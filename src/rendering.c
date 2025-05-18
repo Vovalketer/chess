@@ -6,6 +6,9 @@
 
 #include "game.h"
 
+int CURRENT_WINDOW_WIDTH;
+int CURRENT_WINDOW_HEIGHT;
+
 Texture2D pawn_w;
 Texture2D pawn_b;
 Texture2D rook_w;
@@ -43,20 +46,16 @@ static void _load_textures(void) {
 	king_b = _load_texture_or_exit("resources/Chess_kdt60.png");
 }
 
-void init_rendering(GameState state, int screen_width, int screen_height) {
-	InitWindow(screen_width, screen_height, "Chess");
+void init_rendering(int window_width, int window_height) {
+	CURRENT_WINDOW_WIDTH = window_width;
+	CURRENT_WINDOW_HEIGHT = window_height;
+	InitWindow(CURRENT_WINDOW_WIDTH, CURRENT_WINDOW_HEIGHT, "Chess");
 	SetTargetFPS(30);
 
 	_load_textures();
-	while (!WindowShouldClose()) {
-		BeginDrawing();
-		ClearBackground(RAYWHITE);
-		draw_board(state, screen_width, screen_height);
-		EndDrawing();
-	}
 }
 
-void draw_board(GameState state, int width, int height) {
+static void _draw_board(GameState state, int width, int height) {
 	int tile_w_size = width / 8;
 	int tile_h_size = height / 8;
 	for (int i = 0; i < 8; i++) {
@@ -94,6 +93,15 @@ void draw_board(GameState state, int width, int height) {
 			int posX = (tile_w_size * j) + ((tile_w_size - piece_tex.width) / 2);
 			DrawTexture(piece_tex, posX, posY, WHITE);
 		}
+	}
+}
+
+void game_loop(GameState state) {
+	while (!WindowShouldClose()) {
+		BeginDrawing();
+		ClearBackground(RAYWHITE);
+		_draw_board(state, CURRENT_WINDOW_WIDTH, CURRENT_WINDOW_HEIGHT);
+		EndDrawing();
 	}
 }
 

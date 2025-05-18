@@ -9,7 +9,8 @@ GameState game;
 
 int main(void) {
 	init_board(&game);
-	init_rendering(game, WINDOW_WIDTH, WINDOW_HEIGHT);
+	init_rendering(WINDOW_WIDTH, WINDOW_HEIGHT);
+	game_loop(game);
 	stop_rendering();
 	return EXIT_SUCCESS;
 }

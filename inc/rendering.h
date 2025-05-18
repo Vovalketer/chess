@@ -3,7 +3,7 @@
 
 #include "game.h"
 
-void init_rendering(GameState state, int screen_width, int screen_height);
-void draw_board(GameState state, int width, int height);
+void init_rendering(int screen_width, int screen_height);
+void game_loop(GameState state);
 void stop_rendering(void);
 #endif

@@ -97,10 +97,42 @@ static void _draw_board(const MatchState* state, int width, int height) {
 }
 
 void game_loop(MatchState* state) {
+	Vector2 mouse_position = {0, 0};
+	bool selected = false;
+	int selected_x = -1;
+	int selected_y = -1;
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
+		mouse_position = GetMousePosition();
 		_draw_board(state, CURRENT_WINDOW_WIDTH, CURRENT_WINDOW_HEIGHT);
+
+		if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+			int tile_w_size = CURRENT_WINDOW_WIDTH / 8;
+			int tile_h_size = CURRENT_WINDOW_HEIGHT / 8;
+			int x = mouse_position.x / tile_w_size;
+			int y = mouse_position.y / tile_h_size;
+			if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+				Piece piece = get_tile_content(state, x, y);
+				if (selected) {
+					if (selected_x == x && selected_y == y) {
+						selected = false;
+						selected_x = -1;
+						selected_y = -1;
+					} else {
+						move_piece(state, selected_x, selected_y, x, y);
+						selected = false;
+						selected_x = -1;
+						selected_y = -1;
+					}
+				} else if (!selected && piece.type != EMPTY) {
+					selected_x = x;
+					selected_y = y;
+					selected = true;
+				}
+			}
+		}
+
 		EndDrawing();
 	}
 }

@@ -97,6 +97,8 @@ static void _draw_board(const MatchState* state, int width, int height) {
 }
 
 void game_loop(MatchState* state) {
+	int tile_w_size = CURRENT_WINDOW_WIDTH / 8;
+	int tile_h_size = CURRENT_WINDOW_HEIGHT / 8;
 	Vector2 mouse_position = {0, 0};
 	bool selected = false;
 	int selected_x = -1;
@@ -104,12 +106,10 @@ void game_loop(MatchState* state) {
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
-		mouse_position = GetMousePosition();
 		_draw_board(state, CURRENT_WINDOW_WIDTH, CURRENT_WINDOW_HEIGHT);
 
 		if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-			int tile_w_size = CURRENT_WINDOW_WIDTH / 8;
-			int tile_h_size = CURRENT_WINDOW_HEIGHT / 8;
+			mouse_position = GetMousePosition();
 			int x = mouse_position.x / tile_w_size;
 			int y = mouse_position.y / tile_h_size;
 			if (x >= 0 && x < 8 && y >= 0 && y < 8) {

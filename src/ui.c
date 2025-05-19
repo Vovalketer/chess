@@ -66,22 +66,22 @@ static void _draw_board(const MatchState* state, int width, int height) {
 			Texture2D piece_tex;
 			switch (piece.type) {
 				case PAWN:
-					piece_tex = piece.color == WHITE_PLAYER ? pawn_w : pawn_b;
+					piece_tex = piece.player == WHITE_PLAYER ? pawn_w : pawn_b;
 					break;
 				case ROOK:
-					piece_tex = piece.color == WHITE_PLAYER ? rook_w : rook_b;
+					piece_tex = piece.player == WHITE_PLAYER ? rook_w : rook_b;
 					break;
 				case KNIGHT:
-					piece_tex = piece.color == WHITE_PLAYER ? knight_w : knight_b;
+					piece_tex = piece.player == WHITE_PLAYER ? knight_w : knight_b;
 					break;
 				case BISHOP:
-					piece_tex = piece.color == WHITE_PLAYER ? bishop_w : bishop_b;
+					piece_tex = piece.player == WHITE_PLAYER ? bishop_w : bishop_b;
 					break;
 				case QUEEN:
-					piece_tex = piece.color == WHITE_PLAYER ? queen_w : queen_b;
+					piece_tex = piece.player == WHITE_PLAYER ? queen_w : queen_b;
 					break;
 				case KING:
-					piece_tex = piece.color == WHITE_PLAYER ? king_w : king_b;
+					piece_tex = piece.player == WHITE_PLAYER ? king_w : king_b;
 					break;
 				default:
 					// dont draw if there's no piece

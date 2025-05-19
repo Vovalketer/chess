@@ -20,7 +20,7 @@ typedef enum {
 } PieceType;
 
 typedef struct {
-	Player color;
+	Player player;
 	PieceType type;
 } Piece;
 

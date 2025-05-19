@@ -1,10 +1,10 @@
-#include "rendering.h"
+#include "ui.h"
 
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "game.h"
+#include "engine.h"
 
 int CURRENT_WINDOW_WIDTH;
 int CURRENT_WINDOW_HEIGHT;

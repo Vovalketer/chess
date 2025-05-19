@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include "game.h"
-#include "rendering.h"
+#include "engine.h"
+#include "ui.h"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600

@@ -55,14 +55,14 @@ void init_rendering(int window_width, int window_height) {
 	_load_textures();
 }
 
-static void _draw_board(GameState state, int width, int height) {
+static void _draw_board(const MatchState* state, int width, int height) {
 	int tile_w_size = width / 8;
 	int tile_h_size = height / 8;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			DrawRectangle(
 				tile_w_size * j, tile_h_size * i, tile_w_size, tile_h_size, (i + j) % 2 == 0 ? WHITE : LIME);
-			Piece piece = state.board[i][j];
+			Piece piece = get_tile_content(state, j, i);
 			Texture2D piece_tex;
 			switch (piece.type) {
 				case PAWN:
@@ -96,7 +96,7 @@ static void _draw_board(GameState state, int width, int height) {
 	}
 }
 
-void game_loop(GameState state) {
+void game_loop(MatchState* state) {
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(RAYWHITE);

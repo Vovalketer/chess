@@ -1,55 +1,68 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -Werror -std=c99 -pedantic -g
+CC := gcc
+CPPFLAGS := -MMD -MP
+CFLAGS := -Wall -Wextra -std=c99 -pedantic
+#we're using DNDEBUG on the tests to disable asserts, as they interfere with Criterion
+CFLAGS_TEST := $(CFLAGS) -g -DNDEBUG
+LIBS_SYSTEM := -lraylib
+LDFLAGS := -lm $(LIBS_SYSTEM)
 
-TARGET_EXEC := bin
+EXTERNAL = external
+TESTING_LIB_DIR = $(EXTERNAL)/Criterion/lib
+TESTING_LIB_LINK = -L$(TESTING_LIB_DIR) -Wl,-rpath=$(TESTING_LIB_DIR) -lcriterion
+TESTING_INCLUDE = $(EXTERNAL)/Criterion/include
 
-LDFLAGS := -lraylib
+SRC_DIR := src
+BUILD_DIR := build
+OBJ_DIR := ${BUILD_DIR}/obj
+TARGET_BIN := ${BUILD_DIR}/chess
+
+TEST_SRC := tests
+TEST_OBJ_DIR := ${BUILD_DIR}/tests/obj
+TEST_DIR := ${BUILD_DIR}/tests
+
+SRCS := $(wildcard $(SRC_DIR)/*.c)
+OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+TEST_OBJS := $(SRCS:$(SRC_DIR)/%.c=$(TEST_OBJ_DIR)/%.o)
+
+DEPS := $(OBJS:%.o=%.d)
+-include $(DEPS)
 
 
-BUILD_DIR := ./build
-SRC_DIRS := ./src ./inc
+all: $(TARGET_BIN)
 
-# Find all the C and C++ files we want to compile
-# Note the single quotes around the * expressions. The shell will incorrectly expand these otherwise, but we want to send the * directly to the find command.
-SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c')
+$(TARGET_BIN): $(OBJS)
+	$(CC) $^ -o $@ $(LDFLAGS)
 
-# Prepends BUILD_DIR and appends .o to every src file
-# As an example, ./your_dir/hello.cpp turns into ./build/./your_dir/hello.cpp.o
-OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
-
-# String substitution (suffix version without %).
-# As an example, ./build/hello.cpp.o turns into ./build/hello.cpp.d
-DEPS := $(OBJS:.o=.d)
-
-# Every folder in ./src will need to be passed to GCC so that it can find header files
-INC_DIRS := $(shell find $(SRC_DIRS) -type d)
-# Add a prefix to INC_DIRS. So moduleA would become -ImoduleA. GCC understands this -I flag
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-
-# The -MMD and -MP flags together generate Makefiles for us!
-# These files will have .d instead of .o as the output.
-CPPFLAGS := $(INC_FLAGS) -MMD -MP
-
-# The final build step.
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
-
-# Build step for C source
-$(BUILD_DIR)/%.c.o: %.c
-	mkdir -p $(dir $@)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-# Build step for C++ source
-$(BUILD_DIR)/%.cpp.o: %.cpp
-	mkdir -p $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
-
+$(BUILD_DIR) $(OBJ_DIR) $(DEP_DIR) $(TEST_SRC) $(TEST_DIR) $(TEST_OBJ_DIR):
+	mkdir -p $@
 
 .PHONY: clean
 clean:
-	rm -r $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)
 
-# Include the .d makefiles. The - at the front suppresses the errors of missing
-# Makefiles. Initially, all the .d files will be missing, and we don't want those
-# errors to show up.
--include $(DEPS)
+# Test sources and binaries (recursively find .c files)
+TEST_SRCS := $(shell find tests -type f -name '*.c')
+TEST_BINS := $(patsubst tests/%.c,$(TEST_DIR)/%,$(TEST_SRCS))
+# filter out the main obj
+MAIN_SRC := $(SRC_DIR)/main.c
+MAIN_OBJ := $(TEST_OBJ_DIR)/$(subst $(SRC_DIR)/,,$(MAIN_SRC:.c=.o))
+TEST_LINK_OBJS := $(filter-out $(MAIN_OBJ), $(TEST_OBJS))
+# Compile each test binary, preserving subdirectory structure
+$(TEST_DIR)/%: tests/%.c $(TEST_OBJS) | $(TEST_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) $(CPPFLAGS) $(CFLAGS_TEST) -I$(TESTING_INCLUDE) $< $(TEST_LINK_OBJS) -o $@ $(TESTING_LIB_LINK) $(LDFLAGS) 
+
+$(TEST_OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(TEST_OBJ_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS_TEST) -c $< -o $@
+
+# Run all tests
+.PHONY: test
+test: $(TEST_BINS)
+	@echo "Running all tests:"
+	@for t in $^; do \
+		echo "=== $$t ==="; \
+		./$$t; \
+	done

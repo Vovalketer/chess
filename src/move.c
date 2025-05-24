@@ -15,6 +15,7 @@ bool move_list_create(MoveList **list) {
 	if (moves == NULL) {
 		return false;
 	}
+	moves->size = 0;
 	moves->_capacity = initial_capacity;
 	*list = moves;
 	return true;

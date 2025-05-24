@@ -9,9 +9,7 @@ Move move_create(int x_src, int y_src, int x_dest, int y_dest) {
 }
 
 bool move_list_create(MoveList **list) {
-	if (!list) {
-		return false;
-	}
+	assert(list != NULL);
 	unsigned int initial_capacity = 8;
 	MoveList *moves = malloc(sizeof(MoveList));
 	if (moves == NULL) {
@@ -36,22 +34,21 @@ void move_list_destroy(MoveList **list) {
 	}
 }
 
-bool move_list_clear(MoveList *list) {
+void move_list_clear(MoveList *list) {
+	assert(list != NULL);
 	list->size = 0;
-	return true;
 }
 
 size_t move_list_size(const MoveList *list) {
+	assert(list != NULL);
 	return list->size;
 }
 
-// list cant contain more than COORD_LIST_MAX_SIZE moves
 bool move_list_add(MoveList *list, Move move) {
 	// this case should never happen under normal circumstances unless the
 	// user has modified the _capacity
-	if (list->size > list->_capacity) {
-		return false;
-	}
+	assert(list->size <= list->_capacity);
+
 	if (list->size == list->_capacity) {
 		list->_capacity *= 2;
 		Move *d = realloc(list->data, sizeof(Move) * list->_capacity);
@@ -77,24 +74,17 @@ bool move_list_contains(const MoveList *list, Move move) {
 	return false;
 }
 
-// returns a new instance of a move if found
-bool move_list_get(const MoveList *list, size_t index, Move *out) {
-	assert(list != NULL || index < list->size);
-	if (index >= list->size) {
-		return false;
-	}
+void move_list_get(const MoveList *list, size_t index, Move *out) {
+	assert(list != NULL);
+	assert(index < list->size);
 	*out = list->data[index];
-
-	return true;
 }
 
-bool move_list_remove(MoveList *list, size_t index) {
-	if (!list || index >= list->size) {
-		return false;
-	}
+void move_list_remove(MoveList *list, size_t index) {
+	assert(list != NULL);
+	assert(index < list->size);
 	for (unsigned int i = index; i < list->size; i++) {
 		list->data[i] = list->data[i + 1];
 	}
 	list->size--;
-	return true;
 }

@@ -54,7 +54,11 @@ bool move_list_add(MoveList *list, Move move) {
 	}
 	if (list->size == list->_capacity) {
 		list->_capacity *= 2;
-		list->data = realloc(list->data, sizeof(Move) * list->_capacity);
+		Move *d = realloc(list->data, sizeof(Move) * list->_capacity);
+		if (d == NULL) {
+			return false;
+		}
+		list->data = d;
 	}
 	list->data[list->size] = move;
 	list->size++;

@@ -106,29 +106,15 @@ Test(moves, remove_move_at_index_removes_item_at_the_start, .init = setup, .fini
 }
 
 Test(moves, move_list_resizes_correctly, .init = setup, .fini = teardown) {
-	move_list_add(&moves, move_create(1, 1, 1, 1));
-	move_list_add(&moves, move_create(2, 2, 2, 2));
-	move_list_add(&moves, move_create(3, 3, 3, 3));
-	move_list_add(&moves, move_create(4, 4, 4, 4));
-	move_list_add(&moves, move_create(5, 5, 5, 5));
-	move_list_add(&moves, move_create(6, 6, 6, 6));
-	move_list_add(&moves, move_create(7, 7, 7, 7));
-	move_list_add(&moves, move_create(8, 8, 8, 8));
-	move_list_add(&moves, move_create(9, 9, 9, 9));
-	move_list_add(&moves, move_create(10, 10, 10, 10));
-	move_list_add(&moves, move_create(11, 11, 11, 11));
-	move_list_add(&moves, move_create(12, 12, 12, 12));
-	move_list_add(&moves, move_create(13, 13, 13, 13));
-	move_list_add(&moves, move_create(14, 14, 14, 14));
-	move_list_add(&moves, move_create(15, 15, 15, 15));
-	move_list_add(&moves, move_create(16, 16, 16, 16));
-	move_list_add(&moves, move_create(17, 17, 17, 17));
+	for (int i = 0; i < 17; i++) {
+		move_list_add(&moves, move_create(i, i, i, i));
+	}
 	cr_assert_eq(move_list_size(moves), 17);
 	for (int i = 0; i < 17; i++) {
 		Move m = move_list_get(moves, i);
-		cr_assert_eq(m.x_src, i + 1);
-		cr_assert_eq(m.y_src, i + 1);
-		cr_assert_eq(m.x_dest, i + 1);
-		cr_assert_eq(m.y_dest, i + 1);
+		cr_assert_eq(m.x_src, i);
+		cr_assert_eq(m.y_src, i);
+		cr_assert_eq(m.x_dest, i);
+		cr_assert_eq(m.y_dest, i);
 	}
 }

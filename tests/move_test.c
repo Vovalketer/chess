@@ -78,8 +78,7 @@ Test(moves, get_move_at_index_returns_correct_move, .init = setup, .fini = teard
 	move_list_add(moves, move_create(1, 1, 1, 1));
 	move_list_add(moves, move_create(2, 2, 2, 2));
 	move_list_add(moves, move_create(3, 3, 3, 3));
-	Move move;
-	move_list_get(moves, 1, &move);
+	Move move = move_list_get(moves, 1);
 	cr_assert_eq(move.x_src, 2);
 	cr_assert_eq(move.y_src, 2);
 	cr_assert_eq(move.x_dest, 2);

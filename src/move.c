@@ -74,10 +74,10 @@ bool move_list_contains(const MoveList *list, Move move) {
 	return false;
 }
 
-void move_list_get(const MoveList *list, size_t index, Move *out) {
+Move move_list_get(const MoveList *list, size_t index) {
 	assert(list != NULL);
 	assert(index < list->size);
-	*out = list->data[index];
+	return list->data[index];
 }
 
 void move_list_remove(MoveList *list, size_t index) {

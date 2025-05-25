@@ -15,6 +15,7 @@ Player board_get_player_turn(const BoardState *state);
 int board_get_turn(const BoardState *state);
 int board_next_turn(BoardState *state);
 bool board_is_empty(const BoardState *state, int x, int y);
+bool board_is_enemy(const BoardState *state, Player player, int x, int y);
 bool board_is_within_bounds(int x, int y);
 
 #endif

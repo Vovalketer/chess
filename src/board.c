@@ -85,6 +85,19 @@ bool board_is_empty(const BoardState *state, int x, int y) {
 	return board_get_piece(state, x, y).type == EMPTY;
 }
 
+bool board_is_enemy(const BoardState *state, Player player, int x, int y) {
+	assert(state != NULL);
+	switch (player) {
+		case WHITE_PLAYER:
+			return board_get_piece(state, x, y).player == BLACK_PLAYER;
+		case BLACK_PLAYER:
+			return board_get_piece(state, x, y).player == WHITE_PLAYER;
+		case NONE:
+			return false;
+	}
+	return false;  // should never reach this point but is required by the compiler
+}
+
 bool board_is_within_bounds(int x, int y) {
 	return x >= 0 && x <= 7 && y >= 0 && y <= 7;
 }

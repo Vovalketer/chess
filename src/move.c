@@ -44,7 +44,7 @@ static bool _move_list_resize(MoveList **list) {
 	if (d == NULL) {
 		return false;
 	}
-	(*list)->_capacity = new_cap;
+	d->_capacity = new_cap;
 	*list = d;
 	return true;
 }

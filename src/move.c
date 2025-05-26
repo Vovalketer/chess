@@ -84,7 +84,7 @@ Move move_list_get(const MoveList *list, size_t index) {
 void move_list_remove(MoveList *list, size_t index) {
 	assert(list != NULL);
 	assert(index < list->size);
-	for (unsigned int i = index; i < list->size; i++) {
+	for (size_t i = index; i < list->size - 1; i++) {
 		list->data[i] = list->data[i + 1];
 	}
 	list->size--;

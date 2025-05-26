@@ -1,111 +1,101 @@
+#include "../include/engine.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 
-#include "engine.h"
+#include "../include/board.h"
+#include "../include/movegen.h"
 
-struct MatchState {
-	Piece board[8][8];
-	int turn;
-};
-
-static void _init_place_pawns(MatchState *state) {
+static void _init_place_pawns(BoardState *state) {
 	for (int i = 0; i < 8; i++) {
-		state->board[1][i].player = BLACK_PLAYER;
-		state->board[1][i].type = PAWN;
+		bool success = board_set_piece(state, (Piece) {BLACK_PLAYER, PAWN}, i, 1);
+		if (!success) {
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	for (int i = 0; i < 8; i++) {
-		state->board[6][i].player = WHITE_PLAYER;
-		state->board[6][i].type = PAWN;
+		bool success = board_set_piece(state, (Piece) {WHITE_PLAYER, PAWN}, i, 6);
+		if (!success) {
+			exit(EXIT_FAILURE);
+		}
 	}
 }
 
-static void _init_place_main_pieces(MatchState *state) {
-	state->board[7][0].player = WHITE_PLAYER;
-	state->board[7][0].type = ROOK;
+static void _init_place_main_pieces(BoardState *state) {
+	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, 0, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, 1, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, 2, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, QUEEN}, 3, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KING}, 4, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, 5, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, 6, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, 7, 7);
 
-	state->board[7][1].player = WHITE_PLAYER;
-	state->board[7][1].type = KNIGHT;
-
-	state->board[7][2].player = WHITE_PLAYER;
-	state->board[7][2].type = BISHOP;
-
-	state->board[7][3].player = WHITE_PLAYER;
-	state->board[7][3].type = QUEEN;
-
-	state->board[7][4].player = WHITE_PLAYER;
-	state->board[7][4].type = KING;
-
-	state->board[7][5].player = WHITE_PLAYER;
-	state->board[7][5].type = BISHOP;
-
-	state->board[7][6].player = WHITE_PLAYER;
-	state->board[7][6].type = KNIGHT;
-
-	state->board[7][7].player = WHITE_PLAYER;
-	state->board[7][7].type = ROOK;
-
-	state->board[0][0].player = BLACK_PLAYER;
-	state->board[0][0].type = ROOK;
-
-	state->board[0][1].player = BLACK_PLAYER;
-	state->board[0][1].type = KNIGHT;
-
-	state->board[0][2].player = BLACK_PLAYER;
-	state->board[0][2].type = BISHOP;
-
-	state->board[0][3].player = BLACK_PLAYER;
-	state->board[0][3].type = QUEEN;
-
-	state->board[0][4].player = BLACK_PLAYER;
-	state->board[0][4].type = KING;
-
-	state->board[0][5].player = BLACK_PLAYER;
-	state->board[0][5].type = BISHOP;
-
-	state->board[0][6].player = BLACK_PLAYER;
-	state->board[0][6].type = KNIGHT;
-
-	state->board[0][7].player = BLACK_PLAYER;
-	state->board[0][7].type = ROOK;
+	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, 0, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, 1, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, 2, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, QUEEN}, 3, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KING}, 4, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, 5, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, 6, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, 7, 0);
 }
 
-void init_board(MatchState *state) {
+static void _init_match(BoardState *state) {
 	_init_place_pawns(state);
 	_init_place_main_pieces(state);
 }
 
-Player _get_tile_occupant(MatchState state, int x, int y) {
-	return state.board[y][x].player;
-}
-
-bool move_piece(MatchState *state, int x_orig, int y_orig, int x_dest, int y_dest) {
-	Piece orig = state->board[y_orig][x_orig];
-	state->board[y_dest][x_dest].player = orig.player;
-	state->board[y_dest][x_dest].type = orig.type;
-	state->board[y_orig][x_orig].player = NONE;
-	state->board[y_orig][x_orig].type = EMPTY;
+bool create_empty_board(BoardState **state) {
+	BoardState *b;
+	bool result = board_create(&b);
+	if (!result) {
+		return false;
+	}
+	*state = b;
 	return true;
 }
 
-MatchState *create_game(void) {
-	MatchState *state = malloc(sizeof(MatchState));
-	init_board(state);
-	return state;
+bool create_standard_match(BoardState **state) {
+	BoardState *b;
+	bool result = create_empty_board(&b);
+	if (!result) {
+		return false;
+	}
+	_init_match(b);
+	*state = b;
+	return true;
 }
 
-void destroy_game(MatchState *state) {
-	free(state);
+MoveMask get_valid_moves(const BoardState *state, int x, int y) {
+	MoveMask mm = {0};
+	if (!board_is_within_bounds(x, y)) {
+		return mm;
+	}
+	MoveList *moves;
+	move_list_create(&moves);
+	movegen_generate(state, x, y, moves);
+
+	for (size_t i = 0; i < move_list_size(moves); i++) {
+		Move m = move_list_get(moves, i);
+		if (m.x_src == x && m.y_src == y) {
+			mm.mask[m.y_dest][m.x_dest] = true;
+			mm.count++;
+		}
+	}
+	move_list_destroy(&moves);
+	return mm;
 }
 
-Player get_player_turn(const MatchState *state) {
-	// TODO: check for end of the game, then return NONE
-	return (state->turn % 2 == 0) ? WHITE_PLAYER : BLACK_PLAYER;
+Piece get_piece(const BoardState *state, int x, int y) {
+	return board_get_piece(state, x, y);
 }
 
-int get_turn(const MatchState *state) {
-	return state->turn;
+bool move_piece(BoardState *state, int x_src, int y_src, int x_dest, int y_dest) {
+	return board_move_piece(state, x_src, y_src, x_dest, y_dest);
 }
 
-Piece get_tile_content(const MatchState *state, int x, int y) {
-	return state->board[y][x];
+void destroy_game(BoardState **state) {
+	board_destroy(state);
 }

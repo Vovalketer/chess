@@ -1,13 +1,16 @@
-#include "ui.h"
+#include "../include/ui.h"
 
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "engine.h"
+#include "../include/engine.h"
 
 int CURRENT_WINDOW_WIDTH;
 int CURRENT_WINDOW_HEIGHT;
+
+int DRAWN_TILE_W_SIZE;
+int DRAWN_TILE_H_SIZE;
 
 Texture2D pawn_w;
 Texture2D pawn_b;
@@ -55,14 +58,17 @@ void init_rendering(int window_width, int window_height) {
 	_load_textures();
 }
 
-static void _draw_board(const MatchState* state, int width, int height) {
-	int tile_w_size = width / 8;
-	int tile_h_size = height / 8;
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			DrawRectangle(
-				tile_w_size * j, tile_h_size * i, tile_w_size, tile_h_size, (i + j) % 2 == 0 ? WHITE : LIME);
-			Piece piece = get_tile_content(state, j, i);
+static void _draw_board(const BoardState* state, int width, int height) {
+	DRAWN_TILE_W_SIZE = width / 8;
+	DRAWN_TILE_H_SIZE = height / 8;
+	for (int row = 0; row < 8; row++) {
+		for (int col = 0; col < 8; col++) {
+			DrawRectangle(DRAWN_TILE_W_SIZE * col,
+						  DRAWN_TILE_H_SIZE * row,
+						  DRAWN_TILE_W_SIZE,
+						  DRAWN_TILE_H_SIZE,
+						  (row + col) % 2 == 0 ? WHITE : LIME);
+			Piece piece = get_piece(state, col, row);
 			Texture2D piece_tex;
 			switch (piece.type) {
 				case PAWN:
@@ -89,31 +95,49 @@ static void _draw_board(const MatchState* state, int width, int height) {
 					break;
 			}
 
-			int posY = (tile_h_size * i) + ((tile_h_size - piece_tex.height) / 2);
-			int posX = (tile_w_size * j) + ((tile_w_size - piece_tex.width) / 2);
+			int posY = (DRAWN_TILE_H_SIZE * row) + ((DRAWN_TILE_H_SIZE - piece_tex.height) / 2);
+			int posX = (DRAWN_TILE_W_SIZE * col) + ((DRAWN_TILE_W_SIZE - piece_tex.width) / 2);
 			DrawTexture(piece_tex, posX, posY, WHITE);
 		}
 	}
 }
 
-void game_loop(MatchState* state) {
+static void _draw_valid_moves(MoveMask mm) {
+	const int circle_radius = 14;
+	for (int row = 0; row < 8; row++) {
+		for (int col = 0; col < 8; col++) {
+			if (mm.mask[row][col]) {
+				DrawCircle((DRAWN_TILE_W_SIZE * col) + ((DRAWN_TILE_W_SIZE + (circle_radius / 2)) / 2),
+						   (DRAWN_TILE_H_SIZE * row) + ((DRAWN_TILE_H_SIZE + (circle_radius / 2)) / 2),
+						   circle_radius,
+						   RED);
+			}
+		}
+	}
+}
+
+void game_loop(BoardState* state) {
 	int tile_w_size = CURRENT_WINDOW_WIDTH / 8;
 	int tile_h_size = CURRENT_WINDOW_HEIGHT / 8;
 	Vector2 mouse_position = {0, 0};
 	bool selected = false;
 	int selected_x = -1;
 	int selected_y = -1;
+	MoveMask mm = {0};
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
 		_draw_board(state, CURRENT_WINDOW_WIDTH, CURRENT_WINDOW_HEIGHT);
+		if (selected) {
+			_draw_valid_moves(mm);
+		}
 
 		if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
 			mouse_position = GetMousePosition();
 			int x = mouse_position.x / tile_w_size;
 			int y = mouse_position.y / tile_h_size;
 			if (x >= 0 && x < 8 && y >= 0 && y < 8) {
-				Piece piece = get_tile_content(state, x, y);
+				Piece piece = get_piece(state, x, y);
 				if (selected) {
 					if (selected_x == x && selected_y == y) {
 						selected = false;
@@ -125,9 +149,10 @@ void game_loop(MatchState* state) {
 						selected_x = -1;
 						selected_y = -1;
 					}
-				} else if (!selected && piece.type != EMPTY) {
+				} else if (!selected && piece.player != NONE) {
 					selected_x = x;
 					selected_y = y;
+					mm = get_valid_moves(state, selected_x, selected_y);
 					selected = true;
 				}
 			}

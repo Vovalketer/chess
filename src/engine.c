@@ -47,7 +47,7 @@ static void _init_match(BoardState *state) {
 	_init_place_main_pieces(state);
 }
 
-bool create_empty_board(BoardState **state) {
+bool engine_create_empty_board(BoardState **state) {
 	BoardState *b;
 	bool result = board_create(&b);
 	if (!result) {
@@ -57,9 +57,9 @@ bool create_empty_board(BoardState **state) {
 	return true;
 }
 
-bool create_standard_match(BoardState **state) {
+bool engine_create_match(BoardState **state) {
 	BoardState *b;
-	bool result = create_empty_board(&b);
+	bool result = engine_create_empty_board(&b);
 	if (!result) {
 		return false;
 	}
@@ -68,7 +68,7 @@ bool create_standard_match(BoardState **state) {
 	return true;
 }
 
-MoveMask get_valid_moves(const BoardState *state, int x, int y) {
+MoveMask engine_get_valid_moves(const BoardState *state, int x, int y) {
 	MoveMask mm = {0};
 	if (!board_is_within_bounds(x, y)) {
 		return mm;
@@ -88,14 +88,14 @@ MoveMask get_valid_moves(const BoardState *state, int x, int y) {
 	return mm;
 }
 
-Piece get_piece(const BoardState *state, int x, int y) {
+Piece engine_get_piece(const BoardState *state, int x, int y) {
 	return board_get_piece(state, x, y);
 }
 
-bool move_piece(BoardState *state, int x_src, int y_src, int x_dest, int y_dest) {
+bool engine_move_piece(BoardState *state, int x_src, int y_src, int x_dest, int y_dest) {
 	return board_move_piece(state, x_src, y_src, x_dest, y_dest);
 }
 
-void destroy_game(BoardState **state) {
+void engine_destroy_match(BoardState **state) {
 	board_destroy(state);
 }

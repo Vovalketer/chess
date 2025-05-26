@@ -10,7 +10,7 @@
 BoardState* game;
 
 int main(void) {
-	bool created = create_standard_match(&game);
+	bool created = engine_create_match(&game);
 	if (!created) {
 		printf("Error creating game\n");
 		exit(EXIT_FAILURE);
@@ -18,7 +18,7 @@ int main(void) {
 	init_rendering(WINDOW_WIDTH, WINDOW_HEIGHT);
 	game_loop(game);
 	stop_rendering();
-	destroy_game(&game);
+	engine_destroy_match(&game);
 
 	return EXIT_SUCCESS;
 }

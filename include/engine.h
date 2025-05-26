@@ -10,13 +10,12 @@ typedef struct {
 	int count;
 } MoveMask;
 
-bool create_empty_board(BoardState **state);
-bool create_standard_match(BoardState **state);
-void destroy_game(BoardState **state);
-Player get_active_player(const BoardState *state);
-int get_turn(const BoardState *state);
-Piece get_piece(const BoardState *state, int x, int y);
-bool move_piece(BoardState *state, int x_src, int y_src, int x_dest, int y_dest);
-MoveMask get_valid_moves(const BoardState *state, int x, int y);
+bool engine_create_match(BoardState **state);
+void engine_destroy_match(BoardState **state);
+Player engine_get_active_player(const BoardState *state);
+int engine_get_turn(const BoardState *state);
+Piece engine_get_piece(const BoardState *state, int x, int y);
+bool engine_move_piece(BoardState *state, int x_src, int y_src, int x_dest, int y_dest);
+MoveMask engine_get_valid_moves(const BoardState *state, int x, int y);
 
 #endif

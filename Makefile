@@ -14,7 +14,7 @@ TESTING_INCLUDE = $(EXTERNAL)/Criterion/include
 SRC_DIR := src
 BUILD_DIR := build
 OBJ_DIR := ${BUILD_DIR}/obj
-TARGET_BIN := ${BUILD_DIR}/chess
+TARGET_BIN := chess
 
 TEST_SRC := tests
 TEST_OBJ_DIR := ${BUILD_DIR}/tests/obj

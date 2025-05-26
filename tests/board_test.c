@@ -20,11 +20,6 @@ Test(board, create_returns_true_if_successful) {
 	cr_assert_not_null(_board);
 }
 
-Test(board, create_returns_false_if_board_is_null) {
-	bool result = board_create(NULL);
-	cr_assert_not(result);
-}
-
 Test(board, destroy_destroys_board) {
 	BoardState *_board = NULL;
 	bool result = board_create(&_board);

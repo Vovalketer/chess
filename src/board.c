@@ -10,9 +10,9 @@ struct BoardState {
 };
 
 bool board_create(BoardState **state) {
-	BoardState *b;
 	assert(state != NULL);
-	b = malloc(sizeof(BoardState));
+	BoardState *b;
+	b = calloc(1, sizeof(BoardState));
 	if (!b) {
 		return false;
 	}

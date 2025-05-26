@@ -62,7 +62,9 @@ $(TEST_OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(TEST_OBJ_DIR)
 .PHONY: test
 test: $(TEST_BINS)
 	@echo "Running all tests:"
+	@echo "";
 	@for t in $^; do \
 		echo "=== $$t ==="; \
 		./$$t; \
+		echo ""; \
 	done

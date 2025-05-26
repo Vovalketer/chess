@@ -4,24 +4,25 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#define LIST_INITIAL_CAPACITY 16
+
 Move move_create(int x_src, int y_src, int x_dest, int y_dest) {
 	return (Move) {x_src, y_src, x_dest, y_dest};
 }
 
 bool move_list_create(MoveList **list) {
 	assert(list != NULL);
-	unsigned int initial_capacity = 8;
 	MoveList *moves = malloc(sizeof(MoveList));
 	if (moves == NULL) {
 		return false;
 	}
-	moves->data = malloc(sizeof(Move) * initial_capacity);
+	moves->data = malloc(sizeof(Move) * LIST_INITIAL_CAPACITY);
 	if (moves->data == NULL) {
 		free(moves);
 		return false;
 	}
 	moves->size = 0;
-	moves->_capacity = initial_capacity;
+	moves->_capacity = LIST_INITIAL_CAPACITY;
 	*list = moves;
 	return true;
 }

@@ -14,7 +14,7 @@ bool rules_is_valid_move(BoardState *state, Move move) {
 		movegen_generate(state, move.src, moves);
 
 		if (move_list_contains(moves, move)) {
-			success = board_move_piece(state, move.src, move.dst);
+			success = true;
 		}
 		move_list_destroy(&moves);
 	}

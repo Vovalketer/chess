@@ -114,3 +114,17 @@ bool board_is_enemy(const BoardState *state, Player player, Position pos) {
 bool board_is_within_bounds(Position pos) {
 	return pos.x >= 0 && pos.x <= 7 && pos.y >= 0 && pos.y <= 7;
 }
+
+Position board_find_king_pos(const BoardState *state, Player player) {
+	assert(state != NULL);
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			Position pos = (Position) {i, j};
+			Piece piece = board_get_piece(state, pos);
+			if (piece.player == player && piece.type == KING) {
+				return pos;
+			}
+		}
+	}
+	return (Position) {-1, -1};	 // should never reach this point but is required by the compiler
+}

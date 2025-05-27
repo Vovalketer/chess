@@ -16,5 +16,5 @@ int board_next_turn(BoardState *state);
 bool board_is_empty(const BoardState *state, Position pos);
 bool board_is_enemy(const BoardState *state, Player player, Position pos);
 bool board_is_within_bounds(Position pos);
-
+Position board_find_king_pos(const BoardState *state, Player player);
 #endif

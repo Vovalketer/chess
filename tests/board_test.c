@@ -140,6 +140,23 @@ Test(board, is_within_bounds_returns_false_when_out_of_bounds, .init = setup, .f
 	bool result = board_is_within_bounds((Position) {-10, -10});
 	cr_assert_not(result);
 }
+
+Test(board, find_king_pos_returns_white_king_position, .init = setup, .fini = teardown) {
+	bool result = board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, (Position) {4, 7});
+	cr_assert(result);
+	Position pos = board_find_king_pos(board, WHITE_PLAYER);
+	cr_assert_eq(pos.x, 4);
+	cr_assert_eq(pos.y, 7);
+}
+
+Test(board, find_king_pos_returns_black_king_position, .init = setup, .fini = teardown) {
+	bool result = board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, (Position) {4, 0});
+	cr_assert(result);
+	Position pos = board_find_king_pos(board, BLACK_PLAYER);
+	cr_assert_eq(pos.x, 4);
+	cr_assert_eq(pos.y, 0);
+}
+
 Test(board, clone_returns_true_when_successful, .init = setup, .fini = teardown) {
 	BoardState *dst;
 	bool result = board_clone(&dst, board);

@@ -26,5 +26,6 @@ bool move_list_add(MoveList *list, Move move);
 bool move_list_contains(const MoveList *list, Move move);
 Move move_list_get(const MoveList *list, size_t index);
 void move_list_remove(MoveList *list, size_t index);
+Move move_list_pop(MoveList *list);
 
 #endif

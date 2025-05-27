@@ -91,3 +91,11 @@ void move_list_remove(MoveList *list, size_t index) {
 	}
 	list->size--;
 }
+
+Move move_list_pop(MoveList *list) {
+	assert(list != NULL);
+	assert(list->size > 0);
+	Move move = move_list_get(list, list->size - 1);
+	move_list_remove(list, list->size - 1);
+	return move;
+}

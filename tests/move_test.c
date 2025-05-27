@@ -118,3 +118,18 @@ Test(moves, move_list_resizes_correctly, .init = setup, .fini = teardown) {
 		cr_assert_eq(m.dst.y, i);
 	}
 }
+
+Test(moves, pop_move_from_list_removes_item_at_the_end, .init = setup, .fini = teardown) {
+	for (int i = 0; i < 4; i++) {
+		move_list_add(moves, move_create((Position) {i, i}, (Position) {i, i}));
+	}
+	cr_assert(eq(uint, move_list_size(moves), 4));
+	Move pop = move_list_pop(moves);
+	cr_assert(eq(int, pop.src.x, 3));
+	cr_assert(eq(int, pop.src.y, 3));
+	cr_assert(eq(int, pop.dst.x, 3));
+	cr_assert(eq(int, pop.dst.y, 3));
+	cr_assert(eq(uint, move_list_size(moves), 3));
+	bool is_present = move_list_contains(moves, move_create((Position) {3, 3}, (Position) {3, 3}));
+	cr_assert_eq(is_present, false);
+}

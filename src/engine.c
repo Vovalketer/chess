@@ -6,46 +6,9 @@
 #include "../include/board.h"
 #include "../include/movegen.h"
 
-static void _init_place_pawns(BoardState *state) {
-	for (int i = 0; i < 8; i++) {
-		bool success = board_set_piece(state, (Piece) {BLACK_PLAYER, PAWN}, i, 1);
-		if (!success) {
-			exit(EXIT_FAILURE);
-		}
-	}
-
-	for (int i = 0; i < 8; i++) {
-		bool success = board_set_piece(state, (Piece) {WHITE_PLAYER, PAWN}, i, 6);
-		if (!success) {
-			exit(EXIT_FAILURE);
-		}
-	}
-}
-
-static void _init_place_main_pieces(BoardState *state) {
-	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, 0, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, 1, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, 2, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, QUEEN}, 3, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, KING}, 4, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, 5, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, 6, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, 7, 7);
-
-	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, 0, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, 1, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, 2, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, QUEEN}, 3, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, KING}, 4, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, 5, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, 6, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, 7, 0);
-}
-
-static void _init_match(BoardState *state) {
-	_init_place_pawns(state);
-	_init_place_main_pieces(state);
-}
+static void _init_match(BoardState *state);
+static void _init_place_pawns(BoardState *state);
+static void _init_place_main_pieces(BoardState *state);
 
 bool engine_create_empty_board(BoardState **state) {
 	BoardState *b;
@@ -98,4 +61,45 @@ bool engine_move_piece(BoardState *state, int x_src, int y_src, int x_dest, int 
 
 void engine_destroy_match(BoardState **state) {
 	board_destroy(state);
+}
+
+static void _init_place_pawns(BoardState *state) {
+	for (int i = 0; i < 8; i++) {
+		bool success = board_set_piece(state, (Piece) {BLACK_PLAYER, PAWN}, i, 1);
+		if (!success) {
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	for (int i = 0; i < 8; i++) {
+		bool success = board_set_piece(state, (Piece) {WHITE_PLAYER, PAWN}, i, 6);
+		if (!success) {
+			exit(EXIT_FAILURE);
+		}
+	}
+}
+
+static void _init_place_main_pieces(BoardState *state) {
+	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, 0, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, 1, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, 2, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, QUEEN}, 3, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KING}, 4, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, 5, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, 6, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, 7, 7);
+
+	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, 0, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, 1, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, 2, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, QUEEN}, 3, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KING}, 4, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, 5, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, 6, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, 7, 0);
+}
+
+static void _init_match(BoardState *state) {
+	_init_place_pawns(state);
+	_init_place_main_pieces(state);
 }

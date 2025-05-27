@@ -27,39 +27,39 @@ void board_destroy(BoardState **state) {
 	}
 }
 
-Piece board_get_piece(const BoardState *state, int x, int y) {
+Piece board_get_piece(const BoardState *state, Position pos) {
 	assert(state != NULL);
-	if (!board_is_within_bounds(x, y)) {
+	if (!board_is_within_bounds(pos)) {
 		return (Piece) {NONE, EMPTY};
 	}
-	return state->board[y][x];
+	return state->board[pos.y][pos.x];
 }
 
-bool board_set_piece(BoardState *state, Piece piece, int x, int y) {
+bool board_set_piece(BoardState *state, Piece piece, Position pos) {
 	assert(state != NULL);
-	if (board_is_within_bounds(x, y)) {
-		state->board[y][x] = piece;
+	if (board_is_within_bounds(pos)) {
+		state->board[pos.y][pos.x] = piece;
 		return true;
 	}
 	return false;
 }
 
-void board_remove_piece(BoardState *state, int x, int y) {
+void board_remove_piece(BoardState *state, Position pos) {
 	assert(state != NULL);
-	board_set_piece(state, (Piece) {NONE, EMPTY}, x, y);
+	board_set_piece(state, (Piece) {NONE, EMPTY}, pos);
 }
 
-bool board_move_piece(BoardState *state, int x_src, int y_src, int x_dest, int y_dest) {
+bool board_move_piece(BoardState *state, Position src, Position dst) {
 	assert(state != NULL);
-	if (!board_is_within_bounds(x_src, y_src) || !board_is_within_bounds(x_dest, y_dest)) {
+	if (!board_is_within_bounds(src) || !board_is_within_bounds(dst)) {
 		return false;
 	}
-	Piece orig = board_get_piece(state, x_src, y_src);
+	Piece orig = board_get_piece(state, src);
 	if (orig.type == EMPTY) {
 		return false;
 	}
-	board_set_piece(state, orig, x_dest, y_dest);
-	board_remove_piece(state, x_src, y_src);
+	board_set_piece(state, orig, dst);
+	board_remove_piece(state, src);
 	return true;
 }
 
@@ -79,24 +79,24 @@ int board_next_turn(BoardState *state) {
 	return state->turn;
 }
 
-bool board_is_empty(const BoardState *state, int x, int y) {
+bool board_is_empty(const BoardState *state, Position pos) {
 	assert(state != NULL);
-	return board_get_piece(state, x, y).type == EMPTY;
+	return board_get_piece(state, pos).type == EMPTY;
 }
 
-bool board_is_enemy(const BoardState *state, Player player, int x, int y) {
+bool board_is_enemy(const BoardState *state, Player player, Position pos) {
 	assert(state != NULL);
 	switch (player) {
 		case WHITE_PLAYER:
-			return board_get_piece(state, x, y).player == BLACK_PLAYER;
+			return board_get_piece(state, pos).player == BLACK_PLAYER;
 		case BLACK_PLAYER:
-			return board_get_piece(state, x, y).player == WHITE_PLAYER;
+			return board_get_piece(state, pos).player == WHITE_PLAYER;
 		case NONE:
 			return false;
 	}
 	return false;  // should never reach this point but is required by the compiler
 }
 
-bool board_is_within_bounds(int x, int y) {
-	return x >= 0 && x <= 7 && y >= 0 && y <= 7;
+bool board_is_within_bounds(Position pos) {
+	return pos.x >= 0 && pos.x <= 7 && pos.y >= 0 && pos.y <= 7;
 }

@@ -32,19 +32,19 @@ bool engine_create_match(BoardState **state) {
 	return true;
 }
 
-MoveMask engine_get_valid_moves(const BoardState *state, int x, int y) {
+MoveMask engine_get_valid_moves(const BoardState *state, Position pos) {
 	MoveMask mm = {0};
-	if (!board_is_within_bounds(x, y)) {
+	if (!board_is_within_bounds(pos)) {
 		return mm;
 	}
 	MoveList *moves;
 	move_list_create(&moves);
-	movegen_generate(state, x, y, moves);
+	movegen_generate(state, pos, moves);
 
 	for (size_t i = 0; i < move_list_size(moves); i++) {
 		Move m = move_list_get(moves, i);
-		if (m.x_src == x && m.y_src == y) {
-			mm.mask[m.y_dest][m.x_dest] = true;
+		if (m.src.x == pos.x && m.src.y == pos.y) {
+			mm.mask[m.dst.y][m.dst.x] = true;
 			mm.count++;
 		}
 	}
@@ -52,16 +52,21 @@ MoveMask engine_get_valid_moves(const BoardState *state, int x, int y) {
 	return mm;
 }
 
-Piece engine_get_piece(const BoardState *state, int x, int y) {
-	return board_get_piece(state, x, y);
+Piece engine_get_piece(const BoardState *state, Position pos) {
+	return board_get_piece(state, pos);
 }
 
-bool engine_move_piece(BoardState *state, int x_src, int y_src, int x_dest, int y_dest) {
-	bool success = rules_is_valid_move(state, (Move) {x_src, y_src, x_dest, y_dest});
+bool engine_move_piece(BoardState *state, Position src, Position dst) {
+	bool success = rules_is_valid_move(state, (Move) {src, dst});
 	if (success) {
 		board_next_turn(state);
 	}
 	return success;
+}
+
+bool engine_undo_move(BoardState *state) {
+	// TODO: implement, possibly by adding a move list to the board state itself
+	return false;
 }
 
 void engine_destroy_match(BoardState **state) {
@@ -70,14 +75,14 @@ void engine_destroy_match(BoardState **state) {
 
 static void _init_place_pawns(BoardState *state) {
 	for (int i = 0; i < 8; i++) {
-		bool success = board_set_piece(state, (Piece) {BLACK_PLAYER, PAWN}, i, 1);
+		bool success = board_set_piece(state, (Piece) {BLACK_PLAYER, PAWN}, (Position) {i, 1});
 		if (!success) {
 			exit(EXIT_FAILURE);
 		}
 	}
 
 	for (int i = 0; i < 8; i++) {
-		bool success = board_set_piece(state, (Piece) {WHITE_PLAYER, PAWN}, i, 6);
+		bool success = board_set_piece(state, (Piece) {WHITE_PLAYER, PAWN}, (Position) {i, 6});
 		if (!success) {
 			exit(EXIT_FAILURE);
 		}
@@ -85,23 +90,23 @@ static void _init_place_pawns(BoardState *state) {
 }
 
 static void _init_place_main_pieces(BoardState *state) {
-	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, 0, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, 1, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, 2, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, QUEEN}, 3, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, KING}, 4, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, 5, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, 6, 7);
-	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, 7, 7);
+	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, (Position) {0, 7});
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, (Position) {1, 7});
+	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, (Position) {2, 7});
+	board_set_piece(state, (Piece) {WHITE_PLAYER, QUEEN}, (Position) {3, 7});
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KING}, (Position) {4, 7});
+	board_set_piece(state, (Piece) {WHITE_PLAYER, BISHOP}, (Position) {5, 7});
+	board_set_piece(state, (Piece) {WHITE_PLAYER, KNIGHT}, (Position) {6, 7});
+	board_set_piece(state, (Piece) {WHITE_PLAYER, ROOK}, (Position) {7, 7});
 
-	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, 0, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, 1, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, 2, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, QUEEN}, 3, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, KING}, 4, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, 5, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, 6, 0);
-	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, 7, 0);
+	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, (Position) {0, 0});
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, (Position) {1, 0});
+	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, (Position) {2, 0});
+	board_set_piece(state, (Piece) {BLACK_PLAYER, QUEEN}, (Position) {3, 0});
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KING}, (Position) {4, 0});
+	board_set_piece(state, (Piece) {BLACK_PLAYER, BISHOP}, (Position) {5, 0});
+	board_set_piece(state, (Piece) {BLACK_PLAYER, KNIGHT}, (Position) {6, 0});
+	board_set_piece(state, (Piece) {BLACK_PLAYER, ROOK}, (Position) {7, 0});
 }
 
 static void _init_match(BoardState *state) {

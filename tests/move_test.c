@@ -35,86 +35,86 @@ Test(moves, create_moves_list_has_correct_size, .init = setup, .fini = teardown)
 }
 
 Test(moves, create_moves_list_has_correct_capacity, .init = setup, .fini = teardown) {
-	cr_assert(eq(uint, moves->_capacity, 8));
+	cr_assert(eq(uint, moves->_capacity, 16));
 }
 
 Test(moves, add_move_adds_move_to_list, .init = setup, .fini = teardown) {
 	cr_assert(eq(uint, moves->size, 0));
-	bool added = move_list_add(moves, move_create(1, 1, 1, 1));
+	bool added = move_list_add(moves, move_create((Position) {1, 1}, (Position) {1, 1}));
 	cr_assert_eq(added, true);
 	cr_assert(eq(uint, moves->size, 1));
 }
 
 Test(moves, get_moves_list_size_returns_correct_size, .init = setup, .fini = teardown) {
 	cr_assert(eq(uint, move_list_size(moves), 0));
-	move_list_add(moves, move_create(1, 1, 1, 1));
+	move_list_add(moves, move_create((Position) {1, 1}, (Position) {1, 1}));
 	cr_assert(eq(uint, move_list_size(moves), 1));
 }
 
 Test(moves, clear_list_removes_all_moves, .init = setup, .fini = teardown) {
-	move_list_add(moves, move_create(1, 1, 1, 1));
-	move_list_add(moves, move_create(2, 2, 2, 2));
-	move_list_add(moves, move_create(3, 3, 3, 3));
+	for (int i = 1; i < 4; i++) {
+		move_list_add(moves, move_create((Position) {i, i}, (Position) {i, i}));
+	}
 	move_list_clear(moves);
 	cr_assert(eq(uint, moves->size, 0));
 	cr_assert_not_null(moves);
 }
 
 Test(moves, is_move_in_list_returns_true_for_move_in_list, .init = setup, .fini = teardown) {
-	move_list_add(moves, move_create(1, 1, 1, 1));
-	move_list_add(moves, move_create(2, 2, 2, 2));
-	move_list_add(moves, move_create(3, 3, 3, 3));
-	bool is_present = move_list_contains(moves, move_create(2, 2, 2, 2));
+	for (int i = 1; i < 4; i++) {
+		move_list_add(moves, move_create((Position) {i, i}, (Position) {i, i}));
+	}
+	bool is_present = move_list_contains(moves, move_create((Position) {2, 2}, (Position) {2, 2}));
 	cr_assert(is_present);
 }
 
 Test(moves, is_move_in_list_returns_false_for_move_not_in_list, .init = setup, .fini = teardown) {
-	move_list_add(moves, move_create(1, 1, 1, 1));
-	bool is_present = move_list_contains(moves, move_create(2, 2, 2, 2));
+	move_list_add(moves, move_create((Position) {1, 1}, (Position) {1, 1}));
+	bool is_present = move_list_contains(moves, move_create((Position) {2, 2}, (Position) {2, 2}));
 	cr_assert_not(is_present);
 }
 
 Test(moves, get_move_at_index_returns_correct_move, .init = setup, .fini = teardown) {
-	move_list_add(moves, move_create(1, 1, 1, 1));
-	move_list_add(moves, move_create(2, 2, 2, 2));
-	move_list_add(moves, move_create(3, 3, 3, 3));
+	for (int i = 1; i < 4; i++) {
+		move_list_add(moves, move_create((Position) {i, i}, (Position) {i, i}));
+	}
 	Move move = move_list_get(moves, 1);
-	cr_assert_eq(move.x_src, 2);
-	cr_assert_eq(move.y_src, 2);
-	cr_assert_eq(move.x_dest, 2);
-	cr_assert_eq(move.y_dest, 2);
+	cr_assert_eq(move.src.x, 2);
+	cr_assert_eq(move.src.y, 2);
+	cr_assert_eq(move.dst.x, 2);
+	cr_assert_eq(move.dst.y, 2);
 }
 
 Test(moves, remove_move_at_index_removes_item_at_the_end, .init = setup, .fini = teardown) {
-	move_list_add(moves, move_create(1, 1, 1, 1));
-	move_list_add(moves, move_create(2, 2, 2, 2));
-	move_list_add(moves, move_create(3, 3, 3, 3));
+	for (int i = 1; i < 4; i++) {
+		move_list_add(moves, move_create((Position) {i, i}, (Position) {i, i}));
+	}
 	move_list_remove(moves, 2);
 	cr_assert(eq(uint, move_list_size(moves), 2));
-	bool is_present = move_list_contains(moves, move_create(3, 3, 3, 3));
+	bool is_present = move_list_contains(moves, move_create((Position) {3, 3}, (Position) {3, 3}));
 	cr_assert_eq(is_present, false);
 }
 
 Test(moves, remove_move_at_index_removes_item_at_the_start, .init = setup, .fini = teardown) {
-	move_list_add(moves, move_create(1, 1, 1, 1));
-	move_list_add(moves, move_create(2, 2, 2, 2));
-	move_list_add(moves, move_create(3, 3, 3, 3));
+	for (int i = 1; i < 4; i++) {
+		move_list_add(moves, move_create((Position) {i, i}, (Position) {i, i}));
+	}
 	move_list_remove(moves, 0);
 	cr_assert(eq(uint, move_list_size(moves), 2));
-	bool is_present = move_list_contains(moves, move_create(1, 1, 1, 1));
+	bool is_present = move_list_contains(moves, move_create((Position) {1, 1}, (Position) {1, 1}));
 	cr_assert_eq(is_present, false);
 }
 
 Test(moves, move_list_resizes_correctly, .init = setup, .fini = teardown) {
 	for (int i = 0; i < 17; i++) {
-		move_list_add(moves, move_create(i, i, i, i));
+		move_list_add(moves, move_create((Position) {i, i}, (Position) {i, i}));
 	}
 	cr_assert_eq(move_list_size(moves), 17);
 	for (int i = 0; i < 17; i++) {
 		Move m = move_list_get(moves, i);
-		cr_assert_eq(m.x_src, i);
-		cr_assert_eq(m.y_src, i);
-		cr_assert_eq(m.x_dest, i);
-		cr_assert_eq(m.y_dest, i);
+		cr_assert_eq(m.src.x, i);
+		cr_assert_eq(m.src.y, i);
+		cr_assert_eq(m.dst.x, i);
+		cr_assert_eq(m.dst.y, i);
 	}
 }

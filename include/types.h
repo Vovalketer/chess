@@ -23,6 +23,11 @@ typedef struct {
 	PieceType type;
 } Piece;
 
+typedef struct {
+	int x;
+	int y;
+} Position;
+
 typedef struct BoardState BoardState;
 
 #endif

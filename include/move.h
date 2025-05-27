@@ -1,14 +1,13 @@
 #ifndef MOVE_H
 #define MOVE_H
 
-#include <stdbool.h>
 #include <stddef.h>
 
+#include "../include/types.h"
+
 typedef struct {
-	int x_src;
-	int y_src;
-	int x_dest;
-	int y_dest;
+	Position src;
+	Position dst;
 } Move;
 
 typedef struct {
@@ -18,7 +17,7 @@ typedef struct {
 } MoveList;
 
 // returns a move by value, no need to free it
-Move move_create(int x_src, int y_src, int x_dest, int y_dest);
+Move move_create(Position src, Position dst);
 bool move_list_create(MoveList **list);
 void move_list_destroy(MoveList **list);
 size_t move_list_size(const MoveList *list);

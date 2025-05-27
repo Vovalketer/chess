@@ -5,8 +5,12 @@
 
 #define LIST_INITIAL_CAPACITY 16
 
-Move move_create(int x_src, int y_src, int x_dest, int y_dest) {
-	return (Move) {x_src, y_src, x_dest, y_dest};
+static bool _position_eq(Position p1, Position p2) {
+	return p1.x == p2.x && p1.y == p2.y;
+}
+
+Move move_create(Position src, Position dst) {
+	return (Move) {src, dst};
 }
 
 bool move_list_create(MoveList **list) {
@@ -66,8 +70,7 @@ bool move_list_contains(const MoveList *list, Move move) {
 	assert(list != NULL);
 	for (unsigned int i = 0; i < list->size; i++) {
 		Move m = list->data[i];
-		if (m.x_src == move.x_src && m.y_src == move.y_src && m.x_dest == move.x_dest &&
-			m.y_dest == move.y_dest) {
+		if (_position_eq(m.src, move.src) && _position_eq(m.dst, move.dst)) {
 			return true;
 		}
 	}

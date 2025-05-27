@@ -68,7 +68,8 @@ static void _draw_board(const BoardState* state, int width, int height) {
 						  DRAWN_TILE_W_SIZE,
 						  DRAWN_TILE_H_SIZE,
 						  (row + col) % 2 == 0 ? WHITE : LIME);
-			Piece piece = engine_get_piece(state, col, row);
+			Position pos = (Position) {col, row};
+			Piece piece = engine_get_piece(state, pos);
 			Texture2D piece_tex;
 			switch (piece.type) {
 				case PAWN:
@@ -121,8 +122,7 @@ void game_loop(BoardState* state) {
 	int tile_h_size = CURRENT_WINDOW_HEIGHT / 8;
 	Vector2 mouse_position = {0, 0};
 	bool selected = false;
-	int selected_x = -1;
-	int selected_y = -1;
+	Position selected_pos = (Position) {-1, -1};
 	MoveMask mm = {0};
 	while (!WindowShouldClose()) {
 		BeginDrawing();
@@ -137,22 +137,20 @@ void game_loop(BoardState* state) {
 			int x = mouse_position.x / tile_w_size;
 			int y = mouse_position.y / tile_h_size;
 			if (x >= 0 && x < 8 && y >= 0 && y < 8) {
-				Piece piece = engine_get_piece(state, x, y);
+				Position pos = (Position) {x, y};
+				Piece piece = engine_get_piece(state, pos);
 				if (selected) {
-					if (selected_x == x && selected_y == y) {
+					if (selected_pos.x == x && selected_pos.y == y) {
 						selected = false;
-						selected_x = -1;
-						selected_y = -1;
+						selected_pos = (Position) {-1, -1};
 					} else {
-						engine_move_piece(state, selected_x, selected_y, x, y);
+						engine_move_piece(state, selected_pos, pos);
 						selected = false;
-						selected_x = -1;
-						selected_y = -1;
+						selected_pos = (Position) {-1, -1};
 					}
 				} else if (!selected && piece.player != NONE) {
-					selected_x = x;
-					selected_y = y;
-					mm = engine_get_valid_moves(state, selected_x, selected_y);
+					selected_pos = pos;
+					mm = engine_get_valid_moves(state, selected_pos);
 					selected = true;
 				}
 			}

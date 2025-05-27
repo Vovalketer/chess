@@ -1,5 +1,6 @@
 #include "../include/engine.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -57,11 +58,29 @@ Piece engine_get_piece(const BoardState *state, Position pos) {
 }
 
 bool engine_move_piece(BoardState *state, Position src, Position dst) {
-	bool success = rules_is_valid_move(state, (Move) {src, dst});
-	if (success) {
-		board_next_turn(state);
+	Move move = (Move) {src, dst};
+	Piece piece = board_get_piece(state, src);
+	if (piece.player == NONE) {
+		return false;
 	}
-	return success;
+	if (!rules_is_valid_move(state, move)) {
+		return false;
+	}
+
+	// clone board and calculate if the king iwll be in check after moving the piece
+	BoardState *clone;
+	bool cloned = board_clone(&clone, state);
+	board_move_piece(clone, src, dst);
+	assert(cloned != false);
+	bool is_check = rules_is_check(clone, piece.player);
+	board_destroy(&clone);
+	if (is_check) {
+		return false;
+	}
+
+	board_move_piece(state, src, dst);
+	board_next_turn(state);
+	return true;
 }
 
 bool engine_undo_move(BoardState *state) {

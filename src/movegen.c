@@ -1,7 +1,6 @@
 #include "../include/movegen.h"
 // pseudo valid moves, doesnt check for rules
 
-#include <stdbool.h>
 #include <stdio.h>
 
 #include "../include/board.h"

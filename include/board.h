@@ -1,8 +1,6 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include <stdbool.h>
-
 #include "types.h"
 
 bool board_create(BoardState **state);

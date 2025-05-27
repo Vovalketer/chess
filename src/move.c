@@ -1,7 +1,6 @@
 #include "../include/move.h"
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stdlib.h>
 
 #define LIST_INITIAL_CAPACITY 16

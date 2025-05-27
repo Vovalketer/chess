@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct BoardState {
 	Piece board[8][8];
@@ -17,6 +18,19 @@ bool board_create(BoardState **state) {
 	}
 	b->turn = 0;
 	*state = b;
+	return true;
+}
+
+bool board_clone(BoardState **dst, const BoardState *src) {
+	assert(dst != NULL);
+	assert(src != NULL);
+	BoardState *b;
+	b = malloc(sizeof(BoardState));
+	if (!b) {
+		return false;
+	}
+	memcpy(b, src, sizeof(BoardState));
+	*dst = b;
 	return true;
 }
 

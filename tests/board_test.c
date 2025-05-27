@@ -140,3 +140,33 @@ Test(board, is_within_bounds_returns_false_when_out_of_bounds, .init = setup, .f
 	bool result = board_is_within_bounds((Position) {-10, -10});
 	cr_assert_not(result);
 }
+Test(board, clone_returns_true_when_successful, .init = setup, .fini = teardown) {
+	BoardState *dst;
+	bool result = board_clone(&dst, board);
+	cr_assert(result);
+	board_destroy(&dst);
+}
+
+Test(board, clone_returns_board_with_the_same_state, .init = setup, .fini = teardown) {
+	BoardState *clone;
+	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, (Position) {0, 0});
+	board_set_piece(board, (Piece) {WHITE_PLAYER, KNIGHT}, (Position) {1, 0});
+	board_set_piece(board, (Piece) {WHITE_PLAYER, BISHOP}, (Position) {2, 0});
+	board_next_turn(board);
+	board_next_turn(board);
+	board_next_turn(board);
+	bool result = board_clone(&clone, board);
+	cr_assert(result);
+
+	cr_assert_eq(board_get_turn(board), board_get_turn(clone));
+
+	Piece rook = board_get_piece(clone, (Position) {0, 0});
+	Piece knight = board_get_piece(clone, (Position) {1, 0});
+	Piece bishop = board_get_piece(clone, (Position) {2, 0});
+
+	cr_assert_eq(rook.type, ROOK);
+	cr_assert_eq(knight.type, KNIGHT);
+	cr_assert_eq(bishop.type, BISHOP);
+
+	board_destroy(&clone);
+}

@@ -4,6 +4,7 @@
 #include "types.h"
 
 bool board_create(BoardState **state);
+bool board_clone(BoardState **dst, const BoardState *src);
 void board_destroy(BoardState **state);
 Piece board_get_piece(const BoardState *state, Position pos);
 bool board_set_piece(BoardState *state, Piece piece, Position pos);

@@ -5,6 +5,7 @@
 
 #include "../include/board.h"
 #include "../include/movegen.h"
+#include "../include/rules.h"
 
 static void _init_match(BoardState *state);
 static void _init_place_pawns(BoardState *state);
@@ -56,7 +57,11 @@ Piece engine_get_piece(const BoardState *state, int x, int y) {
 }
 
 bool engine_move_piece(BoardState *state, int x_src, int y_src, int x_dest, int y_dest) {
-	return board_move_piece(state, x_src, y_src, x_dest, y_dest);
+	bool success = rules_is_valid_move(state, (Move) {x_src, y_src, x_dest, y_dest});
+	if (success) {
+		board_next_turn(state);
+	}
+	return success;
 }
 
 void engine_destroy_match(BoardState **state) {

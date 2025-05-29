@@ -12,5 +12,6 @@ typedef struct {
 
 // returns a move by value, no need to free it
 Move move_create(Position src, Position dst);
+bool move_eq(Move m1, Move m2);
 
 #endif

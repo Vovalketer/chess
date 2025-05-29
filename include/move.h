@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "../include/types.h"
+#include "../include/position.h"
 
 typedef struct {
 	Position src;

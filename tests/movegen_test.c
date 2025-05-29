@@ -1,6 +1,7 @@
 #include "../include/movegen.h"
 
 #include "../include/board.h"
+#include "../include/movelist.h"
 #include "criterion/criterion.h"
 #include "criterion/new/assert.h"
 

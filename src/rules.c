@@ -4,6 +4,7 @@
 
 #include "../include/board.h"
 #include "../include/movegen.h"
+#include "../include/movelist.h"
 
 bool rules_is_valid_move(BoardState *state, Move move) {
 	bool success;

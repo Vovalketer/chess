@@ -2,6 +2,7 @@
 
 #include <assert.h>
 
+#include "../include/movelist.h"
 #include "criterion/criterion.h"
 #include "criterion/new/assert.h"
 
@@ -31,18 +32,14 @@ Test(moves, destroy_moves_list_makes_list_null) {
 }
 
 Test(moves, create_moves_list_has_correct_size, .init = setup, .fini = teardown) {
-	cr_assert(eq(uint, moves->size, 0));
-}
-
-Test(moves, create_moves_list_has_correct_capacity, .init = setup, .fini = teardown) {
-	cr_assert(eq(uint, moves->_capacity, 16));
+	cr_assert(eq(uint, move_list_size(moves), 0));
 }
 
 Test(moves, add_move_adds_move_to_list, .init = setup, .fini = teardown) {
-	cr_assert(eq(uint, moves->size, 0));
+	cr_assert(eq(uint, move_list_size(moves), 0));
 	bool added = move_list_add(moves, move_create((Position) {1, 1}, (Position) {1, 1}));
 	cr_assert_eq(added, true);
-	cr_assert(eq(uint, moves->size, 1));
+	cr_assert(eq(uint, move_list_size(moves), 1));
 }
 
 Test(moves, get_moves_list_size_returns_correct_size, .init = setup, .fini = teardown) {
@@ -56,7 +53,7 @@ Test(moves, clear_list_removes_all_moves, .init = setup, .fini = teardown) {
 		move_list_add(moves, move_create((Position) {i, i}, (Position) {i, i}));
 	}
 	move_list_clear(moves);
-	cr_assert(eq(uint, moves->size, 0));
+	cr_assert(eq(uint, move_list_size(moves), 0));
 	cr_assert_not_null(moves);
 }
 

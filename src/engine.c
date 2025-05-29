@@ -6,6 +6,7 @@
 
 #include "../include/board.h"
 #include "../include/movegen.h"
+#include "../include/movelist.h"
 #include "../include/rules.h"
 
 static void _init_match(BoardState *state);

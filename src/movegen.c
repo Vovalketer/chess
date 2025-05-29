@@ -1,4 +1,6 @@
 #include "../include/movegen.h"
+
+#include "../include/movelist.h"
 // pseudo valid moves, doesnt check for rules
 
 #include <stdio.h>

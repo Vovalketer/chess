@@ -18,6 +18,7 @@ Test(board, create_returns_true_if_successful) {
 	bool result = board_create(&_board);
 	cr_assert(result);
 	cr_assert_not_null(_board);
+	board_destroy(&_board);
 }
 
 Test(board, destroy_destroys_board) {

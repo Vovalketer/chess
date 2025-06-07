@@ -180,6 +180,26 @@ Test(movegen, white_pawns_can_capture_enemies_at_ne_and_nw, .init = setup, .fini
 	move_list_destroy(&moves);
 }
 
+Test(movegen, white_pawns_cannot_move_ne_and_nw_when_there_are_no_enemies_there, .init = setup,
+	 .fini = teardown) {
+	const int w_pawn_x = 4;
+	const int w_pawn_y = 6;
+	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
+	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
+	board_set_piece(board, w_pawn, w_pawn_pos);
+
+	MoveList *moves = NULL;
+	move_list_create(&moves);
+	movegen_generate(board, w_pawn_pos, moves);
+
+	bool nw = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x - 1, w_pawn_y - 1}});
+	cr_assert_eq(nw, false, "white pawn should not be able to move to the northwest");
+	bool ne = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x + 1, w_pawn_y - 1}});
+	cr_assert_eq(ne, false, "white pawn should not be able to move to the northeast");
+
+	move_list_destroy(&moves);
+}
+
 Test(movegen, black_pawns_can_capture_enemies_at_se_and_sw, .init = setup, .fini = teardown) {
 	const int b_pawn_x = 4;
 	const int b_pawn_y = 1;
@@ -205,6 +225,26 @@ Test(movegen, black_pawns_can_capture_enemies_at_se_and_sw, .init = setup, .fini
 
 	move_list_contains(moves, (Move) {b_pawn_pos, w_pawn_se_pos});
 	move_list_contains(moves, (Move) {b_pawn_pos, w_pawn_sw_pos});
+
+	move_list_destroy(&moves);
+}
+
+Test(movegen, black_pawns_cannot_move_se_and_sw_when_there_are_no_enemies_there, .init = setup,
+	 .fini = teardown) {
+	const int b_pawn_x = 4;
+	const int b_pawn_y = 1;
+	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
+	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
+	board_set_piece(board, b_pawn, b_pawn_pos);
+
+	MoveList *moves = NULL;
+	move_list_create(&moves);
+	movegen_generate(board, b_pawn_pos, moves);
+
+	bool sw = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x - 1, b_pawn_y + 1}});
+	cr_assert_eq(sw, false, "black pawn should not be able to move to the southwest");
+	bool se = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x + 1, b_pawn_y + 1}});
+	cr_assert_eq(se, false, "black pawn should not be able to move to the southeast");
 
 	move_list_destroy(&moves);
 }

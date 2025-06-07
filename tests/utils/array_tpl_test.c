@@ -15,7 +15,7 @@ typedef struct TestStruct {
 	NestedTestStruct nested;
 } TestStruct;
 
-ARRAY_DEFINE_TYPE(TestStruct, TestStruct_list)
+ARRAY_DEFINE_TYPE(TestStruct, TestStructList, TestStruct_list)
 TestStructList* list = NULL;
 
 void setup(void) {

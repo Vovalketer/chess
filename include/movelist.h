@@ -4,7 +4,7 @@
 
 #include "array_tpl.h"
 #include "move.h"
-ARRAY_DEFINE_TYPE(Move, move_list)
+ARRAY_DEFINE_TYPE(Move, MoveList, move_list)
 
 bool move_list_contains(MoveList *list, Move move);
 

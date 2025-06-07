@@ -27,7 +27,7 @@ void teardown(void) {
 
 Test(movegen, generate_returns_false_when_out_of_bounds, .init = setup, .fini = teardown) {
 	Position pos = (Position) {-1, -1};
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	bool success = movegen_generate(board, pos, moves);
 	cr_assert_eq(success, false, "movegen should return false when out of bounds");
@@ -41,7 +41,7 @@ Test(movegen, white_pawns_have_two_moves_at_starting_row, .init = setup, .fini =
 		board_set_piece(board, pawn, (Position) {i, white_pawn_starting_row});
 	}
 	for (int i = 0; i < 8; i++) {
-		MoveList *moves;
+		MoveList *moves = NULL;
 		move_list_create(&moves);
 		movegen_generate(board, (Position) {i, white_pawn_starting_row}, moves);
 		int moves_size = move_list_size(moves);
@@ -59,7 +59,7 @@ Test(movegen, black_pawns_have_two_moves_at_starting_row, .init = setup, .fini =
 		board_set_piece(board, pawn, (Position) {i, black_pawn_starting_row});
 	}
 	for (int i = 0; i < 8; i++) {
-		MoveList *moves;
+		MoveList *moves = NULL;
 		move_list_create(&moves);
 		movegen_generate(board, (Position) {i, black_pawn_starting_row}, moves);
 		int moves_size = move_list_size(moves);
@@ -84,7 +84,7 @@ Test(movegen, white_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 			bool set_piece = board_set_piece(board, pawn, pos);
 			cr_assert(set_piece, "failed to set piece at x:%d y:%d", col, row);
 
-			MoveList *moves;
+			MoveList *moves = NULL;
 			move_list_create(&moves);
 			movegen_generate(board, pos, moves);
 			size_t moves_size = move_list_size(moves);
@@ -124,6 +124,7 @@ Test(movegen, black_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 			bool set_piece = board_set_piece(board, pawn, pos);
 			cr_assert(set_piece, "failed to set piece at x:%d y:%d", col, row);
 
+			MoveList *moves = NULL;
 			move_list_create(&moves);
 			movegen_generate(board, pos, moves);
 			size_t moves_size = move_list_size(moves);
@@ -166,7 +167,7 @@ Test(movegen, white_pawns_can_capture_enemies_at_ne_and_nw, .init = setup, .fini
 	board_set_piece(board, b_pawn, b_pawn_nw_pos);
 	board_set_piece(board, b_pawn, b_pawn_n_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, w_pawn_pos, moves);
 
@@ -195,7 +196,7 @@ Test(movegen, black_pawns_can_capture_enemies_at_se_and_sw, .init = setup, .fini
 	board_set_piece(board, w_pawn, w_pawn_sw_pos);
 	board_set_piece(board, w_pawn, w_pawn_s_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, b_pawn_pos, moves);
 
@@ -215,7 +216,7 @@ Test(movegen, white_pawns_cannot_move_to_same_row, .init = setup, .fini = teardo
 	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
 	board_set_piece(board, w_pawn, w_pawn_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, w_pawn_pos, moves);
 
@@ -234,7 +235,7 @@ Test(movegen, black_pawns_cannot_move_to_same_row, .init = setup, .fini = teardo
 	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
 	board_set_piece(board, b_pawn, b_pawn_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, b_pawn_pos, moves);
 
@@ -253,7 +254,7 @@ Test(movegen, white_pawns_cannot_move_behind, .init = setup, .fini = teardown) {
 	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
 	board_set_piece(board, w_pawn, w_pawn_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, w_pawn_pos, moves);
 
@@ -276,7 +277,7 @@ Test(movegen, black_pawns_cannot_move_behind, .init = setup, .fini = teardown) {
 	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
 	board_set_piece(board, b_pawn, b_pawn_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, b_pawn_pos, moves);
 
@@ -299,7 +300,7 @@ Test(movegen, rook_can_move_in_cross, .init = setup, .fini = teardown) {
 			Position starting_pos = (Position) {starting_col, starting_row};
 			board_set_piece(board, rook, starting_pos);
 
-			MoveList *moves;
+			MoveList *moves = NULL;
 			move_list_create(&moves);
 			movegen_generate(board, starting_pos, moves);
 
@@ -355,7 +356,7 @@ Test(movegen, rook_cant_go_over_allies, .init = setup, .fini = teardown) {
 	pawn_pos = (Position) {rook_x - 1, rook_y};
 	board_set_piece(board, pawn, pawn_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, rook_pos, moves);
 
@@ -393,7 +394,7 @@ Test(movegen, rook_cant_go_over_enemies, .init = setup, .fini = teardown) {
 	enemy_pawn_pos2 = (Position) {rook_x - 2, rook_y};
 	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, rook_pos, moves);
 
@@ -410,7 +411,7 @@ Test(movegen, knight_can_move_in_L, .init = setup, .fini = teardown) {
 	Position knight_pos = (Position) {knight_x, knight_y};
 	board_set_piece(board, knight, knight_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, knight_pos, moves);
 
@@ -443,7 +444,7 @@ Test(movegen, generate_moves_for_knight_on_board_edge, .init = setup, .fini = te
 
 	Position knight_pos_arr[4] = {knight_ne, knight_nw, knight_se, knight_sw};
 	for (int i = 0; i < 4; i++) {
-		MoveList *moves;
+		MoveList *moves = NULL;
 		move_list_create(&moves);
 
 		movegen_generate(board, knight_pos_arr[i], moves);
@@ -487,7 +488,7 @@ Test(movegen, bishop_can_move_in_diagonals, .init = setup, .fini = teardown) {
 	Position bishop_pos = (Position) {bishop_x, bishop_y};
 	board_set_piece(board, bishop, bishop_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, bishop_pos, moves);
 
@@ -542,7 +543,7 @@ Test(movegen, bishop_cant_skip_allies, .init = setup, .fini = teardown) {
 	pawn_pos = (Position) {bishop_x + 1, bishop_y - 1};
 	board_set_piece(board, pawn, pawn_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, bishop_pos, moves);
 
@@ -580,7 +581,7 @@ Test(movegen, bishop_cant_skip_enemies, .init = setup, .fini = teardown) {
 	pawn_pos2 = (Position) {bishop_x + 2, bishop_y - 2};
 	board_set_piece(board, pawn, pawn_pos2);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, bishop_pos, moves);
 
@@ -597,7 +598,7 @@ Test(movegen, queen_can_move_in_cross_and_diag, .init = setup, .fini = teardown)
 	Position queen_pos = (Position) {queen_x, queen_y};
 	board_set_piece(board, queen, queen_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, queen_pos, moves);
 
@@ -634,7 +635,7 @@ Test(movegen, queen_cant_skip_allies, .init = setup, .fini = teardown) {
 	pawn_pos2 = (Position) {queen_x - 1, queen_y};
 	board_set_piece(board, pawn, pawn_pos2);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, queen_pos, moves);
 
@@ -688,7 +689,7 @@ Test(movegen, queen_cant_skip_enemies, .init = setup, .fini = teardown) {
 	pawn_pos2 = (Position) {queen_x, queen_y + 2};
 	board_set_piece(board, pawn, pawn_pos2);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, queen_pos, moves);
 
@@ -705,7 +706,7 @@ Test(movegen, king_can_move_in_cross_and_diag, .init = setup, .fini = teardown) 
 	Position king_pos = (Position) {king_x, king_y};
 	board_set_piece(board, king, king_pos);
 
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(board, king_pos, moves);
 

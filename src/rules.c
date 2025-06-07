@@ -7,12 +7,12 @@
 #include "../include/movelist.h"
 
 bool rules_is_valid_move(BoardState *state, Move move) {
-	bool success;
+	bool success = false;
 	Piece src_piece = board_get_piece(state, move.src);
 	if (src_piece.player != board_get_player_turn(state)) {
 		success = false;
 	} else {
-		MoveList *moves;
+		MoveList *moves = NULL;
 		move_list_create(&moves);
 		movegen_generate(state, move.src, moves);
 

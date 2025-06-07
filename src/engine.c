@@ -39,7 +39,7 @@ MoveMask engine_get_valid_moves(const BoardState *state, Position pos) {
 	if (!board_is_within_bounds(pos)) {
 		return mm;
 	}
-	MoveList *moves;
+	MoveList *moves = NULL;
 	move_list_create(&moves);
 	movegen_generate(state, pos, moves);
 

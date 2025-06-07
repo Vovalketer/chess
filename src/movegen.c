@@ -1,6 +1,5 @@
 #include "../include/movegen.h"
 
-#include "../include/movelist.h"
 // pseudo valid moves, doesnt check for rules
 
 #include <stdio.h>
@@ -70,9 +69,9 @@ static void _gen_knight(const BoardState *board, Piece piece, Position pos, Move
 		Position target_pos = {target_col, target_row};
 		if (board_is_within_bounds(target_pos)) {
 			if (board_is_empty(board, target_pos)) {
-				move_list_add(moves, move_create(pos, target_pos));
+				move_list_append(moves, move_create(pos, target_pos));
 			} else if (board_is_enemy(board, piece.player, target_pos)) {
-				move_list_add(moves, move_create(pos, target_pos));
+				move_list_append(moves, move_create(pos, target_pos));
 			}
 		}
 	}
@@ -98,12 +97,12 @@ static void _gen_king(const BoardState *board, Piece piece, Position pos, MoveLi
 			Position target_pos = {target_col, target_row};
 			if (board_is_within_bounds(target_pos)) {
 				if (board_is_empty(board, target_pos)) {
-					bool added = move_list_add(moves, move_create(pos, target_pos));
+					bool added = move_list_append(moves, move_create(pos, target_pos));
 					if (!added) {
 						printf("failed to add move\n");
 					}
 				} else if (board_is_enemy(board, piece.player, target_pos)) {
-					bool added = move_list_add(moves, move_create(pos, target_pos));
+					bool added = move_list_append(moves, move_create(pos, target_pos));
 					if (!added) {
 						printf("failed to add move\n");
 					}
@@ -123,12 +122,12 @@ static void _gen_offset_matrix(const BoardState *board, Piece piece, Position po
 		Position target_pos = {target_col, target_row};
 		while (board_is_within_bounds(target_pos)) {
 			if (board_is_empty(board, target_pos)) {
-				bool added = move_list_add(moves, move_create(pos, target_pos));
+				bool added = move_list_append(moves, move_create(pos, target_pos));
 				if (!added) {
 					printf("failed to add move\n");
 				}
 			} else if (board_is_enemy(board, piece.player, target_pos)) {
-				bool added = move_list_add(moves, move_create(pos, target_pos));
+				bool added = move_list_append(moves, move_create(pos, target_pos));
 				if (!added) {
 					printf("failed to add move\n");
 				}
@@ -166,19 +165,19 @@ static void _gen_pawn(const BoardState *board, Piece piece, Position pos, MoveLi
 	}
 	if (pos.y != starting_row) {
 		if (board_is_within_bounds(forward) && board_is_empty(board, forward)) {
-			move_list_add(moves, move_create(pos, forward));
+			move_list_append(moves, move_create(pos, forward));
 		}
 	} else {
 		if (board_is_empty(board, forward) && board_is_empty(board, forward2)) {
-			move_list_add(moves, move_create(pos, forward2));
-			move_list_add(moves, move_create(pos, forward));
+			move_list_append(moves, move_create(pos, forward2));
+			move_list_append(moves, move_create(pos, forward));
 		}
 	}
 	// check for possible captures
 	if (board_is_enemy(board, piece.player, forward_left)) {
-		move_list_add(moves, move_create(pos, forward_left));
+		move_list_append(moves, move_create(pos, forward_left));
 	}
 	if (board_is_enemy(board, piece.player, forward_right)) {
-		move_list_add(moves, move_create(pos, forward_right));
+		move_list_append(moves, move_create(pos, forward_right));
 	}
 }

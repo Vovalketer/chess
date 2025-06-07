@@ -95,13 +95,14 @@ Test(movegen, white_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 					  col,
 					  row);
 
-			Move move = move_list_get(moves, 0);
-			cr_assert(move.dst.x == col && move.dst.y == row - 1,
+			Move *move = NULL;
+			move_list_get(moves, 0, &move);
+			cr_assert(move->dst.x == col && move->dst.y == row - 1,
 					  "white pawn should be able to move forward, but got x:%d y:%d -> x:%d y:%d",
-					  move.src.x,
-					  move.src.y,
-					  move.dst.x,
-					  move.dst.y);
+					  move->src.x,
+					  move->src.y,
+					  move->dst.x,
+					  move->dst.y);
 
 			// clean up
 			board_remove_piece(board, pos);
@@ -123,7 +124,6 @@ Test(movegen, black_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 			bool set_piece = board_set_piece(board, pawn, pos);
 			cr_assert(set_piece, "failed to set piece at x:%d y:%d", col, row);
 
-			MoveList *moves;
 			move_list_create(&moves);
 			movegen_generate(board, pos, moves);
 			size_t moves_size = move_list_size(moves);
@@ -134,13 +134,14 @@ Test(movegen, black_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 					  col,
 					  row);
 
-			Move move = move_list_get(moves, 0);
-			cr_assert(move.dst.x == col && move.dst.y == row + 1,
+			Move *move = NULL;
+			move_list_get(moves, 0, &move);
+			cr_assert(move->dst.x == col && move->dst.y == row + 1,
 					  "black pawn should be able to move forward, but got x:%d y:%d -> x:%d y:%d",
-					  move.src.x,
-					  move.src.y,
-					  move.dst.x,
-					  move.dst.y);
+					  move->src.x,
+					  move->src.y,
+					  move->dst.x,
+					  move->dst.y);
 
 			// clean up
 			board_remove_piece(board, pos);

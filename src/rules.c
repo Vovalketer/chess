@@ -38,8 +38,9 @@ bool rules_is_check(BoardState *state, Player player) {
 			if (board_is_enemy(state, player, pos)) {
 				movegen_generate(state, pos, moves);
 				for (size_t k = 0; k < move_list_size(moves); k++) {
-					Move move = move_list_get(moves, k);
-					if (move.dst.x == king_pos.x && move.dst.y == king_pos.y) {
+					Move *move = NULL;
+					move_list_get(moves, k, &move);
+					if (move->dst.x == king_pos.x && move->dst.y == king_pos.y) {
 						move_list_destroy(&moves);
 						return true;
 					}

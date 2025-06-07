@@ -44,9 +44,10 @@ MoveMask engine_get_valid_moves(const BoardState *state, Position pos) {
 	movegen_generate(state, pos, moves);
 
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		Move m = move_list_get(moves, i);
-		if (m.src.x == pos.x && m.src.y == pos.y) {
-			mm.mask[m.dst.y][m.dst.x] = true;
+		Move *m = NULL;
+		move_list_get(moves, i, &m);
+		if (position_eq(m->src, pos)) {
+			mm.mask[m->dst.y][m->dst.x] = true;
 			mm.count++;
 		}
 	}

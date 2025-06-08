@@ -1,7 +1,7 @@
 #include "../include/movegen.h"
 
-#include "../include/match.h"
 #include "../include/movelist.h"
+#include "board.h"
 #include "criterion/criterion.h"
 #include "criterion/new/assert.h"
 
@@ -13,15 +13,15 @@ const int knight_moves[KNIGHT_OFFSET_ROWS][MATRIX_COLS] = {
 	{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
 const int cross_moves[CROSS_OFFSET_ROWS][MATRIX_COLS] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 const int diag_moves[DIAG_OFFSET_ROWS][MATRIX_COLS] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-MatchState *board = NULL;
+Board *board = NULL;
 
 void setup(void) {
-	bool created = match_create(&board);
-	cr_assert(created, "match_create failed");
+	bool created = board_create(&board);
+	cr_assert(created, "board_create failed");
 }
 
 void teardown(void) {
-	match_destroy(&board);
+	board_destroy(&board);
 	// movegen_destroy(&moves);
 }
 
@@ -38,7 +38,7 @@ Test(movegen, white_pawns_have_two_moves_at_starting_row, .init = setup, .fini =
 	int white_pawn_starting_row = 6;
 	for (int i = 0; i < 8; i++) {
 		Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-		match_set_piece(board, pawn, (Position) {i, white_pawn_starting_row});
+		board_set_piece(board, pawn, (Position) {i, white_pawn_starting_row});
 	}
 	for (int i = 0; i < 8; i++) {
 		MoveList *moves = NULL;
@@ -56,7 +56,7 @@ Test(movegen, black_pawns_have_two_moves_at_starting_row, .init = setup, .fini =
 	int black_pawn_starting_row = 1;
 	for (int i = 0; i < 8; i++) {
 		Piece pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-		match_set_piece(board, pawn, (Position) {i, black_pawn_starting_row});
+		board_set_piece(board, pawn, (Position) {i, black_pawn_starting_row});
 	}
 	for (int i = 0; i < 8; i++) {
 		MoveList *moves = NULL;
@@ -81,7 +81,7 @@ Test(movegen, white_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 		for (int col = 0; col < 8; col++) {
 			Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
 			Position pos = (Position) {col, row};
-			bool set_piece = match_set_piece(board, pawn, pos);
+			bool set_piece = board_set_piece(board, pawn, pos);
 			cr_assert(set_piece, "failed to set piece at x:%d y:%d", col, row);
 
 			MoveList *moves = NULL;
@@ -105,7 +105,7 @@ Test(movegen, white_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 					  move->dst.y);
 
 			// clean up
-			match_remove_piece(board, pos);
+			board_remove_piece(board, pos);
 			move_list_destroy(&moves);
 		}
 	}
@@ -121,7 +121,7 @@ Test(movegen, black_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 		for (int col = 0; col < 8; col++) {
 			Piece pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
 			Position pos = (Position) {col, row};
-			bool set_piece = match_set_piece(board, pawn, pos);
+			bool set_piece = board_set_piece(board, pawn, pos);
 			cr_assert(set_piece, "failed to set piece at x:%d y:%d", col, row);
 
 			MoveList *moves = NULL;
@@ -145,7 +145,7 @@ Test(movegen, black_pawns_can_only_move_forward_at_non_starting_rows, .init = se
 					  move->dst.y);
 
 			// clean up
-			match_remove_piece(board, pos);
+			board_remove_piece(board, pos);
 			move_list_destroy(&moves);
 		}
 	}
@@ -156,16 +156,16 @@ Test(movegen, white_pawns_can_capture_enemies_at_ne_and_nw, .init = setup, .fini
 	const int w_pawn_y = 6;
 	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
 	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	match_set_piece(board, w_pawn, w_pawn_pos);
+	board_set_piece(board, w_pawn, w_pawn_pos);
 
 	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
 	Position b_pawn_ne_pos = (Position) {w_pawn_x - 1, w_pawn_y - 1};
 	Position b_pawn_nw_pos = (Position) {w_pawn_x + 1, w_pawn_y - 1};
 	Position b_pawn_n_pos = (Position) {w_pawn_x, w_pawn_y - 1};
 
-	match_set_piece(board, b_pawn, b_pawn_ne_pos);
-	match_set_piece(board, b_pawn, b_pawn_nw_pos);
-	match_set_piece(board, b_pawn, b_pawn_n_pos);
+	board_set_piece(board, b_pawn, b_pawn_ne_pos);
+	board_set_piece(board, b_pawn, b_pawn_nw_pos);
+	board_set_piece(board, b_pawn, b_pawn_n_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -186,7 +186,7 @@ Test(movegen, white_pawns_cannot_move_ne_and_nw_when_there_are_no_enemies_there,
 	const int w_pawn_y = 6;
 	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
 	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	match_set_piece(board, w_pawn, w_pawn_pos);
+	board_set_piece(board, w_pawn, w_pawn_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -205,16 +205,16 @@ Test(movegen, black_pawns_can_capture_enemies_at_se_and_sw, .init = setup, .fini
 	const int b_pawn_y = 1;
 	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
 	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	match_set_piece(board, b_pawn, b_pawn_pos);
+	board_set_piece(board, b_pawn, b_pawn_pos);
 
 	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
 	Position w_pawn_se_pos = (Position) {b_pawn_x - 1, b_pawn_y + 1};
 	Position w_pawn_sw_pos = (Position) {b_pawn_x + 1, b_pawn_y + 1};
 	Position w_pawn_s_pos = (Position) {b_pawn_x, b_pawn_y + 1};
 
-	match_set_piece(board, w_pawn, w_pawn_se_pos);
-	match_set_piece(board, w_pawn, w_pawn_sw_pos);
-	match_set_piece(board, w_pawn, w_pawn_s_pos);
+	board_set_piece(board, w_pawn, w_pawn_se_pos);
+	board_set_piece(board, w_pawn, w_pawn_sw_pos);
+	board_set_piece(board, w_pawn, w_pawn_s_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -235,7 +235,7 @@ Test(movegen, black_pawns_cannot_move_se_and_sw_when_there_are_no_enemies_there,
 	const int b_pawn_y = 1;
 	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
 	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	match_set_piece(board, b_pawn, b_pawn_pos);
+	board_set_piece(board, b_pawn, b_pawn_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -254,7 +254,7 @@ Test(movegen, white_pawns_cannot_move_to_same_row, .init = setup, .fini = teardo
 	const int w_pawn_y = 6;
 	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
 	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	match_set_piece(board, w_pawn, w_pawn_pos);
+	board_set_piece(board, w_pawn, w_pawn_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -273,7 +273,7 @@ Test(movegen, black_pawns_cannot_move_to_same_row, .init = setup, .fini = teardo
 	const int b_pawn_y = 1;
 	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
 	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	match_set_piece(board, b_pawn, b_pawn_pos);
+	board_set_piece(board, b_pawn, b_pawn_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -292,7 +292,7 @@ Test(movegen, white_pawns_cannot_move_behind, .init = setup, .fini = teardown) {
 	const int w_pawn_y = 6;
 	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
 	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	match_set_piece(board, w_pawn, w_pawn_pos);
+	board_set_piece(board, w_pawn, w_pawn_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -315,7 +315,7 @@ Test(movegen, black_pawns_cannot_move_behind, .init = setup, .fini = teardown) {
 	const int b_pawn_y = 1;
 	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
 	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	match_set_piece(board, b_pawn, b_pawn_pos);
+	board_set_piece(board, b_pawn, b_pawn_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -338,7 +338,7 @@ Test(movegen, rook_can_move_in_cross, .init = setup, .fini = teardown) {
 	for (int starting_row = 0; starting_row < 8; starting_row++) {
 		for (int starting_col = 0; starting_col < 8; starting_col++) {
 			Position starting_pos = (Position) {starting_col, starting_row};
-			match_set_piece(board, rook, starting_pos);
+			board_set_piece(board, rook, starting_pos);
 
 			MoveList *moves = NULL;
 			move_list_create(&moves);
@@ -373,7 +373,7 @@ Test(movegen, rook_can_move_in_cross, .init = setup, .fini = teardown) {
 					}
 				}
 			}
-			match_remove_piece(board, starting_pos);
+			board_remove_piece(board, starting_pos);
 			move_list_destroy(&moves);
 		}
 	}
@@ -384,17 +384,17 @@ Test(movegen, rook_cant_go_over_allies, .init = setup, .fini = teardown) {
 	int rook_y = 3;
 	Piece rook = (Piece) {.player = WHITE_PLAYER, .type = ROOK};
 	Position rook_pos = (Position) {rook_x, rook_y};
-	match_set_piece(board, rook, rook_pos);
+	board_set_piece(board, rook, rook_pos);
 
 	Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
 	Position pawn_pos = (Position) {rook_x, rook_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {rook_x, rook_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {rook_x + 1, rook_y};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {rook_x - 1, rook_y};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -411,28 +411,28 @@ Test(movegen, rook_cant_go_over_enemies, .init = setup, .fini = teardown) {
 	int rook_y = 3;
 	Piece rook = (Piece) {.player = WHITE_PLAYER, .type = ROOK};
 	Position rook_pos = (Position) {rook_x, rook_y};
-	match_set_piece(board, rook, rook_pos);
+	board_set_piece(board, rook, rook_pos);
 
 	Piece enemy_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
 	// should be able to capture these
 	Position enemy_pawn_pos = (Position) {rook_x, rook_y + 1};
-	match_set_piece(board, enemy_pawn, enemy_pawn_pos);
+	board_set_piece(board, enemy_pawn, enemy_pawn_pos);
 	enemy_pawn_pos = (Position) {rook_x, rook_y - 1};
-	match_set_piece(board, enemy_pawn, enemy_pawn_pos);
+	board_set_piece(board, enemy_pawn, enemy_pawn_pos);
 	enemy_pawn_pos = (Position) {rook_x + 1, rook_y};
-	match_set_piece(board, enemy_pawn, enemy_pawn_pos);
+	board_set_piece(board, enemy_pawn, enemy_pawn_pos);
 	enemy_pawn_pos = (Position) {rook_x - 1, rook_y};
-	match_set_piece(board, enemy_pawn, enemy_pawn_pos);
+	board_set_piece(board, enemy_pawn, enemy_pawn_pos);
 
 	// should not be able to capture these
 	Position enemy_pawn_pos2 = (Position) {rook_x, rook_y + 2};
-	match_set_piece(board, enemy_pawn, enemy_pawn_pos2);
+	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
 	enemy_pawn_pos2 = (Position) {rook_x, rook_y - 2};
-	match_set_piece(board, enemy_pawn, enemy_pawn_pos2);
+	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
 	enemy_pawn_pos2 = (Position) {rook_x + 2, rook_y};
-	match_set_piece(board, enemy_pawn, enemy_pawn_pos2);
+	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
 	enemy_pawn_pos2 = (Position) {rook_x - 2, rook_y};
-	match_set_piece(board, enemy_pawn, enemy_pawn_pos2);
+	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -449,7 +449,7 @@ Test(movegen, knight_can_move_in_L, .init = setup, .fini = teardown) {
 	int knight_y = 3;
 	Piece knight = (Piece) {.player = WHITE_PLAYER, .type = KNIGHT};
 	Position knight_pos = (Position) {knight_x, knight_y};
-	match_set_piece(board, knight, knight_pos);
+	board_set_piece(board, knight, knight_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -469,17 +469,17 @@ Test(movegen, knight_can_move_in_L, .init = setup, .fini = teardown) {
 	move_list_destroy(&moves);
 }
 
-Test(movegen, generate_moves_for_knight_on_match_edge, .init = setup, .fini = teardown) {
+Test(movegen, generate_moves_for_knight_on_board_edge, .init = setup, .fini = teardown) {
 	Position knight_ne = (Position) {0, 0};
 	Position knight_nw = (Position) {7, 0};
 	Position knight_se = (Position) {0, 7};
 	Position knight_sw = (Position) {7, 7};
-	match_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, knight_ne);
-	match_set_piece(
+	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, knight_ne);
+	board_set_piece(
 		board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, (Position) {knight_nw.x, knight_nw.y});
-	match_set_piece(
+	board_set_piece(
 		board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, (Position) {knight_se.x, knight_se.y});
-	match_set_piece(
+	board_set_piece(
 		board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, (Position) {knight_sw.x, knight_sw.y});
 
 	Position knight_pos_arr[4] = {knight_ne, knight_nw, knight_se, knight_sw};
@@ -499,7 +499,7 @@ Test(movegen, generate_moves_for_knight_on_match_edge, .init = setup, .fini = te
 		Move move = (Move) {knight_pos, target_pos};
 		bool contains = move_list_contains(moves, move);
 
-		if (match_is_within_bounds(target_pos)) {
+		if (board_is_within_bounds(target_pos)) {
 			cr_assert_eq(contains,
 						 true,
 						 "knight at the corner x:%d y:%d should be able to move to x:%d y:%d",
@@ -526,7 +526,7 @@ Test(movegen, bishop_can_move_in_diagonals, .init = setup, .fini = teardown) {
 	int bishop_y = 3;
 	Piece bishop = (Piece) {.player = WHITE_PLAYER, .type = BISHOP};
 	Position bishop_pos = (Position) {bishop_x, bishop_y};
-	match_set_piece(board, bishop, bishop_pos);
+	board_set_piece(board, bishop, bishop_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -571,17 +571,17 @@ Test(movegen, bishop_cant_skip_allies, .init = setup, .fini = teardown) {
 	int bishop_y = 3;
 	Piece bishop = (Piece) {.player = WHITE_PLAYER, .type = BISHOP};
 	Position bishop_pos = (Position) {bishop_x, bishop_y};
-	match_set_piece(board, bishop, bishop_pos);
+	board_set_piece(board, bishop, bishop_pos);
 
 	Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
 	Position pawn_pos = (Position) {bishop_x + 1, bishop_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {bishop_x - 1, bishop_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {bishop_x - 1, bishop_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {bishop_x + 1, bishop_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -598,28 +598,28 @@ Test(movegen, bishop_cant_skip_enemies, .init = setup, .fini = teardown) {
 	int bishop_y = 3;
 	Piece bishop = (Piece) {.player = WHITE_PLAYER, .type = BISHOP};
 	Position bishop_pos = (Position) {bishop_x, bishop_y};
-	match_set_piece(board, bishop, bishop_pos);
+	board_set_piece(board, bishop, bishop_pos);
 
 	Piece pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
 	// should be able to capture these
 	Position pawn_pos = (Position) {bishop_x + 1, bishop_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {bishop_x - 1, bishop_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {bishop_x - 1, bishop_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {bishop_x + 1, bishop_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 
 	// should not be able to capture these
 	Position pawn_pos2 = (Position) {bishop_x + 2, bishop_y + 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {bishop_x - 2, bishop_y - 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {bishop_x - 2, bishop_y + 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {bishop_x + 2, bishop_y - 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -636,7 +636,7 @@ Test(movegen, queen_can_move_in_cross_and_diag, .init = setup, .fini = teardown)
 	int queen_y = 3;
 	Piece queen = (Piece) {.player = WHITE_PLAYER, .type = QUEEN};
 	Position queen_pos = (Position) {queen_x, queen_y};
-	match_set_piece(board, queen, queen_pos);
+	board_set_piece(board, queen, queen_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -654,26 +654,26 @@ Test(movegen, queen_cant_skip_allies, .init = setup, .fini = teardown) {
 	int queen_y = 3;
 	Piece queen = (Piece) {.player = WHITE_PLAYER, .type = QUEEN};
 	Position queen_pos = (Position) {queen_x, queen_y};
-	match_set_piece(board, queen, queen_pos);
+	board_set_piece(board, queen, queen_pos);
 
 	Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
 	Position pawn_pos = (Position) {queen_x + 1, queen_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x - 1, queen_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x - 1, queen_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x + 1, queen_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 
 	Position pawn_pos2 = (Position) {queen_x, queen_y + 1};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x, queen_y - 1};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x + 1, queen_y};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x - 1, queen_y};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -690,44 +690,44 @@ Test(movegen, queen_cant_skip_enemies, .init = setup, .fini = teardown) {
 	int queen_y = 3;
 	Piece queen = (Piece) {.player = WHITE_PLAYER, .type = QUEEN};
 	Position queen_pos = (Position) {queen_x, queen_y};
-	match_set_piece(board, queen, queen_pos);
+	board_set_piece(board, queen, queen_pos);
 
 	Piece pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
 	// should be able to capture these
 	Position pawn_pos = (Position) {queen_x + 1, queen_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x - 1, queen_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x - 1, queen_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x + 1, queen_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x, queen_y + 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x, queen_y - 1};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x + 1, queen_y};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 	pawn_pos = (Position) {queen_x - 1, queen_y};
-	match_set_piece(board, pawn, pawn_pos);
+	board_set_piece(board, pawn, pawn_pos);
 
 	// should not be able to capture these
 	Position pawn_pos2 = (Position) {queen_x + 2, queen_y + 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x - 2, queen_y - 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x - 2, queen_y + 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x + 2, queen_y - 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x + 2, queen_y};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x - 2, queen_y};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x, queen_y + 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 	pawn_pos2 = (Position) {queen_x, queen_y + 2};
-	match_set_piece(board, pawn, pawn_pos2);
+	board_set_piece(board, pawn, pawn_pos2);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -744,7 +744,7 @@ Test(movegen, king_can_move_in_cross_and_diag, .init = setup, .fini = teardown) 
 	int king_y = 3;
 	Piece king = (Piece) {.player = WHITE_PLAYER, .type = KING};
 	Position king_pos = (Position) {king_x, king_y};
-	match_set_piece(board, king, king_pos);
+	board_set_piece(board, king, king_pos);
 
 	MoveList *moves = NULL;
 	move_list_create(&moves);

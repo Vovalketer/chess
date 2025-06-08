@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "board.h"
+
 struct MatchState {
-	Piece board[8][8];
+	Board *board;
 	int turn;
 };
 
@@ -16,6 +18,13 @@ bool match_create(MatchState **state) {
 	if (!b) {
 		return false;
 	}
+
+	if (!board_create(&b->board)) {
+		free(b);
+		return false;
+	}
+
+	board_init_positions(b->board);
 	b->turn = 0;
 	*state = b;
 	return true;
@@ -25,56 +34,35 @@ bool match_clone(MatchState **dst, const MatchState *src) {
 	assert(dst != NULL);
 	assert(src != NULL);
 	MatchState *b;
-	b = malloc(sizeof(MatchState));
+	b = malloc(sizeof(**dst));
 	if (!b) {
 		return false;
 	}
-	memcpy(b, src, sizeof(MatchState));
+	if (!board_clone(&b->board, src->board)) {
+		free(b);
+		return false;
+	}
+	b->turn = src->turn;
 	*dst = b;
 	return true;
 }
 
 void match_destroy(MatchState **state) {
 	if (state && *state) {
+		board_destroy(&(*state)->board);
 		free(*state);
 		*state = NULL;
 	}
 }
 
-Piece match_get_piece(const MatchState *state, Position pos) {
+const Board *match_get_board(const MatchState *state) {
 	assert(state != NULL);
-	if (!match_is_within_bounds(pos)) {
-		return (Piece) {NONE, EMPTY};
-	}
-	return state->board[pos.y][pos.x];
-}
-
-bool match_set_piece(MatchState *state, Piece piece, Position pos) {
-	assert(state != NULL);
-	if (match_is_within_bounds(pos)) {
-		state->board[pos.y][pos.x] = piece;
-		return true;
-	}
-	return false;
-}
-
-void match_remove_piece(MatchState *state, Position pos) {
-	assert(state != NULL);
-	match_set_piece(state, (Piece) {NONE, EMPTY}, pos);
+	return state->board;
 }
 
 bool match_move_piece(MatchState *state, Position src, Position dst) {
 	assert(state != NULL);
-	if (!match_is_within_bounds(src) || !match_is_within_bounds(dst)) {
-		return false;
-	}
-	Piece orig = match_get_piece(state, src);
-	if (orig.type == EMPTY) {
-		return false;
-	}
-	match_set_piece(state, orig, dst);
-	match_remove_piece(state, src);
-	return true;
+	return board_move_piece(state->board, src, dst);
 }
 
 Player match_get_player_turn(const MatchState *state) {
@@ -93,38 +81,4 @@ int match_next_turn(MatchState *state) {
 	return state->turn;
 }
 
-bool match_is_empty(const MatchState *state, Position pos) {
-	assert(state != NULL);
-	return match_get_piece(state, pos).type == EMPTY;
-}
 
-bool match_is_enemy(const MatchState *state, Player player, Position pos) {
-	assert(state != NULL);
-	switch (player) {
-		case WHITE_PLAYER:
-			return match_get_piece(state, pos).player == BLACK_PLAYER;
-		case BLACK_PLAYER:
-			return match_get_piece(state, pos).player == WHITE_PLAYER;
-		case NONE:
-			return false;
-	}
-	return false;  // should never reach this point but is required by the compiler
-}
-
-bool match_is_within_bounds(Position pos) {
-	return pos.x >= 0 && pos.x <= 7 && pos.y >= 0 && pos.y <= 7;
-}
-
-Position match_find_king_pos(const MatchState *state, Player player) {
-	assert(state != NULL);
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			Position pos = (Position) {i, j};
-			Piece piece = match_get_piece(state, pos);
-			if (piece.player == player && piece.type == KING) {
-				return pos;
-			}
-		}
-	}
-	return (Position) {-1, -1};	 // should never reach this point but is required by the compiler
-}

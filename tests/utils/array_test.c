@@ -364,3 +364,20 @@ Test(array, array_delete_at_negative_index) {
 
 	cr_assert_not(array_remove(list, -1));
 }
+
+Test(array, array_clone) {
+	for (size_t i = 0; i < 10; i++) {
+		int data = i;
+		cr_assert(array_append(list, &data));
+	}
+	Array* clone = NULL;
+	cr_assert(array_clone(&clone, list));
+	cr_assert_eq(array_size(list), array_size(clone));
+	for (size_t i = 0; i < array_size(list); i++) {
+		void* data = NULL;
+		cr_assert(array_get(list, i, &data));
+		void* cloned_data = NULL;
+		cr_assert(array_get(clone, i, &cloned_data));
+		cr_assert(eq(int, *(int*) data, *(int*) cloned_data));
+	}
+}

@@ -169,19 +169,23 @@ bool array_get(Array* list, size_t index, void** out_data) {
 	return true;
 }
 
-// bool array_contains(Array* list, void* data, bool (*equals)(void*, void*)) {
-// 	assert(list != NULL);
-// 	assert(data != NULL);
-// 	assert(equals != NULL);
-// 	for (size_t i = 0; i < list->size; i++) {
-// 		if (equals(data, list->data + i * list->elem_size)) {
-// 			return true;
-// 		}
-// 	}
-//
-// 	return false;
-// }
-
 size_t array_size(Array* list) {
 	return list->size;
+}
+
+bool array_clone(Array** dst, const Array* src) {
+	assert(dst != NULL);
+	assert(src != NULL);
+	Array* b;
+	bool result = array_create(&b, src->elem_size);
+	if (!result) {
+		return false;
+	}
+	memcpy(b->data, src->data, src->elem_size * src->size);
+	b->size = src->size;
+	b->capacity = src->capacity;
+	b->elem_size = src->elem_size;
+	b->growth_factor = src->growth_factor;
+	*dst = b;
+	return true;
 }

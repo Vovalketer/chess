@@ -7,7 +7,7 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-BoardState* game;
+MatchState* game;
 
 int main(void) {
 	bool created = engine_create_match(&game);

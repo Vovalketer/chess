@@ -95,6 +95,12 @@ int match_next_turn(MatchState *state) {
 	return state->turn;
 }
 
+int match_previous_turn(MatchState *state) {
+	assert(state != NULL);
+	state->turn--;
+	return state->turn;
+}
+
 Piece match_get_piece(const MatchState *state, Position pos) {
 	assert(state != NULL);
 	return board_get_piece(state->board, pos);

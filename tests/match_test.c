@@ -2,6 +2,7 @@
 
 #include "criterion/criterion.h"
 #include "criterion/new/assert.h"
+#include "history.h"
 
 MatchState *match = NULL;
 
@@ -148,8 +149,7 @@ Test(match, history_contains_moves) {
 		cr_assert(result);
 		match_next_turn(match);
 	}
-	TurnHistory *history = NULL;
-	match_get_history(match, &history);
+	TurnHistory *history = match_get_history(match);
 	cr_assert(eq(uint, 7, history_size(history)));
 	for (int i = 0; i < 7; i++) {
 		TurnRecord *record = NULL;
@@ -166,13 +166,14 @@ Test(match, undo_turn) {
 		cr_assert(result);
 		match_next_turn(match);
 	}
-	TurnHistory *history = NULL;
-	match_get_history(match, &history);
+	TurnHistory *history = match_get_history(match);
 	for (int i = 6; i > -1; i--) {
 		TurnRecord *record = NULL;
 		history_get(history, i, &record);
 		cr_assert(move_eq((Move) {(Position) {0, i}, (Position) {0, i + 1}}, record->move));
 		cr_assert(eq(int, record->turn, i));
-		match_undo_turn(match);
+		bool undo_result = match_undo_turn(match);
+		cr_assert(undo_result);
 	}
+	cr_assert(eq(uint, 0, history_size(history)));
 }

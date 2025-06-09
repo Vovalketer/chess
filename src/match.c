@@ -62,6 +62,7 @@ bool match_clone(MatchState **dst, const MatchState *src) {
 void match_destroy(MatchState **state) {
 	if (state && *state) {
 		board_destroy(&(*state)->board);
+		history_destroy(&(*state)->history);
 		free(*state);
 		*state = NULL;
 	}
@@ -115,13 +116,18 @@ bool match_get_turn_record(MatchState *state, size_t turn, TurnRecord **out_reco
 }
 
 // Returns a clone of the history. User is in charge of freeing the memory
-bool match_get_history(MatchState *state, TurnHistory **out_history) {
+bool match_get_history_clone(MatchState *state, TurnHistory **out_history) {
 	TurnHistory *clone = NULL;
 	if (!history_clone(&clone, state->history)) {
 		return false;
 	}
 	*out_history = clone;
 	return true;
+}
+
+TurnHistory *match_get_history(MatchState *state) {
+	assert(state != NULL);
+	return state->history;
 }
 
 bool match_undo_turn(MatchState *state) {

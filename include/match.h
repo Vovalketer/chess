@@ -18,7 +18,8 @@ int match_get_turn(const MatchState *state);
 int match_next_turn(MatchState *state);
 bool match_append_turn_record(MatchState *state, Move move);
 bool match_get_turn_record(MatchState *state, size_t turn, TurnRecord **out_record);
+TurnHistory *match_get_history(MatchState *state);
 // Returns a clone of the history. User is in charge of freeing the memory
-bool match_get_history(MatchState *state, TurnHistory **out_history);
+bool match_get_history_clone(MatchState *state, TurnHistory **out_history);
 bool match_undo_turn(MatchState *state);
 #endif

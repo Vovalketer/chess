@@ -158,3 +158,21 @@ Test(match, history_contains_moves) {
 		cr_assert(eq(int, record->turn, i));
 	}
 }
+
+Test(match, undo_turn) {
+	for (int i = 0; i < 7; i++) {
+		Move move = (Move) {(Position) {0, i}, (Position) {0, i + 1}};
+		bool result = match_append_turn_record(match, move);
+		cr_assert(result);
+		match_next_turn(match);
+	}
+	TurnHistory *history = NULL;
+	match_get_history(match, &history);
+	for (int i = 6; i > -1; i--) {
+		TurnRecord *record = NULL;
+		history_get(history, i, &record);
+		cr_assert(move_eq((Move) {(Position) {0, i}, (Position) {0, i + 1}}, record->move));
+		cr_assert(eq(int, record->turn, i));
+		match_undo_turn(match);
+	}
+}

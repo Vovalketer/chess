@@ -123,3 +123,17 @@ bool match_get_history(MatchState *state, TurnHistory **out_history) {
 	*out_history = clone;
 	return true;
 }
+
+bool match_undo_turn(MatchState *state) {
+	assert(state != NULL);
+	TurnRecord *r = NULL;
+	bool removed = history_pop_last(state->history, &r);
+	if (!removed) {
+		return false;
+	}
+	board_move_piece(state->board, r->move.dst, r->move.src);
+	// if no piece was captured then it'll just set the tile to NONE
+	board_set_piece(state->board, r->captured_piece, r->move.dst);
+	free(r);
+	return true;
+}

@@ -130,7 +130,7 @@ TurnHistory *match_get_history(MatchState *state) {
 	return state->history;
 }
 
-bool match_undo_turn(MatchState *state) {
+bool match_undo_move(MatchState *state) {
 	assert(state != NULL);
 	TurnRecord *r = NULL;
 	bool removed = history_pop_last(state->history, &r);

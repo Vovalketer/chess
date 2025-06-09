@@ -172,7 +172,7 @@ Test(match, undo_turn) {
 		history_get(history, i, &record);
 		cr_assert(move_eq((Move) {(Position) {0, i}, (Position) {0, i + 1}}, record->move));
 		cr_assert(eq(int, record->turn, i));
-		bool undo_result = match_undo_turn(match);
+		bool undo_result = match_undo_move(match);
 		cr_assert(undo_result);
 	}
 	cr_assert(eq(uint, 0, history_size(history)));

@@ -120,6 +120,9 @@ static inline void _free_wrapper(void* wrapper) {
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_clone(_ARRAY_NAME(CONTAINER_NAME) * *dst,         \
 																 const _ARRAY_NAME(CONTAINER_NAME) * src) {  \
+		*dst = malloc(sizeof **dst);                                                                         \
+		if (!*dst)                                                                                           \
+			return false;                                                                                    \
 		return array_clone(&(*dst)->raw, src->raw);                                                          \
 	}
 

@@ -39,8 +39,8 @@ bool rules_is_check(MatchState *state, Player player) {
 	for (int col = 0; col < 8; col++) {
 		for (int row = 0; row < 8; row++) {
 			Position pos = (Position) {col, row};
-			move_list_clear(moves);
 			if (board_is_enemy(board, player, pos)) {
+				move_list_clear(moves);
 				movegen_generate(board, pos, moves);
 				for (size_t k = 0; k < move_list_size(moves); k++) {
 					Move *move = NULL;
@@ -82,8 +82,8 @@ bool rules_is_checkmate(MatchState *state, Player player) {
 	for (int col = 0; col < 8; col++) {
 		for (int row = 0; row < 8; row++) {
 			Position pos = (Position) {col, row};
-			move_list_clear(moves);
 			if (board_is_friendly(board, player, pos)) {
+				move_list_clear(moves);
 				movegen_generate(board, pos, moves);
 				for (size_t k = 0; k < move_list_size(moves); k++) {
 					Move *move = NULL;

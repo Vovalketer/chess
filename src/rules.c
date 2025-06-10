@@ -32,6 +32,7 @@ bool rules_is_check(MatchState *state, Player player) {
 	assert(player != NONE);
 	const Board *board = match_get_board(state);
 	Position king_pos = board_find_king_pos(board, player);
+	assert(board_is_within_bounds(king_pos));
 	MoveList *moves;
 	bool created = move_list_create(&moves);
 	assert(created != false);
@@ -57,6 +58,7 @@ bool rules_is_check(MatchState *state, Player player) {
 }
 
 bool rules_is_check_after_move(MatchState *state, Move move) {
+	assert(state != NULL);
 	Player player = match_get_player_turn(state);
 	match_move_piece(state, move.src, move.dst);
 	bool is_check = rules_is_check(state, player);

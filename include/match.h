@@ -8,6 +8,7 @@
 struct Board;
 
 bool match_create(MatchState **state);
+bool match_create_empty(MatchState **state);
 bool match_clone(MatchState **dst, const MatchState *src);
 void match_destroy(MatchState **state);
 struct Board *match_get_board(MatchState *state);

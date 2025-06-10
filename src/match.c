@@ -12,27 +12,34 @@ struct MatchState {
 };
 
 bool match_create(MatchState **state) {
+	if (!match_create_empty(state)) {
+		return false;
+	}
+	board_init_positions((*state)->board);
+	return true;
+}
+
+bool match_create_empty(MatchState **state) {
 	assert(state != NULL);
-	MatchState *b = NULL;
-	b = calloc(1, sizeof(MatchState));
-	if (!b) {
+	MatchState *m = NULL;
+	m = calloc(1, sizeof(**state));
+	if (!m) {
 		return false;
 	}
 
-	if (!board_create(&b->board)) {
-		free(b);
+	if (!board_create(&m->board)) {
+		free(m);
 		return false;
 	}
 
-	if (!history_create(&b->history)) {
-		board_destroy(&b->board);
-		free(b);
+	if (!history_create(&m->history)) {
+		board_destroy(&m->board);
+		free(m);
 		return false;
 	}
 
-	board_init_positions(b->board);
-	b->turn = 0;
-	*state = b;
+	m->turn = 0;
+	*state = m;
 	return true;
 }
 

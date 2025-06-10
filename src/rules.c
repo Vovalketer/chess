@@ -70,6 +70,10 @@ bool rules_is_checkmate(MatchState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
 
+	if (!rules_is_check(state, player)) {
+		return false;
+	}
+
 	const Board *board = match_get_board(state);
 
 	MoveList *moves = NULL;

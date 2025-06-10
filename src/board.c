@@ -124,6 +124,12 @@ bool board_is_enemy(const Board *board, Player player, Position pos) {
 	return false;  // should never reach this point but is required by the compiler
 }
 
+bool board_is_friendly(const Board *board, Player player, Position pos) {
+	assert(board != NULL);
+	Piece piece = board_get_piece(board, pos);
+	return piece.player == player;
+}
+
 Position board_find_king_pos(const Board *board, Player player) {
 	assert(board != NULL);
 	for (int i = 0; i < 8; i++) {

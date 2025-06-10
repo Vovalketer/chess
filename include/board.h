@@ -17,6 +17,7 @@ Piece board_get_piece(const Board *board, Position pos);
 bool board_move_piece(Board *board, Position src, Position dst);
 bool board_is_empty(const Board *board, Position pos);
 bool board_is_enemy(const Board *board, Player player, Position pos);
+bool board_is_friendly(const Board *board, Player player, Position pos);
 Position board_find_king_pos(const Board *board, Player player);
 
 #endif	// BOARD_H

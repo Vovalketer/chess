@@ -3,6 +3,7 @@
 #include "criterion/criterion.h"
 #include "criterion/new/assert.h"
 #include "history.h"
+#include "types.h"
 
 MatchState *match = NULL;
 
@@ -103,13 +104,15 @@ Test(match, get_player_turn_returns_black_when_turn_is_uneven) {
 
 Test(match, append_turn_record_returns_true_when_successful) {
 	Move move = (Move) {(Position) {0, 0}, (Position) {0, 1}};
-	bool result = match_append_turn_record(match, move);
+	TurnRecord record = (TurnRecord) {move, 0, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+	bool result = match_append_turn_record(match, record);
 	cr_assert(result);
 }
 
 Test(match, append_turn_record_appends_move_to_history) {
 	Move move = (Move) {(Position) {0, 6}, (Position) {0, 5}};
-	bool result = match_append_turn_record(match, move);
+	TurnRecord r = (TurnRecord) {move, 0, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+	bool result = match_append_turn_record(match, r);
 	cr_assert(result);
 	TurnRecord *record = NULL;
 	match_get_turn_record(match, 0, &record);
@@ -120,19 +123,21 @@ Test(match, append_turn_record_appends_move_to_history) {
 
 	match_next_turn(match);
 	Move move2 = (Move) {(Position) {0, 1}, (Position) {0, 2}};
-	match_append_turn_record(match, move2);
+	TurnRecord r2 = (TurnRecord) {move2, 1, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+	match_append_turn_record(match, r2);
 	cr_assert(result);
 	TurnRecord *record2 = NULL;
 	match_get_turn_record(match, 1, &record2);
 	cr_assert(move_eq(move2, record2->move));
 	cr_assert_eq(record2->turn, 1);
 	cr_assert_eq(record2->captured_piece.type, EMPTY);
-	cr_assert_eq(record2->player, BLACK_PLAYER);
+	cr_assert_eq(record2->player, WHITE_PLAYER);
 }
 
 Test(match, turn_record_contains_captured_piece) {
 	Move move = (Move) {(Position) {0, 6}, (Position) {0, 1}};
-	bool result = match_append_turn_record(match, move);
+	TurnRecord r = (TurnRecord) {move, 0, (Piece) {BLACK_PLAYER, PAWN}, BLACK_PLAYER};
+	bool result = match_append_turn_record(match, r);
 	cr_assert(result);
 	TurnRecord *record = NULL;
 	match_get_turn_record(match, 0, &record);
@@ -145,7 +150,8 @@ Test(match, turn_record_contains_captured_piece) {
 Test(match, history_contains_moves) {
 	for (int i = 0; i < 7; i++) {
 		Move move = (Move) {(Position) {0, i}, (Position) {0, i + 1}};
-		bool result = match_append_turn_record(match, move);
+		TurnRecord r = (TurnRecord) {move, i, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+		bool result = match_append_turn_record(match, r);
 		cr_assert(result);
 		match_next_turn(match);
 	}
@@ -162,7 +168,8 @@ Test(match, history_contains_moves) {
 Test(match, undo_turn) {
 	for (int i = 0; i < 7; i++) {
 		Move move = (Move) {(Position) {0, i}, (Position) {0, i + 1}};
-		bool result = match_append_turn_record(match, move);
+		TurnRecord r = (TurnRecord) {move, i, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+		bool result = match_append_turn_record(match, r);
 		cr_assert(result);
 		match_next_turn(match);
 	}

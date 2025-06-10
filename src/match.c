@@ -82,8 +82,16 @@ Board *match_get_board(const MatchState *state) {
 
 bool match_move_piece(MatchState *state, Position src, Position dst) {
 	assert(state != NULL);
-	match_append_turn_record(state, (Move) {src, dst});
-	return board_move_piece(state->board, src, dst);
+	TurnRecord r = (TurnRecord) {.move = (Move) {src, dst},
+								 .turn = state->turn,
+								 .player = board_get_piece(state->board, src).player,
+								 .captured_piece = board_get_piece(state->board, dst)};
+	if (board_move_piece(state->board, src, dst)) {
+		match_append_turn_record(state, r);
+		return true;
+	}
+
+	return false;
 }
 
 Player match_get_player_turn(const MatchState *state) {
@@ -113,13 +121,9 @@ Piece match_get_piece(const MatchState *state, Position pos) {
 	return board_get_piece(state->board, pos);
 }
 
-bool match_append_turn_record(MatchState *state, Move move) {
+bool match_append_turn_record(MatchState *state, TurnRecord record) {
 	assert(state != NULL);
-	TurnRecord r = (TurnRecord) {.move = move,
-								 .turn = state->turn,
-								 .player = board_get_piece(state->board, move.src).player,
-								 .captured_piece = board_get_piece(state->board, move.dst)};
-	return history_append(state->history, r);
+	return history_append(state->history, record);
 }
 
 bool match_get_turn_record(MatchState *state, size_t turn, TurnRecord **out_record) {

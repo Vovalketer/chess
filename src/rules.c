@@ -55,3 +55,11 @@ bool rules_is_check(MatchState *state, Player player) {
 	move_list_destroy(&moves);
 	return false;
 }
+
+bool rules_is_check_after_move(MatchState *state, Move move) {
+	Player player = match_get_player_turn(state);
+	match_move_piece(state, move.src, move.dst);
+	bool is_check = rules_is_check(state, player);
+	match_undo_move(state);
+	return is_check;
+}

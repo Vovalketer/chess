@@ -48,14 +48,8 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 		return false;
 	}
 
-	// clone board and calculate if the king iwll be in check after moving the piece
-	MatchState *clone;
-	bool cloned = match_clone(&clone, state);
-	match_move_piece(clone, src, dst);
-	assert(cloned != false);
-	bool is_check = rules_is_check(clone, match_get_player_turn(state));
-	match_destroy(&clone);
-	if (is_check) {
+
+	if (rules_is_check_after_move(state, move)) {
 		return false;
 	}
 

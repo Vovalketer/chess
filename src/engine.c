@@ -48,6 +48,10 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 		return false;
 	}
 
+	if (rules_is_checkmate(state, match_get_player_turn(state))) {
+		printf("checkmate\n");
+		return false;
+	}
 
 	if (rules_is_check_after_move(state, move)) {
 		return false;

@@ -156,6 +156,10 @@ void game_loop(MatchState* state) {
 			}
 		}
 
+		if (IsKeyPressed(KEY_U)) {
+			engine_undo_move(state);
+		}
+
 		EndDrawing();
 	}
 }

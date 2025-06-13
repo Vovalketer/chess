@@ -62,9 +62,11 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 	return true;
 }
 
-bool engine_undo_move(MatchState *state) {
-	// TODO: implement, possibly by adding a move list to the board state itself
-	return false;
+void engine_undo_move(MatchState *state) {
+	bool undone = match_undo_move(state);
+	if (undone) {
+		match_previous_turn(state);
+	}
 }
 
 void engine_destroy_match(MatchState **state) {

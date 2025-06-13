@@ -16,5 +16,6 @@ int engine_get_turn(const MatchState *state);
 Piece engine_get_piece(const MatchState *state, Position pos);
 bool engine_move_piece(MatchState *state, Position src, Position dst);
 MoveMask engine_get_valid_moves(const MatchState *state, Position pos);
+void engine_undo_move(MatchState *state);
 
 #endif

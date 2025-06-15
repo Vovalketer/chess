@@ -20,7 +20,7 @@ bool engine_create_match(MatchState **state) {
 	return true;
 }
 
-MoveMask engine_get_valid_moves(const MatchState *state, Position pos) {
+MoveMask engine_get_valid_moves(MatchState *state, Position pos) {
 	MoveMask mm = {0};
 	MoveList *moves = NULL;
 	move_list_create(&moves);
@@ -38,7 +38,7 @@ MoveMask engine_get_valid_moves(const MatchState *state, Position pos) {
 	return mm;
 }
 
-Piece engine_get_piece(const MatchState *state, Position pos) {
+Piece engine_get_piece(MatchState *state, Position pos) {
 	return board_get_piece(match_get_board(state), pos);
 }
 

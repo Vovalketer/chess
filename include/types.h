@@ -9,6 +9,14 @@ typedef enum {
 } Player;
 
 typedef enum {
+	NO_PROMOTION = 0,
+	PROMOTION_QUEEN,
+	PROMOTION_BISHOP,
+	PROMOTION_KNIGHT,
+	PROMOTION_ROOK,
+} PromotionType;
+
+typedef enum {
 	EMPTY,
 	PAWN,
 	ROOK,

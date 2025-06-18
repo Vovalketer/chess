@@ -105,14 +105,14 @@ Test(match, get_player_turn_returns_black_when_turn_is_uneven) {
 
 Test(match, append_turn_record_returns_true_when_successful) {
 	Move move = (Move) {(Position) {0, 0}, (Position) {0, 1}};
-	TurnRecord record = (TurnRecord) {move, 0, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+	TurnRecord record = match_create_turn_record(match, move, NO_PROMOTION);
 	bool result = match_append_turn_record(match, record);
 	cr_assert(result);
 }
 
 Test(match, append_turn_record_appends_move_to_history) {
 	Move move = (Move) {(Position) {0, 6}, (Position) {0, 5}};
-	TurnRecord r = (TurnRecord) {move, 0, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+	TurnRecord r = match_create_turn_record(match, move, NO_PROMOTION);
 	bool result = match_append_turn_record(match, r);
 	cr_assert(result);
 	TurnRecord *record = NULL;
@@ -123,34 +123,33 @@ Test(match, append_turn_record_appends_move_to_history) {
 
 	match_next_turn(match);
 	Move move2 = (Move) {(Position) {0, 1}, (Position) {0, 2}};
-	TurnRecord r2 = (TurnRecord) {move2, 1, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+	TurnRecord r2 = match_create_turn_record(match, move2, NO_PROMOTION);
 	match_append_turn_record(match, r2);
 	cr_assert(result);
 	TurnRecord *record2 = NULL;
 	match_get_turn_record(match, 1, &record2);
 	cr_assert(move_eq(move2, record2->move));
 	cr_assert_eq(record2->turn, 1);
-	cr_assert_eq(record2->captured_piece.type, EMPTY);
-	cr_assert_eq(record2->player, WHITE_PLAYER);
+	cr_assert_eq(record2->dst.type, EMPTY);
 }
 
 Test(match, turn_record_contains_captured_piece) {
 	Move move = (Move) {(Position) {0, 6}, (Position) {0, 1}};
-	TurnRecord r = (TurnRecord) {move, 0, (Piece) {BLACK_PLAYER, PAWN}, BLACK_PLAYER};
+	TurnRecord r = match_create_turn_record(match, move, NO_PROMOTION);
 	bool result = match_append_turn_record(match, r);
 	cr_assert(result);
 	TurnRecord *record = NULL;
 	match_get_turn_record(match, 0, &record);
 	cr_assert(move_eq(move, record->move));
 	cr_assert_eq(record->turn, 0);
-	cr_assert_eq(record->captured_piece.type, PAWN);
-	cr_assert_eq(record->captured_piece.player, BLACK_PLAYER);
+	cr_assert_eq(record->dst.type, PAWN);
+	cr_assert_eq(record->dst.player, BLACK_PLAYER);
 }
 
 Test(match, history_contains_moves) {
 	for (int i = 0; i < 7; i++) {
 		Move move = (Move) {(Position) {0, i}, (Position) {0, i + 1}};
-		TurnRecord r = (TurnRecord) {move, i, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+		TurnRecord r = match_create_turn_record(match, move, NO_PROMOTION);
 		bool result = match_append_turn_record(match, r);
 		cr_assert(result);
 		match_next_turn(match);
@@ -168,7 +167,7 @@ Test(match, history_contains_moves) {
 Test(match, undo_turn) {
 	for (int i = 0; i < 7; i++) {
 		Move move = (Move) {(Position) {0, i}, (Position) {0, i + 1}};
-		TurnRecord r = (TurnRecord) {move, i, (Piece) {NONE, EMPTY}, WHITE_PLAYER};
+		TurnRecord r = match_create_turn_record(match, move, NO_PROMOTION);
 		bool result = match_append_turn_record(match, r);
 		cr_assert(result);
 		match_next_turn(match);
@@ -191,11 +190,4 @@ Test(match, promote_pawn) {
 	match_promote_pawn(match, pos);
 	Piece piece = match_get_piece(match, pos);
 	cr_assert_eq(piece.type, QUEEN);
-}
-
-Test(match, promote_pawn_returns_false_when_not_pawn) {
-	Position pos = (Position) {0, 0};
-	board_set_piece(match_get_board(match), (Piece) {WHITE_PLAYER, ROOK}, pos);
-	bool result = match_promote_pawn(match, pos);
-	cr_assert_eq(result, false);
 }

@@ -9,6 +9,7 @@ typedef struct {
 	Move move;
 	Piece src;
 	Piece dst;
+	PromotionType promoted_type;
 	int turn;
 } TurnRecord;
 

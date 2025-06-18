@@ -44,6 +44,7 @@ Piece engine_get_piece(MatchState *state, Position pos) {
 
 bool engine_move_piece(MatchState *state, Position src, Position dst) {
 	Move move = (Move) {src, dst};
+	PromotionType promotion_type = NO_PROMOTION;
 	if (!rules_is_valid_move(state, move)) {
 		return false;
 	}
@@ -57,11 +58,16 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 		return false;
 	}
 
-	if (rules_is_promotion(state, move)) {
-		match_promote_pawn(state, move.dst);
+	if (rules_is_promotion(state, move.dst)) {
+		promotion_type = match_promote_pawn(state, move.dst);
 	}
 
-	match_move_piece(state, src, dst);
+	TurnRecord record = match_create_turn_record(state, move, promotion_type);
+
+	if (match_move_piece(state, src, dst)) {
+		// commit record only if the move is valid
+		match_append_turn_record(state, record);
+	}
 	match_next_turn(state);
 	return true;
 }
@@ -73,12 +79,12 @@ void engine_undo_move(MatchState *state) {
 	}
 }
 
-void engine_set_next_promotion_type(MatchState *state, Player player, PieceType piece) {
+void engine_set_next_promotion_type(MatchState *state, Player player, PromotionType type) {
 	assert(state != NULL);
-	if (piece == EMPTY) {
+	if (type == NO_PROMOTION) {
 		return;
 	}
-	match_set_next_promotion_type(state, player, piece);
+	match_set_next_promotion_type(state, player, type);
 }
 
 void engine_destroy_match(MatchState **state) {

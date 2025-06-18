@@ -5,12 +5,14 @@
 
 #include "board.h"
 
+static Piece match_get_promoted_piece(Player player, PromotionType type);
+
 struct MatchState {
 	Board *board;
 	int turn;
 	TurnHistory *history;
-	PieceType white_promotion;
-	PieceType black_promotion;
+	PromotionType white_promotion;
+	PromotionType black_promotion;
 };
 
 bool match_create(MatchState **state) {
@@ -40,8 +42,8 @@ bool match_create_empty(MatchState **state) {
 		return false;
 	}
 
-	m->white_promotion = QUEEN;
-	m->black_promotion = QUEEN;
+	m->white_promotion = PROMOTION_QUEEN;
+	m->black_promotion = PROMOTION_QUEEN;
 	m->turn = 0;
 	*state = m;
 	return true;
@@ -88,19 +90,10 @@ Board *match_get_board(MatchState *state) {
 
 bool match_move_piece(MatchState *state, Position src, Position dst) {
 	assert(state != NULL);
-	TurnRecord r = (TurnRecord) {.move = (Move) {src, dst},
-								 .turn = state->turn,
-								 .player = board_get_piece(state->board, src).player,
-								 .captured_piece = board_get_piece(state->board, dst)};
-	if (board_move_piece(state->board, src, dst)) {
-		match_append_turn_record(state, r);
-		return true;
-	}
-
-	return false;
+	return board_move_piece(state->board, src, dst);
 }
 
-void match_set_next_promotion_type(MatchState *state, Player player, PieceType type) {
+void match_set_next_promotion_type(MatchState *state, Player player, PromotionType type) {
 	assert(state != NULL);
 	if (player == WHITE_PLAYER) {
 		state->white_promotion = type;
@@ -109,19 +102,38 @@ void match_set_next_promotion_type(MatchState *state, Player player, PieceType t
 	}
 }
 
+static Piece match_get_promoted_piece(Player player, PromotionType type) {
+	PieceType piece_type = PAWN;
+	switch (type) {
+		case PROMOTION_QUEEN:
+			piece_type = QUEEN;
+			break;
+		case PROMOTION_BISHOP:
+			piece_type = BISHOP;
+			break;
+		case PROMOTION_KNIGHT:
+			piece_type = KNIGHT;
+			break;
+		case PROMOTION_ROOK:
+			piece_type = ROOK;
+			break;
+		case NO_PROMOTION:
+			break;
+	}
+	return (Piece) {player, piece_type};
+}
+
 // promotes to the piece stored in the state
-bool match_promote_pawn(MatchState *state, Position pos) {
+PromotionType match_promote_pawn(MatchState *state, Position pos) {
 	assert(state != NULL);
 	Piece piece = match_get_piece(state, pos);
-	if (piece.type != PAWN) {
-		return false;
-	}
-	if (piece.player == WHITE_PLAYER) {
-		board_set_piece(state->board, (Piece) {WHITE_PLAYER, state->white_promotion}, pos);
-	} else {
-		board_set_piece(state->board, (Piece) {BLACK_PLAYER, state->black_promotion}, pos);
-	}
-	return true;
+	assert(piece.type == PAWN);
+	PromotionType promotion_type =
+		piece.player == WHITE_PLAYER ? state->white_promotion : state->black_promotion;
+	Piece promoted = match_get_promoted_piece(piece.player, promotion_type);
+	bool set_piece = board_set_piece(state->board, promoted, pos);
+	assert(set_piece);
+	return promotion_type;
 }
 
 Player match_get_player_turn(const MatchState *state) {
@@ -151,11 +163,12 @@ Piece match_get_piece(const MatchState *state, Position pos) {
 	return board_get_piece(state->board, pos);
 }
 
-TurnRecord match_create_turn_record(MatchState *state, Move move) {
+TurnRecord match_create_turn_record(MatchState *state, Move move, PromotionType prom) {
 	return (TurnRecord) {.move = move,
 						 .turn = state->turn,
 						 .src = match_get_piece(state, move.src),
-						 .dst = match_get_piece(state, move.dst)};
+						 .dst = match_get_piece(state, move.dst),
+						 .promoted_type = prom};
 }
 
 bool match_append_turn_record(MatchState *state, TurnRecord record) {

@@ -81,7 +81,7 @@ void match_destroy(MatchState **state) {
 	}
 }
 
-Board *match_get_board(const MatchState *state) {
+Board *match_get_board(MatchState *state) {
 	assert(state != NULL);
 	return state->board;
 }

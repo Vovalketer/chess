@@ -5,13 +5,11 @@
 #include "position.h"
 #include "types.h"
 
-struct Board;
-
 bool match_create(MatchState **state);
 bool match_create_empty(MatchState **state);
 bool match_clone(MatchState **dst, const MatchState *src);
 void match_destroy(MatchState **state);
-struct Board *match_get_board(MatchState *state);
+Board *match_get_board(MatchState *state);
 bool match_move_piece(MatchState *state, Position src, Position dst);
 bool match_promote_pawn(MatchState *state, Position pos);
 Piece match_get_piece(const MatchState *state, Position pos);

@@ -5,7 +5,6 @@
 
 #include "position.h"
 #include "types.h"
-typedef struct Board Board;
 bool board_create(Board **board);
 bool board_destroy(Board **board);
 bool board_clone(Board **clone, const Board *board);

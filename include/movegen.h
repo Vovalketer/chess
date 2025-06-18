@@ -1,8 +1,7 @@
 #ifndef MOVEGEN_H
 #define MOVEGEN_H
 #include "movelist.h"
+#include "types.h"
 
-struct Board;
-
-bool movegen_generate(const struct Board *board, Position pos, MoveList *out_moves);
+bool movegen_generate(const Board *board, Position pos, MoveList *out_moves);
 #endif

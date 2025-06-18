@@ -24,5 +24,6 @@ typedef struct {
 } Piece;
 
 typedef struct MatchState MatchState;
+typedef struct Board Board;
 
 #endif

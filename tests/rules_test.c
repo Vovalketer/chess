@@ -19,7 +19,7 @@ void teardown(void) {
 TestSuite(rules, .init = setup, .fini = teardown);
 
 Test(rules, is_check_returns_true_when_king_is_endangered) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {1, 0});
@@ -29,7 +29,7 @@ Test(rules, is_check_returns_true_when_king_is_endangered) {
 }
 
 Test(rules, is_check_returns_false_when_king_is_not_endangered) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = ROOK}, (Position) {1, 0});
@@ -39,7 +39,7 @@ Test(rules, is_check_returns_false_when_king_is_not_endangered) {
 }
 
 Test(rules, is_check_after_move_returns_true_when_king_would_be_endangered) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {2, 1});
@@ -49,7 +49,7 @@ Test(rules, is_check_after_move_returns_true_when_king_would_be_endangered) {
 }
 
 Test(rules, is_check_after_move_returns_false_when_king_would_not_be_endangered) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {3, 1});
@@ -59,7 +59,7 @@ Test(rules, is_check_after_move_returns_false_when_king_would_not_be_endangered)
 }
 
 Test(rules, is_check_after_move_returns_false_when_attacker_is_captured) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {1, 0});
@@ -69,7 +69,7 @@ Test(rules, is_check_after_move_returns_false_when_attacker_is_captured) {
 }
 
 Test(rules, is_check_after_move_returns_true_when_move_exposes_king) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = ROOK}, (Position) {1, 0});
@@ -80,7 +80,7 @@ Test(rules, is_check_after_move_returns_true_when_move_exposes_king) {
 }
 
 Test(rules, is_check_after_move_returns_true_when_capturing_attacker_exposes_king) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {1, 0});
@@ -91,7 +91,7 @@ Test(rules, is_check_after_move_returns_true_when_capturing_attacker_exposes_kin
 }
 
 Test(rules, is_checkmate_returns_true_when_king_cannot_escape) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {1, 0});
@@ -102,7 +102,7 @@ Test(rules, is_checkmate_returns_true_when_king_cannot_escape) {
 }
 
 Test(rules, is_checkmate_returns_false_when_king_can_escape) {
-	struct Board *board = match_get_board(match);
+	Board *board = match_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {2, 0});

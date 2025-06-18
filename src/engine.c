@@ -57,6 +57,10 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 		return false;
 	}
 
+	if (rules_is_promotion(state, move)) {
+		match_promote_pawn(state, move.dst);
+	}
+
 	match_move_piece(state, src, dst);
 	match_next_turn(state);
 	return true;
@@ -67,6 +71,14 @@ void engine_undo_move(MatchState *state) {
 	if (undone) {
 		match_previous_turn(state);
 	}
+}
+
+void engine_set_next_promotion_type(MatchState *state, Player player, PieceType piece) {
+	assert(state != NULL);
+	if (piece == EMPTY) {
+		return;
+	}
+	match_set_next_promotion_type(state, player, piece);
 }
 
 void engine_destroy_match(MatchState **state) {

@@ -33,7 +33,7 @@ bool rules_is_check(MatchState *state, Player player) {
 	const Board *board = match_get_board(state);
 	Position king_pos = board_find_king_pos(board, player);
 	assert(board_is_within_bounds(king_pos));
-	MoveList *moves;
+	MoveList *moves = NULL;
 	bool created = move_list_create(&moves);
 	assert(created != false);
 	for (int col = 0; col < 8; col++) {
@@ -98,4 +98,10 @@ bool rules_is_checkmate(MatchState *state, Player player) {
 	}
 	move_list_destroy(&moves);
 	return true;
+}
+
+bool rules_is_promotion(MatchState *state, Position pos) {
+	Piece piece = match_get_piece(state, pos);
+	return piece.type == PAWN &&
+		   ((piece.player == WHITE_PLAYER && pos.y == 0) || (piece.player == BLACK_PLAYER && pos.y == 7));
 }

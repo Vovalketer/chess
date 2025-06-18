@@ -7,5 +7,6 @@ bool rules_is_valid_move(MatchState *state, Move move);
 bool rules_is_check(MatchState *state, Player player);
 bool rules_is_check_after_move(MatchState *state, Move move);
 bool rules_is_checkmate(MatchState *state, Player player);
+bool rules_is_promotion(MatchState *state, Position pos);
 
 #endif

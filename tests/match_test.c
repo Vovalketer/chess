@@ -1,5 +1,6 @@
 #include "match.h"
 
+#include "board.h"
 #include "criterion/criterion.h"
 #include "criterion/new/assert.h"
 #include "history.h"
@@ -183,4 +184,19 @@ Test(match, undo_turn) {
 		cr_assert(undo_result);
 	}
 	cr_assert(eq(uint, 0, history_size(history)));
+}
+
+Test(match, promote_pawn) {
+	Position pos = (Position) {0, 0};
+	board_set_piece(match_get_board(match), (Piece) {WHITE_PLAYER, PAWN}, pos);
+	match_promote_pawn(match, pos);
+	Piece piece = match_get_piece(match, pos);
+	cr_assert_eq(piece.type, QUEEN);
+}
+
+Test(match, promote_pawn_returns_false_when_not_pawn) {
+	Position pos = (Position) {0, 0};
+	board_set_piece(match_get_board(match), (Piece) {WHITE_PLAYER, ROOK}, pos);
+	bool result = match_promote_pawn(match, pos);
+	cr_assert_eq(result, false);
 }

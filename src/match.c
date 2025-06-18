@@ -9,6 +9,8 @@ struct MatchState {
 	Board *board;
 	int turn;
 	TurnHistory *history;
+	PieceType white_promotion;
+	PieceType black_promotion;
 };
 
 bool match_create(MatchState **state) {
@@ -38,6 +40,8 @@ bool match_create_empty(MatchState **state) {
 		return false;
 	}
 
+	m->white_promotion = QUEEN;
+	m->black_promotion = QUEEN;
 	m->turn = 0;
 	*state = m;
 	return true;
@@ -62,6 +66,8 @@ bool match_clone(MatchState **dst, const MatchState *src) {
 		return false;
 	}
 	b->turn = src->turn;
+	b->white_promotion = src->white_promotion;
+	b->black_promotion = src->black_promotion;
 	*dst = b;
 	return true;
 }
@@ -92,6 +98,30 @@ bool match_move_piece(MatchState *state, Position src, Position dst) {
 	}
 
 	return false;
+}
+
+void match_set_next_promotion_type(MatchState *state, Player player, PieceType type) {
+	assert(state != NULL);
+	if (player == WHITE_PLAYER) {
+		state->white_promotion = type;
+	} else {
+		state->black_promotion = type;
+	}
+}
+
+// promotes to the piece stored in the state
+bool match_promote_pawn(MatchState *state, Position pos) {
+	assert(state != NULL);
+	Piece piece = match_get_piece(state, pos);
+	if (piece.type != PAWN) {
+		return false;
+	}
+	if (piece.player == WHITE_PLAYER) {
+		board_set_piece(state->board, (Piece) {WHITE_PLAYER, state->white_promotion}, pos);
+	} else {
+		board_set_piece(state->board, (Piece) {BLACK_PLAYER, state->black_promotion}, pos);
+	}
+	return true;
 }
 
 Player match_get_player_turn(const MatchState *state) {

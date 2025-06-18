@@ -60,9 +60,17 @@ bool rules_is_check(MatchState *state, Player player) {
 bool rules_is_check_after_move(MatchState *state, Move move) {
 	assert(state != NULL);
 	Player player = match_get_player_turn(state);
-	match_move_piece(state, move.src, move.dst);
+	Board *board = match_get_board(state);
+	Piece src_piece = board_get_piece(board, move.src);
+	Piece dst_piece = board_get_piece(board, move.dst);
+	bool is_move = board_move_piece(board, move.src, move.dst);
+	assert(is_move == true);
 	bool is_check = rules_is_check(state, player);
-	match_undo_move(state);
+	// undo move
+	bool set_src = board_set_piece(board, src_piece, move.src);
+	bool set_dst = board_set_piece(board, dst_piece, move.dst);
+	assert(set_src == true);
+	assert(set_dst == true);
 	return is_check;
 }
 

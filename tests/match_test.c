@@ -119,8 +119,7 @@ Test(match, append_turn_record_appends_move_to_history) {
 	match_get_turn_record(match, 0, &record);
 	cr_assert(move_eq(move, record->move));
 	cr_assert_eq(record->turn, 0);
-	cr_assert_eq(record->captured_piece.type, EMPTY);
-	cr_assert_eq(record->player, WHITE_PLAYER);
+	cr_assert_eq(record->dst.type, EMPTY);
 
 	match_next_turn(match);
 	Move move2 = (Move) {(Position) {0, 1}, (Position) {0, 2}};

@@ -151,6 +151,13 @@ Piece match_get_piece(const MatchState *state, Position pos) {
 	return board_get_piece(state->board, pos);
 }
 
+TurnRecord match_create_turn_record(MatchState *state, Move move) {
+	return (TurnRecord) {.move = move,
+						 .turn = state->turn,
+						 .src = match_get_piece(state, move.src),
+						 .dst = match_get_piece(state, move.dst)};
+}
+
 bool match_append_turn_record(MatchState *state, TurnRecord record) {
 	assert(state != NULL);
 	return history_append(state->history, record);
@@ -186,7 +193,7 @@ bool match_undo_move(MatchState *state) {
 	}
 	board_move_piece(state->board, r->move.dst, r->move.src);
 	// if no piece was captured then it'll just set the tile to NONE
-	board_set_piece(state->board, r->captured_piece, r->move.dst);
+	board_set_piece(state->board, r->dst, r->move.dst);
 	free(r);
 	return true;
 }

@@ -18,6 +18,7 @@ Player match_get_player_turn(const MatchState *state);
 int match_get_turn(const MatchState *state);
 int match_previous_turn(MatchState *state);
 int match_next_turn(MatchState *state);
+TurnRecord match_create_turn_record(MatchState *state, Move move);
 bool match_append_turn_record(MatchState *state, TurnRecord record);
 bool match_get_turn_record(MatchState *state, size_t turn, TurnRecord **out_record);
 TurnHistory *match_get_history(MatchState *state);

@@ -7,10 +7,11 @@
 // TODO: castling rights
 typedef struct {
 	Move move;
+	Piece src;
+	Piece dst;
 	int turn;
-	Piece captured_piece;
-	Player player;
 } TurnRecord;
+
 ARRAY_DEFINE_TYPE(TurnRecord, TurnHistory, history)
 
 #endif	// HISTORY_H

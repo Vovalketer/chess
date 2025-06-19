@@ -169,6 +169,14 @@ bool array_get(Array* list, size_t index, void** out_data) {
 	return true;
 }
 
+bool array_get_first(Array* list, void** out_data) {
+	return array_get(list, 0, out_data);
+}
+
+bool array_get_last(Array* list, void** out_data) {
+	return array_get(list, array_size(list) - 1, out_data);
+}
+
 size_t array_size(Array* list) {
 	return list->size;
 }

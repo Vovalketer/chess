@@ -118,6 +118,24 @@ static inline void _free_wrapper(void* wrapper) {
 		return true;                                                                                         \
 	}                                                                                                        \
                                                                                                              \
+	__attribute__((unused)) static inline bool FN_PREFIX##_get_first(_ARRAY_NAME(CONTAINER_NAME) * list,     \
+																	 TYPE * *out) {                          \
+		void* tmp = NULL;                                                                                    \
+		if (!array_get_first(list->raw, &tmp))                                                               \
+			return false;                                                                                    \
+		*out = (TYPE*) tmp;                                                                                  \
+		return true;                                                                                         \
+	}                                                                                                        \
+                                                                                                             \
+	__attribute__((unused)) static inline bool FN_PREFIX##_get_last(_ARRAY_NAME(CONTAINER_NAME) * list,      \
+																	TYPE * *out) {                           \
+		void* tmp = NULL;                                                                                    \
+		if (!array_get_last(list->raw, &tmp))                                                                \
+			return false;                                                                                    \
+		*out = (TYPE*) tmp;                                                                                  \
+		return true;                                                                                         \
+	}                                                                                                        \
+                                                                                                             \
 	__attribute__((unused)) static inline bool FN_PREFIX##_clone(_ARRAY_NAME(CONTAINER_NAME) * *dst,         \
 																 const _ARRAY_NAME(CONTAINER_NAME) * src) {  \
 		*dst = malloc(sizeof **dst);                                                                         \

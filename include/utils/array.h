@@ -21,6 +21,8 @@ bool array_remove_first(Array* list);
 bool array_remove_last(Array* list);
 // returns a pointer to the data, does not remove it from the array
 bool array_get(Array* list, size_t index, void** out_data);
+bool array_get_first(Array* list, void** out_data);
+bool array_get_last(Array* list, void** out_data);
 size_t array_size(Array* list);
 bool array_clone(Array** dst, const Array* src);
 

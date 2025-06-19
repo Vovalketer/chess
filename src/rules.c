@@ -7,6 +7,8 @@
 #include "../include/movelist.h"
 #include "board.h"
 
+static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position pos, Player player);
+
 bool rules_is_valid_move(MatchState *state, Move move) {
 	bool success = false;
 	const Board *board = match_get_board(state);
@@ -27,12 +29,10 @@ bool rules_is_valid_move(MatchState *state, Move move) {
 	return success;
 }
 
-bool rules_is_check(MatchState *state, Player player) {
+static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position target, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	const Board *board = match_get_board(state);
-	Position king_pos = board_find_king_pos(board, player);
-	assert(board_is_within_bounds(king_pos));
+	Board *board = match_get_board(state);
 	MoveList *moves = NULL;
 	bool created = move_list_create(&moves);
 	assert(created != false);
@@ -45,7 +45,7 @@ bool rules_is_check(MatchState *state, Player player) {
 				for (size_t k = 0; k < move_list_size(moves); k++) {
 					Move *move = NULL;
 					move_list_get(moves, k, &move);
-					if (move->dst.x == king_pos.x && move->dst.y == king_pos.y) {
+					if (move->dst.x == target.x && move->dst.y == target.y) {
 						move_list_destroy(&moves);
 						return true;
 					}
@@ -55,6 +55,15 @@ bool rules_is_check(MatchState *state, Player player) {
 	}
 	move_list_destroy(&moves);
 	return false;
+}
+
+bool rules_is_check(MatchState *state, Player player) {
+	assert(state != NULL);
+	assert(player != NONE);
+	const Board *board = match_get_board(state);
+	Position king_pos = board_find_king_pos(board, player);
+	assert(board_is_within_bounds(king_pos));
+	return rules_is_tile_targeted_by_enemy(state, king_pos, player);
 }
 
 bool rules_is_check_after_move(MatchState *state, Move move) {

@@ -122,3 +122,28 @@ bool rules_is_promotion(MatchState *state, Position pos) {
 	return piece.type == PAWN &&
 		   ((piece.player == WHITE_PLAYER && pos.y == 0) || (piece.player == BLACK_PLAYER && pos.y == 7));
 }
+MoveType rules_get_move_type(MatchState *state, Move move) {
+	Board *board = match_get_board(state);
+	Piece src_piece = board_get_piece(board, move.src);
+	Piece dst_piece = board_get_piece(board, move.dst);
+	Player player = match_get_player_turn(state);
+
+	if (src_piece.player == NONE || player != src_piece.player || src_piece.player == dst_piece.player) {
+		return MOVE_INVALID;
+	}
+
+	if (rules_is_promotion(state, move.dst)) {
+		return MOVE_PROMOTION;
+	}
+	// if (rules_is_castling_move(state, move)) {
+	// 	return MOVE_CASTLING;
+	// }
+	// if (rules_is_en_passant(state, move)) {
+	// 	return MOVE_EN_PASSANT;
+	// }
+	if (rules_is_valid_move(state, move)) {
+		return MOVE_REGULAR;
+	} else {
+		return MOVE_INVALID;
+	}
+}

@@ -45,9 +45,6 @@ Piece engine_get_piece(MatchState *state, Position pos) {
 bool engine_move_piece(MatchState *state, Position src, Position dst) {
 	Move move = (Move) {src, dst};
 	PromotionType promotion_type = NO_PROMOTION;
-	if (!rules_is_valid_move(state, move)) {
-		return false;
-	}
 
 	if (rules_is_checkmate(state, match_get_player_turn(state))) {
 		printf("checkmate\n");
@@ -58,11 +55,12 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 		return false;
 	}
 
-	if (rules_is_promotion(state, move.dst)) {
-		promotion_type = match_promote_pawn(state, move.dst);
+	MoveType move_type = rules_get_move_type(state, move);
+	if (move_type == MOVE_INVALID) {
+		return false;
 	}
 
-	TurnRecord record = match_create_turn_record(state, move, promotion_type);
+	TurnRecord record = match_create_turn_record(state, move, move_type, promotion_type);
 
 	if (match_move_piece(state, src, dst)) {
 		// commit record only if the move is valid

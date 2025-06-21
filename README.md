@@ -17,7 +17,7 @@ Chess implementation, written in C
 - [x] Implement legal moves for all pieces (King, Queen, Bishop, Knight, Rook, Pawn).
 - [x] Implement Pawn's two-square opening move.
 - [x] Implement Pawn promotion when reaching the last rank.
-- [ ] Implement Castling.
+- [x] Implement Castling.
 - [ ] Implement En Passant capture rule.
 
 ### Check & Checkmate

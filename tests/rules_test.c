@@ -138,3 +138,303 @@ Test(rules, is_promotion_returns_false_when_not_pawn) {
 	bool is_promotion = rules_is_promotion(match, (Position) {0, 0});
 	cr_assert_eq(is_promotion, false);
 }
+
+Test(rules, white_can_kingside_castling) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {WHITE_PLAYER, KING};
+	Position king_pos = (Position) {4, 7};
+	Piece rook = (Piece) {WHITE_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 7};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, WHITE_PLAYER);
+
+	cr_assert_eq(ks_castling, true);
+}
+
+Test(rules, white_kingside_castling_blocked_by_friendly) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {WHITE_PLAYER, KING};
+	Position king_pos = (Position) {4, 7};
+	Piece rook = (Piece) {WHITE_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 7};
+
+	Piece blocking_pawn = (Piece) {WHITE_PLAYER, PAWN};
+	Position blocking_pawn_pos = (Position) {6, 7};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_pawn, blocking_pawn_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, WHITE_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, white_kingside_castling_blocked_by_enemy) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {WHITE_PLAYER, KING};
+	Position king_pos = (Position) {4, 7};
+	Piece rook = (Piece) {WHITE_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 7};
+
+	Piece blocking_enemy = (Piece) {BLACK_PLAYER, PAWN};
+	Position blocking_enemy_pos = (Position) {6, 7};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_enemy, blocking_enemy_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, WHITE_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, white_kingside_castling_blocked_by_check) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {WHITE_PLAYER, KING};
+	Position king_pos = (Position) {4, 7};
+	Piece rook = (Piece) {WHITE_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 7};
+
+	Piece blocking_enemy = (Piece) {BLACK_PLAYER, BISHOP};
+	Position blocking_enemy_pos = (Position) {king_pos.x - 2, king_pos.y - 2};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_enemy, blocking_enemy_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, WHITE_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, white_kingside_castling_blocked_by_enemy_targeting_castling_tile_f1) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {WHITE_PLAYER, KING};
+	Position king_pos = (Position) {4, 7};
+	Piece rook = (Piece) {WHITE_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 7};
+
+	Piece blocking_enemy = (Piece) {BLACK_PLAYER, BISHOP};
+	Position blocking_enemy_pos = (Position) {3, 5};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_enemy, blocking_enemy_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, WHITE_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, white_kingside_castling_blocked_by_enemy_targeting_castling_tile_g1) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {WHITE_PLAYER, KING};
+	Position king_pos = (Position) {4, 7};
+	Piece rook = (Piece) {WHITE_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 7};
+
+	Piece blocking_enemy = (Piece) {BLACK_PLAYER, BISHOP};
+	Position blocking_enemy_pos = (Position) {4, 5};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_enemy, blocking_enemy_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, WHITE_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, black_can_kingside_castling) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {BLACK_PLAYER, KING};
+	Position king_pos = (Position) {4, 0};
+	Piece rook = (Piece) {BLACK_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 0};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, BLACK_PLAYER);
+
+	cr_assert_eq(ks_castling, true);
+}
+
+Test(rules, black_kingside_castling_blocked_by_friendly) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {BLACK_PLAYER, KING};
+	Position king_pos = (Position) {4, 0};
+	Piece rook = (Piece) {BLACK_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 0};
+
+	Piece blocking_friendly = (Piece) {BLACK_PLAYER, PAWN};
+	Position blocking_friendly_pos = (Position) {6, 0};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_friendly, blocking_friendly_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, BLACK_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, black_kingside_castling_blocked_by_enemy) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {BLACK_PLAYER, KING};
+	Position king_pos = (Position) {4, 0};
+	Piece rook = (Piece) {BLACK_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 0};
+
+	Piece blocking_pawn = (Piece) {WHITE_PLAYER, PAWN};
+	Position blocking_pawn_pos = (Position) {6, 0};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_pawn, blocking_pawn_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, BLACK_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, black_kingside_castling_blocked_by_check) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {BLACK_PLAYER, KING};
+	Position king_pos = (Position) {4, 0};
+	Piece rook = (Piece) {BLACK_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 0};
+
+	Piece blocking_enemy = (Piece) {WHITE_PLAYER, BISHOP};
+	Position blocking_enemy_pos = (Position) {king_pos.x - 2, king_pos.y + 2};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_enemy, blocking_enemy_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, BLACK_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, black_kingside_castling_blocked_by_enemy_targeting_castling_tile_f8) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {BLACK_PLAYER, KING};
+	Position king_pos = (Position) {4, 0};
+	Piece rook = (Piece) {BLACK_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 0};
+
+	Piece blocking_enemy = (Piece) {WHITE_PLAYER, BISHOP};
+	Position blocking_enemy_pos = (Position) {3, 2};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_enemy, blocking_enemy_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, BLACK_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, black_kingside_castling_blocked_by_enemy_targeting_castling_tile_g8) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {BLACK_PLAYER, KING};
+	Position king_pos = (Position) {4, 0};
+	Piece rook = (Piece) {BLACK_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 0};
+
+	Piece blocking_enemy = (Piece) {WHITE_PLAYER, BISHOP};
+	Position blocking_enemy_pos = (Position) {4, 2};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+	board_set_piece(board, blocking_enemy, blocking_enemy_pos);
+
+	bool ks_castling = rules_can_castle_kingside(match, BLACK_PLAYER);
+
+	cr_assert_eq(ks_castling, false);
+}
+
+Test(rules, white_is_castling_kingside) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {WHITE_PLAYER, KING};
+	Position king_pos = (Position) {4, 7};
+	Piece rook = (Piece) {WHITE_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 7};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+
+	Move castling_move = (Move) {king_pos, rook_pos};
+	bool ks_castling = rules_is_castling(match, castling_move);
+
+	cr_assert_eq(ks_castling, true);
+}
+
+Test(rules, white_is_castling_queenside) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {WHITE_PLAYER, KING};
+	Position king_pos = (Position) {4, 7};
+	Piece rook = (Piece) {WHITE_PLAYER, ROOK};
+	Position rook_pos = (Position) {0, 7};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+
+	Move castling_move = (Move) {king_pos, rook_pos};
+	bool qs_castling = rules_is_castling(match, castling_move);
+
+	cr_assert_eq(qs_castling, true);
+}
+
+Test(rules, black_is_castling_kingside) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {BLACK_PLAYER, KING};
+	Position king_pos = (Position) {4, 0};
+	Piece rook = (Piece) {BLACK_PLAYER, ROOK};
+	Position rook_pos = (Position) {7, 0};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+
+	Move castling_move = (Move) {king_pos, rook_pos};
+	bool ks_castling = rules_is_castling(match, castling_move);
+
+	cr_assert_eq(ks_castling, true);
+}
+
+Test(rules, black_is_castling_queenside) {
+	Board *board = match_get_board(match);
+
+	Piece king = (Piece) {BLACK_PLAYER, KING};
+	Position king_pos = (Position) {4, 0};
+	Piece rook = (Piece) {BLACK_PLAYER, ROOK};
+	Position rook_pos = (Position) {0, 0};
+
+	board_set_piece(board, king, king_pos);
+	board_set_piece(board, rook, rook_pos);
+
+	Move castling_move = (Move) {king_pos, rook_pos};
+	bool qs_castling = rules_is_castling(match, castling_move);
+
+	cr_assert_eq(qs_castling, true);
+}

@@ -13,6 +13,10 @@ struct MatchState {
 	TurnHistory *history;
 	PromotionType white_promotion;
 	PromotionType black_promotion;
+	bool w_ks_castling;
+	bool w_qs_castling;
+	bool b_ks_castling;
+	bool b_qs_castling;
 };
 
 bool match_create(MatchState **state) {
@@ -44,6 +48,10 @@ bool match_create_empty(MatchState **state) {
 
 	m->white_promotion = PROMOTION_QUEEN;
 	m->black_promotion = PROMOTION_QUEEN;
+	m->w_ks_castling = true;
+	m->w_qs_castling = true;
+	m->b_ks_castling = true;
+	m->b_qs_castling = true;
 	m->turn = 0;
 	*state = m;
 	return true;
@@ -70,6 +78,10 @@ bool match_clone(MatchState **dst, const MatchState *src) {
 	b->turn = src->turn;
 	b->white_promotion = src->white_promotion;
 	b->black_promotion = src->black_promotion;
+	b->w_ks_castling = src->w_ks_castling;
+	b->w_qs_castling = src->w_qs_castling;
+	b->b_ks_castling = src->b_ks_castling;
+	b->b_qs_castling = src->b_qs_castling;
 	*dst = b;
 	return true;
 }
@@ -163,11 +175,12 @@ Piece match_get_piece(const MatchState *state, Position pos) {
 	return board_get_piece(state->board, pos);
 }
 
-TurnRecord match_create_turn_record(MatchState *state, Move move, PromotionType prom) {
+TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type, PromotionType prom) {
 	return (TurnRecord) {.move = move,
 						 .turn = state->turn,
 						 .src = match_get_piece(state, move.src),
 						 .dst = match_get_piece(state, move.dst),
+						 .move_type = type,
 						 .promoted_type = prom};
 }
 
@@ -209,4 +222,52 @@ bool match_undo_move(MatchState *state) {
 	board_set_piece(state->board, r->dst, r->move.dst);
 	free(r);
 	return true;
+}
+
+bool match_kingside_castling_available(MatchState *state, Player player) {
+	return player == WHITE_PLAYER ? state->w_ks_castling : state->b_ks_castling;
+}
+
+bool match_queenside_castling_available(MatchState *state, Player player) {
+	return player == WHITE_PLAYER ? state->w_qs_castling : state->b_qs_castling;
+}
+
+void match_kingside_castling(MatchState *state, Player player) {
+	int row = player == WHITE_PLAYER ? 7 : 0;
+	int king_col = 4;
+	int rook_col = 7;
+	Position king_pos = (Position) {king_col, row};
+	Position rook_pos = (Position) {rook_col, row};
+	// this should be checked by rules
+	assert(board_get_piece(state->board, king_pos).type == KING);
+	assert(board_get_piece(state->board, rook_pos).type == ROOK);
+	Position king_castled_pos = (Position) {6, row};
+	Position rook_castled_pos = (Position) {5, row};
+	board_move_piece(state->board, king_pos, king_castled_pos);
+	board_move_piece(state->board, rook_pos, rook_castled_pos);
+	if (player == WHITE_PLAYER) {
+		state->w_ks_castling = false;
+	} else {
+		state->b_ks_castling = false;
+	}
+}
+
+void match_queenside_castling(MatchState *state, Player player) {
+	int row = player == WHITE_PLAYER ? 7 : 0;
+	int king_col = 4;
+	int rook_col = 0;
+	Position king_pos = (Position) {king_col, row};
+	Position rook_pos = (Position) {rook_col, row};
+	// this should be checked by rules
+	assert(board_get_piece(state->board, king_pos).type == KING);
+	assert(board_get_piece(state->board, rook_pos).type == ROOK);
+	Position king_castled_pos = (Position) {2, row};
+	Position rook_castled_pos = (Position) {3, row};
+	board_move_piece(state->board, king_pos, king_castled_pos);
+	board_move_piece(state->board, rook_pos, rook_castled_pos);
+	if (player == WHITE_PLAYER) {
+		state->w_qs_castling = false;
+	} else {
+		state->b_qs_castling = false;
+	}
 }

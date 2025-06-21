@@ -7,6 +7,12 @@
 #include "../include/movelist.h"
 #include "board.h"
 
+#define KING_STARTING_X 4
+#define ROOK_QS_STARTING_X 0
+#define ROOK_KS_STARTING_X 7
+#define WHITE_STARTING_Y 7
+#define BLACK_STARTING_Y 0
+
 static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position pos, Player player);
 
 bool rules_is_valid_move(MatchState *state, Move move) {
@@ -122,22 +128,112 @@ bool rules_is_promotion(MatchState *state, Position pos) {
 	return piece.type == PAWN &&
 		   ((piece.player == WHITE_PLAYER && pos.y == 0) || (piece.player == BLACK_PLAYER && pos.y == 7));
 }
+
+bool rules_can_castle_kingside(MatchState *state, Player player) {
+	assert(state != NULL);
+	assert(player != NONE);
+	if (!match_kingside_castling_available(state, player)) {
+		return false;
+	}
+	int row;
+	if (player == WHITE_PLAYER) {
+		row = 7;
+	} else {
+		row = 0;
+	}
+	Piece expect_rook = match_get_piece(state, (Position) {ROOK_KS_STARTING_X, row});
+	Piece expect_king = match_get_piece(state, (Position) {KING_STARTING_X, row});
+	// if castling is available then the king and the rook should be in the original positions
+	assert(expect_rook.player == expect_king.player);
+	assert(expect_rook.type == ROOK);
+	assert(expect_king.type == KING);
+
+	// check if the tiles between the king and the rook are empty
+	Position tile1 = {6, row};
+	Position tile2 = {5, row};
+	if (match_get_piece(state, tile1).type != EMPTY || match_get_piece(state, tile2).type != EMPTY) {
+		return false;
+	}
+	// check if the king is in check and if the target tiles are not being threatened by the enemy
+	if (rules_is_check(state, player) || rules_is_tile_targeted_by_enemy(state, tile1, player) ||
+		rules_is_tile_targeted_by_enemy(state, tile2, player)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool rules_can_castle_queenside(MatchState *state, Player player) {
+	assert(state != NULL);
+	assert(player != NONE);
+	if (!match_queenside_castling_available(state, player)) {
+		return false;
+	}
+	int row;
+	if (player == WHITE_PLAYER) {
+		row = WHITE_STARTING_Y;
+	} else {
+		row = BLACK_STARTING_Y;
+	}
+
+	Piece expect_rook = match_get_piece(state, (Position) {ROOK_QS_STARTING_X, row});
+	Piece expect_king = match_get_piece(state, (Position) {KING_STARTING_X, row});
+	// if castling is available then the king and the rook should be in the original positions
+	assert(expect_rook.player == expect_king.player);
+	assert(expect_rook.type == ROOK);
+	assert(expect_king.type == KING);
+
+	Position tile1 = {1, row};
+	Position tile2 = {2, row};
+	Position tile3 = {3, row};
+	if (match_get_piece(state, tile1).type != EMPTY || match_get_piece(state, tile2).type != EMPTY ||
+		match_get_piece(state, tile3).type != EMPTY) {
+		return false;
+	}
+	if (rules_is_tile_targeted_by_enemy(state, tile2, player) ||
+		rules_is_tile_targeted_by_enemy(state, tile3, player)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool rules_is_castling(MatchState *state, Move move) {
+	assert(state != NULL);
+	Board *board = match_get_board(state);
+	if (move.src.y != WHITE_STARTING_Y && move.src.y != BLACK_STARTING_Y) {
+		return false;
+	}
+	Piece src_piece = board_get_piece(board, move.src);
+	Piece dst_piece = board_get_piece(board, move.dst);
+	if (src_piece.type != KING || dst_piece.type != ROOK || src_piece.player != dst_piece.player) {
+		return false;
+	}
+	Player p = src_piece.player;
+	if (move.dst.x == ROOK_KS_STARTING_X) {
+		return rules_can_castle_kingside(state, p);
+	}
+	if (move.dst.x == ROOK_QS_STARTING_X) {
+		return rules_can_castle_queenside(state, p);
+	}
+	return false;
+}
+
 MoveType rules_get_move_type(MatchState *state, Move move) {
 	Board *board = match_get_board(state);
 	Piece src_piece = board_get_piece(board, move.src);
-	Piece dst_piece = board_get_piece(board, move.dst);
 	Player player = match_get_player_turn(state);
 
-	if (src_piece.player == NONE || player != src_piece.player || src_piece.player == dst_piece.player) {
+	if (src_piece.player == NONE || player != src_piece.player) {
 		return MOVE_INVALID;
 	}
 
 	if (rules_is_promotion(state, move.dst)) {
 		return MOVE_PROMOTION;
 	}
-	// if (rules_is_castling_move(state, move)) {
-	// 	return MOVE_CASTLING;
-	// }
+	if (rules_is_castling(state, move)) {
+		return MOVE_CASTLING;
+	}
 	// if (rules_is_en_passant(state, move)) {
 	// 	return MOVE_EN_PASSANT;
 	// }

@@ -25,4 +25,6 @@ TurnHistory *match_get_history(MatchState *state);
 // Returns a clone of the history. User is in charge of freeing the memory
 bool match_get_history_clone(MatchState *state, TurnHistory **out_history);
 bool match_undo_move(MatchState *state);
+bool match_kingside_castling_available(MatchState *state, Player player);
+bool match_queenside_castling_available(MatchState *state, Player player);
 #endif

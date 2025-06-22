@@ -195,6 +195,12 @@ bool match_get_turn_record(MatchState *state, size_t turn, TurnRecord **out_reco
 	return history_get(state->history, turn, out_record);
 }
 
+bool match_get_last_turn_record(MatchState *state, TurnRecord **out_record) {
+	assert(state != NULL);
+	assert(out_record != NULL);
+	return history_get_last(state->history, out_record);
+}
+
 // Returns a clone of the history. User is in charge of freeing the memory
 bool match_get_history_clone(MatchState *state, TurnHistory **out_history) {
 	TurnHistory *clone = NULL;

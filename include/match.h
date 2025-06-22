@@ -21,6 +21,7 @@ int match_next_turn(MatchState *state);
 TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type, PromotionType prom);
 bool match_append_turn_record(MatchState *state, TurnRecord record);
 bool match_get_turn_record(MatchState *state, size_t turn, TurnRecord **out_record);
+bool match_get_last_turn_record(MatchState *state, TurnRecord **out_record);
 TurnHistory *match_get_history(MatchState *state);
 // Returns a clone of the history. User is in charge of freeing the memory
 bool match_get_history_clone(MatchState *state, TurnHistory **out_history);

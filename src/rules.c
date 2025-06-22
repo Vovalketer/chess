@@ -12,6 +12,8 @@
 #define ROOK_KS_STARTING_X 7
 #define WHITE_STARTING_Y 7
 #define BLACK_STARTING_Y 0
+#define EN_PASSANT_WHITE_ROW 3
+#define EN_PASSANT_BLACK_ROW 4
 
 static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position pos, Player player);
 
@@ -219,6 +221,45 @@ bool rules_is_castling(MatchState *state, Move move) {
 	return false;
 }
 
+bool rules_is_en_passant(MatchState *state, Move move) {
+	assert(state != NULL);
+	Board *board = match_get_board(state);
+	Piece pawn = board_get_piece(board, move.src);
+	if (pawn.type != PAWN) {
+		return false;
+	}
+	Player player = pawn.player;
+	int step;
+	int en_passant_row;
+	if (player == WHITE_PLAYER) {
+		step = -1;
+		en_passant_row = EN_PASSANT_WHITE_ROW;
+	} else {
+		step = 1;
+		en_passant_row = EN_PASSANT_BLACK_ROW;
+	}
+	// check if the pawn is standing in the row where en passant is possible and
+	// is attempting to advance in diagonal by 1 square
+	if (move.src.y != en_passant_row || abs(move.dst.x - move.src.x) != 1 ||
+		move.dst.y != move.src.y + step) {
+		return false;
+	}
+
+	Piece target = board_get_piece(board, (Position) {move.dst.x, move.dst.y - step});
+	if (target.type == PAWN && target.player != player) {
+		TurnRecord *record = NULL;
+		bool record_get = match_get_last_turn_record(state, &record);
+		assert(record_get);
+		if (record->src.type != PAWN || record->src.player != target.player) {
+			return false;
+		}
+		if (abs(record->move.dst.y - record->move.src.y) == 2) {
+			return true;
+		}
+	}
+	return false;
+}
+
 MoveType rules_get_move_type(MatchState *state, Move move) {
 	Board *board = match_get_board(state);
 	Piece src_piece = board_get_piece(board, move.src);
@@ -234,9 +275,9 @@ MoveType rules_get_move_type(MatchState *state, Move move) {
 	if (rules_is_castling(state, move)) {
 		return MOVE_CASTLING;
 	}
-	// if (rules_is_en_passant(state, move)) {
-	// 	return MOVE_EN_PASSANT;
-	// }
+	if (rules_is_en_passant(state, move)) {
+		return MOVE_EN_PASSANT;
+	}
 	if (rules_is_valid_move(state, move)) {
 		return MOVE_REGULAR;
 	} else {

@@ -18,7 +18,7 @@ Chess implementation, written in C
 - [x] Implement Pawn's two-square opening move.
 - [x] Implement Pawn promotion when reaching the last rank.
 - [x] Implement Castling.
-- [ ] Implement En Passant capture rule.
+- [x] Implement En Passant capture rule.
 
 ### Check & Checkmate
 

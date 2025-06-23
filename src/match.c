@@ -6,6 +6,12 @@
 #include "board.h"
 
 static Piece match_get_promoted_piece(Player player, PromotionType type);
+static void match_remove_ks_castling_rights(MatchState *state, Player player);
+static void match_remove_qs_castling_rights(MatchState *state, Player player);
+static void match_remove_all_castling_rights(MatchState *state, Player player);
+static bool match_is_castling_rights_available(MatchState *state, Player player);
+static void match_queenside_castling(MatchState *state, Player player);
+static void match_kingside_castling(MatchState *state, Player player);
 
 struct MatchState {
 	Board *board;
@@ -102,7 +108,22 @@ Board *match_get_board(MatchState *state) {
 
 bool match_move_piece(MatchState *state, Position src, Position dst) {
 	assert(state != NULL);
-	return board_move_piece(state->board, src, dst);
+	Piece piece = board_get_piece(state->board, src);
+	Player player = piece.player;
+	if (board_move_piece(state->board, src, dst)) {
+		if (match_is_castling_rights_available(state, player)) {
+			if (piece.type == KING) {
+				match_remove_all_castling_rights(state, player);
+			} else if (piece.type == ROOK) {
+				if (src.x == 0) {
+					match_remove_qs_castling_rights(state, player);
+				} else if (src.x == 7) {
+					match_remove_ks_castling_rights(state, player);
+				}
+			}
+		}
+	}
+	return false;
 }
 
 void match_set_next_promotion_type(MatchState *state, Player player, PromotionType type) {
@@ -238,7 +259,8 @@ bool match_is_queenside_castling_available(MatchState *state, Player player) {
 	return player == WHITE_PLAYER ? state->w_qs_castling : state->b_qs_castling;
 }
 
-void match_kingside_castling(MatchState *state, Player player) {
+static void match_kingside_castling(MatchState *state, Player player) {
+	assert(player != NONE);
 	int row = player == WHITE_PLAYER ? 7 : 0;
 	int king_col = 4;
 	int rook_col = 7;
@@ -251,14 +273,10 @@ void match_kingside_castling(MatchState *state, Player player) {
 	Position rook_castled_pos = (Position) {5, row};
 	board_move_piece(state->board, king_pos, king_castled_pos);
 	board_move_piece(state->board, rook_pos, rook_castled_pos);
-	if (player == WHITE_PLAYER) {
-		state->w_ks_castling = false;
-	} else {
-		state->b_ks_castling = false;
-	}
 }
 
-void match_queenside_castling(MatchState *state, Player player) {
+static void match_queenside_castling(MatchState *state, Player player) {
+	assert(player != NONE);
 	int row = player == WHITE_PLAYER ? 7 : 0;
 	int king_col = 4;
 	int rook_col = 0;
@@ -271,9 +289,59 @@ void match_queenside_castling(MatchState *state, Player player) {
 	Position rook_castled_pos = (Position) {3, row};
 	board_move_piece(state->board, king_pos, king_castled_pos);
 	board_move_piece(state->board, rook_pos, rook_castled_pos);
+}
+
+bool match_move_castling(MatchState *state, Position src, Position dst) {
+	assert(state != NULL);
+	Player p_src = board_get_piece(state->board, src).player;
+	Player p_dst = board_get_piece(state->board, dst).player;
+	Piece king = board_get_piece(state->board, src);
+	Piece rook = board_get_piece(state->board, dst);
+	if (king.type != KING || rook.type != ROOK || p_src != p_dst) {
+		return false;
+	}
+	if (dst.x == 0) {
+		match_queenside_castling(state, p_src);
+	} else {
+		match_kingside_castling(state, p_src);
+	}
+	match_remove_all_castling_rights(state, p_src);
+	return true;
+}
+
+static void match_remove_qs_castling_rights(MatchState *state, Player player) {
+	assert(state != NULL);
+	assert(player != NONE);
+
 	if (player == WHITE_PLAYER) {
 		state->w_qs_castling = false;
 	} else {
 		state->b_qs_castling = false;
 	}
+}
+
+static void match_remove_ks_castling_rights(MatchState *state, Player player) {
+	assert(state != NULL);
+	assert(player != NONE);
+
+	if (player == WHITE_PLAYER) {
+		state->w_ks_castling = false;
+	} else {
+		state->b_ks_castling = false;
+	}
+}
+
+static void match_remove_all_castling_rights(MatchState *state, Player player) {
+	assert(state != NULL);
+	assert(player != NONE);
+
+	match_remove_ks_castling_rights(state, player);
+	match_remove_qs_castling_rights(state, player);
+}
+
+static bool match_is_castling_rights_available(MatchState *state, Player player) {
+	assert(state != NULL);
+	assert(player != NONE);
+	return match_is_kingside_castling_available(state, player) ||
+		   match_is_queenside_castling_available(state, player);
 }

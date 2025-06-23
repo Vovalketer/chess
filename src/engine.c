@@ -62,10 +62,23 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 
 	TurnRecord record = match_create_turn_record(state, move, move_type, promotion_type);
 
-	if (match_move_piece(state, src, dst)) {
-		// commit record only if the move is valid
-		match_append_turn_record(state, record);
+	switch (move_type) {
+		case MOVE_REGULAR:
+			match_move_piece(state, src, dst);
+			break;
+		case MOVE_CASTLING:
+			match_move_castling(state, src, dst);
+			break;
+		// case MOVE_EN_PASSANT:
+		// 	match_move_en_passant(state, src, dst);
+		// 	break;
+		case MOVE_PROMOTION:
+			match_promote_pawn(state, src);
+		default:
+			break;
 	}
+
+	match_append_turn_record(state, record);
 	match_next_turn(state);
 	return true;
 }

@@ -28,4 +28,5 @@ bool match_get_history_clone(MatchState *state, TurnHistory **out_history);
 bool match_undo_move(MatchState *state);
 bool match_is_kingside_castling_available(MatchState *state, Player player);
 bool match_is_queenside_castling_available(MatchState *state, Player player);
+bool match_move_castling(MatchState *state, Position src, Position dst);
 #endif

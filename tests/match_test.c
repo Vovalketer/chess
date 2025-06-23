@@ -191,3 +191,79 @@ Test(match, promote_pawn) {
 	Piece piece = match_get_piece(match, pos);
 	cr_assert_eq(piece.type, QUEEN);
 }
+
+Test(match, white_castling_move_kingside) {
+	Board *board = match_get_board(match);
+	Position src = (Position) {4, 7};
+	Position dst = (Position) {7, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, src);
+	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, dst);
+	bool result = match_move_castling(match, src, dst);
+	cr_assert(result);
+
+	Position expect_king_pos = (Position) {6, 7};
+	Piece expect_king = board_get_piece(board, expect_king_pos);
+	Position expect_rook_pos = (Position) {5, 7};
+	Piece expect_rook = board_get_piece(board, expect_rook_pos);
+	cr_assert_eq(expect_king.type, KING);
+	cr_assert_eq(expect_king.player, WHITE_PLAYER);
+	cr_assert_eq(expect_rook.type, ROOK);
+	cr_assert_eq(expect_rook.player, WHITE_PLAYER);
+}
+
+Test(match, white_castling_move_queenside) {
+	Board *board = match_get_board(match);
+	Position src = (Position) {4, 7};
+	Position dst = (Position) {0, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, src);
+	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, dst);
+	bool result = match_move_castling(match, src, dst);
+	cr_assert(result);
+
+	Position expect_king_pos = (Position) {2, 7};
+	Piece expect_king = board_get_piece(board, expect_king_pos);
+	Position expect_rook_pos = (Position) {3, 7};
+	Piece expect_rook = board_get_piece(board, expect_rook_pos);
+	cr_assert_eq(expect_king.type, KING);
+	cr_assert_eq(expect_king.player, WHITE_PLAYER);
+	cr_assert_eq(expect_rook.type, ROOK);
+	cr_assert_eq(expect_rook.player, WHITE_PLAYER);
+}
+
+Test(match, black_castling_move_kingside) {
+	Board *board = match_get_board(match);
+	Position src = (Position) {4, 0};
+	Position dst = (Position) {7, 0};
+	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, src);
+	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, dst);
+	bool result = match_move_castling(match, src, dst);
+	cr_assert(result);
+
+	Position expect_king_pos = (Position) {6, 0};
+	Piece expect_king = board_get_piece(board, expect_king_pos);
+	Position expect_rook_pos = (Position) {5, 0};
+	Piece expect_rook = board_get_piece(board, expect_rook_pos);
+	cr_assert_eq(expect_king.type, KING);
+	cr_assert_eq(expect_king.player, BLACK_PLAYER);
+	cr_assert_eq(expect_rook.type, ROOK);
+	cr_assert_eq(expect_rook.player, BLACK_PLAYER);
+}
+
+Test(match, black_castling_move_queenside) {
+	Board *board = match_get_board(match);
+	Position src = (Position) {4, 0};
+	Position dst = (Position) {0, 0};
+	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, src);
+	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, dst);
+	bool result = match_move_castling(match, src, dst);
+	cr_assert(result);
+
+	Position expect_king_pos = (Position) {2, 0};
+	Piece expect_king = board_get_piece(board, expect_king_pos);
+	Position expect_rook_pos = (Position) {3, 0};
+	Piece expect_rook = board_get_piece(board, expect_rook_pos);
+	cr_assert_eq(expect_king.type, KING);
+	cr_assert_eq(expect_king.player, BLACK_PLAYER);
+	cr_assert_eq(expect_rook.type, ROOK);
+	cr_assert_eq(expect_rook.player, BLACK_PLAYER);
+}

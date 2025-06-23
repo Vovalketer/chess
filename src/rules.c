@@ -134,7 +134,7 @@ bool rules_is_promotion(MatchState *state, Position pos) {
 bool rules_can_castle_kingside(MatchState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	if (!match_kingside_castling_available(state, player)) {
+	if (!match_is_kingside_castling_available(state, player)) {
 		return false;
 	}
 	int row;
@@ -168,7 +168,7 @@ bool rules_can_castle_kingside(MatchState *state, Player player) {
 bool rules_can_castle_queenside(MatchState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	if (!match_queenside_castling_available(state, player)) {
+	if (!match_is_queenside_castling_available(state, player)) {
 		return false;
 	}
 	int row;

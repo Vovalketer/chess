@@ -230,11 +230,11 @@ bool match_undo_move(MatchState *state) {
 	return true;
 }
 
-bool match_kingside_castling_available(MatchState *state, Player player) {
+bool match_is_kingside_castling_available(MatchState *state, Player player) {
 	return player == WHITE_PLAYER ? state->w_ks_castling : state->b_ks_castling;
 }
 
-bool match_queenside_castling_available(MatchState *state, Player player) {
+bool match_is_queenside_castling_available(MatchState *state, Player player) {
 	return player == WHITE_PLAYER ? state->w_qs_castling : state->b_qs_castling;
 }
 

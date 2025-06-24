@@ -269,11 +269,17 @@ MoveType rules_get_move_type(MatchState *state, Move move) {
 		return MOVE_INVALID;
 	}
 
-	if (rules_is_promotion(state, move.dst)) {
-		return MOVE_PROMOTION;
-	}
+	// castling is our only case where src piece and dest piece are friendly
 	if (rules_is_castling(state, move)) {
 		return MOVE_CASTLING;
+	}
+	// fail fast if target is friendly
+	if (board_get_piece(board, move.src).player == board_get_piece(board, move.dst).player) {
+		return MOVE_INVALID;
+	}
+
+	if (rules_is_promotion(state, move.dst)) {
+		return MOVE_PROMOTION;
 	}
 	if (rules_is_en_passant(state, move)) {
 		return MOVE_EN_PASSANT;

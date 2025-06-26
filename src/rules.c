@@ -122,8 +122,8 @@ bool rules_is_checkmate(MatchState *state, Player player) {
 
 bool rules_is_promotion(MatchState *state, Position pos) {
 	Piece piece = match_get_piece(state, pos);
-	return piece.type == PAWN &&
-		   ((piece.player == WHITE_PLAYER && pos.y == 0) || (piece.player == BLACK_PLAYER && pos.y == 7));
+	return piece.type == PAWN && ((piece.player == WHITE_PLAYER && pos.y == BLACK_STARTING_Y) ||
+								  (piece.player == BLACK_PLAYER && pos.y == WHITE_STARTING_Y));
 }
 
 bool rules_can_castle_kingside(MatchState *state, Player player) {
@@ -134,9 +134,9 @@ bool rules_can_castle_kingside(MatchState *state, Player player) {
 	}
 	int row;
 	if (player == WHITE_PLAYER) {
-		row = 7;
+		row = WHITE_STARTING_Y;
 	} else {
-		row = 0;
+		row = BLACK_STARTING_Y;
 	}
 	Piece expect_rook = match_get_piece(state, (Position) {ROOK_KS_STARTING_X, row});
 	Piece expect_king = match_get_piece(state, (Position) {KING_STARTING_X, row});

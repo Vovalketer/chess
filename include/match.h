@@ -14,6 +14,7 @@ bool match_move_piece(MatchState *state, Position src, Position dst);
 PromotionType match_promote_pawn(MatchState *state, Position pos);
 Piece match_get_piece(const MatchState *state, Position pos);
 void match_set_next_promotion_type(MatchState *state, Player player, PromotionType type);
+Player match_get_enemy_player(Player player);
 Player match_get_player_turn(const MatchState *state);
 int match_get_turn(const MatchState *state);
 int match_previous_turn(MatchState *state);

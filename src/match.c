@@ -345,3 +345,7 @@ static bool match_is_castling_rights_available(MatchState *state, Player player)
 	return match_is_kingside_castling_available(state, player) ||
 		   match_is_queenside_castling_available(state, player);
 }
+
+Player match_get_enemy_player(Player player) {
+	return player == WHITE_PLAYER ? BLACK_PLAYER : WHITE_PLAYER;
+}

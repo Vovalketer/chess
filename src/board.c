@@ -132,9 +132,10 @@ bool board_is_friendly(const Board *board, Player player, Position pos) {
 
 Position board_find_king_pos(const Board *board, Player player) {
 	assert(board != NULL);
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			Position pos = (Position) {i, j};
+	assert(player != NONE);
+	for (int col = 0; col < 8; col++) {
+		for (int row = 0; row < 8; row++) {
+			Position pos = (Position) {col, row};
 			Piece piece = board_get_piece(board, pos);
 			if (piece.player == player && piece.type == KING) {
 				return pos;

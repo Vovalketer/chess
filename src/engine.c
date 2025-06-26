@@ -44,17 +44,13 @@ Piece engine_get_piece(MatchState *state, Position pos) {
 }
 
 bool engine_move_piece(MatchState *state, Position src, Position dst) {
-	Move move = (Move) {src, dst};
-	PromotionType promotion_type = NO_PROMOTION;
-
 	if (match_get_status(state) != MATCH_IN_PROGRESS ||
 		match_get_player_turn(state) != match_get_piece(state, src).player) {
 		return false;
 	}
 
-	if (rules_is_check_after_move(state, move)) {
-		return false;
-	}
+	Move move = (Move) {src, dst};
+	PromotionType promotion_type = NO_PROMOTION;
 
 	MoveType move_type = rules_get_move_type(state, move);
 	if (move_type == MOVE_INVALID) {

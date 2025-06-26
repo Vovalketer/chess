@@ -19,20 +19,12 @@ static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position pos, Pla
 
 bool rules_is_valid_move(MatchState *state, Move move) {
 	bool success = false;
-	const Board *board = match_get_board(state);
+	Board *board = match_get_board(state);
 	Piece src_piece = board_get_piece(board, move.src);
 	if (src_piece.player != match_get_player_turn(state) || src_piece.type == EMPTY) {
 		success = false;
 	} else {
-		MoveList *moves = NULL;
-		move_list_create(&moves);
-		// TODO: error handling
-		movegen_generate(board, move.src, moves);
-
-		if (move_list_contains(moves, move)) {
-			success = true;
-		}
-		move_list_destroy(&moves);
+		success = movegen_contains(board, move);
 	}
 	return success;
 }

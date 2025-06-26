@@ -5,11 +5,15 @@
 #include "position.h"
 #include "types.h"
 
+typedef enum { MATCH_IN_PROGRESS, MATCH_DRAW, MATCH_WHITE_WINS, MATCH_BLACK_WINS } MatchStatus;
+
 bool match_create(MatchState **state);
 bool match_create_empty(MatchState **state);
 bool match_clone(MatchState **dst, const MatchState *src);
 void match_destroy(MatchState **state);
 Board *match_get_board(MatchState *state);
+MatchStatus match_get_status(MatchState *state);
+void match_set_status(MatchState *state, MatchStatus status);
 bool match_move_piece(MatchState *state, Position src, Position dst);
 PromotionType match_promote_pawn(MatchState *state, Position pos);
 Piece match_get_piece(const MatchState *state, Position pos);

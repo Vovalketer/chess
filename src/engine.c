@@ -10,6 +10,7 @@
 #include "../include/movelist.h"
 #include "../include/rules.h"
 
+static bool _update_match_status(MatchState *state);
 bool engine_create_match(MatchState **state) {
 	MatchState *b;
 	bool result = match_create(&b);
@@ -46,8 +47,8 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 	Move move = (Move) {src, dst};
 	PromotionType promotion_type = NO_PROMOTION;
 
-	if (rules_is_checkmate(state, match_get_player_turn(state))) {
-		printf("checkmate\n");
+	if (match_get_status(state) != MATCH_IN_PROGRESS ||
+		match_get_player_turn(state) != match_get_piece(state, src).player) {
 		return false;
 	}
 
@@ -80,7 +81,18 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 
 	match_append_turn_record(state, record);
 	match_next_turn(state);
+	_update_match_status(state);
 	return true;
+}
+
+bool _update_match_status(MatchState *state) {
+	Player player = match_get_enemy_player(match_get_player_turn(state));
+	bool is_checkmate = rules_is_checkmate(state, player);
+	if (is_checkmate) {
+		MatchStatus winner = player == WHITE_PLAYER ? MATCH_BLACK_WINS : MATCH_WHITE_WINS;
+		match_set_status(state, winner);
+	}
+	return is_checkmate;
 }
 
 void engine_undo_move(MatchState *state) {

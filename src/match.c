@@ -16,9 +16,10 @@ static void match_kingside_castling(MatchState *state, Player player);
 struct MatchState {
 	Board *board;
 	int turn;
-	TurnHistory *history;
 	PromotionType white_promotion;
 	PromotionType black_promotion;
+	TurnHistory *history;
+	MatchStatus status;
 	bool w_ks_castling;
 	bool w_qs_castling;
 	bool b_ks_castling;
@@ -54,6 +55,7 @@ bool match_create_empty(MatchState **state) {
 
 	m->white_promotion = PROMOTION_QUEEN;
 	m->black_promotion = PROMOTION_QUEEN;
+	m->status = MATCH_IN_PROGRESS;
 	m->w_ks_castling = true;
 	m->w_qs_castling = true;
 	m->b_ks_castling = true;
@@ -84,6 +86,7 @@ bool match_clone(MatchState **dst, const MatchState *src) {
 	b->turn = src->turn;
 	b->white_promotion = src->white_promotion;
 	b->black_promotion = src->black_promotion;
+	b->status = src->status;
 	b->w_ks_castling = src->w_ks_castling;
 	b->w_qs_castling = src->w_qs_castling;
 	b->b_ks_castling = src->b_ks_castling;
@@ -104,6 +107,16 @@ void match_destroy(MatchState **state) {
 Board *match_get_board(MatchState *state) {
 	assert(state != NULL);
 	return state->board;
+}
+
+MatchStatus match_get_status(MatchState *state) {
+	assert(state != NULL);
+	return state->status;
+}
+
+void match_set_status(MatchState *state, MatchStatus status) {
+	assert(state != NULL);
+	state->status = status;
 }
 
 bool match_move_piece(MatchState *state, Position src, Position dst) {

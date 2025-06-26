@@ -2,6 +2,7 @@
 
 // pseudo valid moves, doesnt check for rules
 
+#include <assert.h>
 #include <stdio.h>
 
 #include "board.h"
@@ -54,6 +55,19 @@ bool movegen_generate(const Board *board, Position pos, MoveList *moves) {
 	}
 
 	return true;
+}
+
+bool movegen_contains(Board *board, Move move) {
+	assert(board != NULL);
+	MoveList *ml = NULL;
+	move_list_create(&ml);
+	bool gen = movegen_generate(board, move.src, ml);
+	assert(gen);
+	bool contains = move_list_contains(ml, move);
+
+	move_list_destroy(&ml);
+
+	return contains;
 }
 
 static void _gen_rook(const Board *board, Piece piece, Position pos, MoveList *moves) {

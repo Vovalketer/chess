@@ -17,7 +17,7 @@
 
 static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position pos, Player player);
 
-bool rules_is_valid_move(MatchState *state, Move move) {
+bool rules_is_pseudo_legal_move(MatchState *state, Move move) {
 	bool success = false;
 	Board *board = match_get_board(state);
 	Piece src_piece = board_get_piece(board, move.src);
@@ -279,7 +279,7 @@ MoveType rules_get_move_type(MatchState *state, Move move) {
 	if (rules_is_en_passant(state, move)) {
 		return MOVE_EN_PASSANT;
 	}
-	if (rules_is_valid_move(state, move)) {
+	if (rules_is_pseudo_legal_move(state, move)) {
 		return MOVE_REGULAR;
 	} else {
 		return MOVE_INVALID;

@@ -80,6 +80,9 @@ bool rules_is_check_after_move(MatchState *state, Move move) {
 	Board *board = match_get_board(state);
 	Piece src_piece = board_get_piece(board, move.src);
 	Piece dst_piece = board_get_piece(board, move.dst);
+	if (src_piece.player == dst_piece.player) {
+		return false;
+	}
 	bool is_move = board_move_piece(board, move.src, move.dst);
 	assert(is_move == true);
 	bool is_check = rules_is_check(state, player);

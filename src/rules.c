@@ -268,7 +268,7 @@ MoveType rules_get_move_type(MatchState *state, Move move) {
 	Piece src_piece = board_get_piece(board, move.src);
 	Player player = match_get_player_turn(state);
 
-	if (src_piece.player == NONE || player != src_piece.player) {
+	if (src_piece.player == NONE || player != src_piece.player || rules_is_check_after_move(state, move)) {
 		return MOVE_INVALID;
 	}
 

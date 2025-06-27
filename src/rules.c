@@ -240,7 +240,8 @@ bool rules_is_en_passant(MatchState *state, Move move) {
 		return false;
 	}
 
-	Piece target = board_get_piece(board, (Position) {move.dst.x, move.dst.y - step});
+	Position target_pos = (Position) {move.dst.x, move.dst.y - step};
+	Piece target = board_get_piece(board, target_pos);
 	if (target.type == PAWN && target.player != player) {
 		TurnRecord *record = NULL;
 		bool record_get = match_get_last_turn_record(state, &record);
@@ -248,7 +249,7 @@ bool rules_is_en_passant(MatchState *state, Move move) {
 		if (record->src.type != PAWN || record->src.player != target.player) {
 			return false;
 		}
-		if (abs(record->move.dst.y - record->move.src.y) == 2) {
+		if (position_eq(record->move.dst, target_pos) && abs(record->move.dst.y - record->move.src.y) == 2) {
 			return true;
 		}
 	}

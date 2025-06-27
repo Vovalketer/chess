@@ -11,6 +11,7 @@
 #include "../include/rules.h"
 
 static bool _update_match_status(MatchState *state);
+
 bool engine_create_match(MatchState **state) {
 	MatchState *b;
 	bool result = match_create(&b);
@@ -66,9 +67,10 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 		case MOVE_CASTLING:
 			match_move_castling(state, src, dst);
 			break;
-		// case MOVE_EN_PASSANT:
-		// 	match_move_en_passant(state, src, dst);
-		// 	break;
+		case MOVE_EN_PASSANT:
+			bool is_en_passant = match_move_en_passant(state, src, dst);
+			assert(is_en_passant);
+			break;
 		case MOVE_PROMOTION:
 			promotion_type = match_promote_pawn(state, src);
 		default:

@@ -322,6 +322,27 @@ bool match_move_castling(MatchState *state, Position src, Position dst) {
 	return true;
 }
 
+bool match_move_en_passant(MatchState *state, Position src, Position dst) {
+	assert(state != NULL);
+	Piece src_piece = board_get_piece(state->board, src);
+	if (src_piece.type != PAWN) {
+		return false;
+	}
+	int step = src_piece.player == WHITE_PLAYER ? 1 : -1;
+	Position target_pos = (Position) {dst.x, dst.y + step};
+	Piece target = board_get_piece(state->board, target_pos);
+
+	if (target.type != PAWN || target.player == src_piece.player) {
+		return false;
+	}
+
+	bool pawn_move = board_move_piece(state->board, src, dst);
+	assert(pawn_move);
+	board_remove_piece(state->board, target_pos);
+
+	return true;
+}
+
 static void match_remove_qs_castling_rights(MatchState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);

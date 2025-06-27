@@ -34,4 +34,5 @@ bool match_undo_move(MatchState *state);
 bool match_is_kingside_castling_available(MatchState *state, Player player);
 bool match_is_queenside_castling_available(MatchState *state, Player player);
 bool match_move_castling(MatchState *state, Position src, Position dst);
+bool match_move_en_passant(MatchState *state, Position src, Position dst);
 #endif

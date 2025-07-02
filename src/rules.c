@@ -246,7 +246,8 @@ bool rules_is_en_passant(MatchState *state, Move move) {
 		TurnRecord *record = NULL;
 		bool record_get = match_get_last_turn_record(state, &record);
 		assert(record_get);
-		if (record->src.type != PAWN || record->src.player != target.player) {
+		if (record->src.type != PAWN || !position_eq(record->move.dst, target_pos) ||
+			record->src.player != target.player) {
 			return false;
 		}
 		if (position_eq(record->move.dst, target_pos) && abs(record->move.dst.y - record->move.src.y) == 2) {

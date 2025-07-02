@@ -44,7 +44,8 @@ Test(rules, is_check_after_move_returns_true_when_king_would_be_endangered) {
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {2, 1});
 
-	bool is_check = rules_is_check_after_move(match, (Move) {(Position) {0, 0}, (Position) {1, 0}});
+	bool is_check =
+		rules_is_check_after_move(match, WHITE_PLAYER, (Move) {(Position) {0, 0}, (Position) {1, 0}});
 	cr_assert_eq(is_check, true);
 }
 
@@ -54,7 +55,8 @@ Test(rules, is_check_after_move_returns_false_when_king_would_not_be_endangered)
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {3, 1});
 
-	bool is_check = rules_is_check_after_move(match, (Move) {(Position) {0, 0}, (Position) {1, 0}});
+	bool is_check =
+		rules_is_check_after_move(match, WHITE_PLAYER, (Move) {(Position) {0, 0}, (Position) {1, 0}});
 	cr_assert_eq(is_check, false);
 }
 
@@ -64,7 +66,8 @@ Test(rules, is_check_after_move_returns_false_when_attacker_is_captured) {
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {1, 0});
 
-	bool is_check = rules_is_check_after_move(match, (Move) {(Position) {0, 0}, (Position) {1, 0}});
+	bool is_check =
+		rules_is_check_after_move(match, WHITE_PLAYER, (Move) {(Position) {0, 0}, (Position) {1, 0}});
 	cr_assert_eq(is_check, false);
 }
 
@@ -75,7 +78,8 @@ Test(rules, is_check_after_move_returns_true_when_move_exposes_king) {
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = ROOK}, (Position) {1, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {2, 0});
 
-	bool is_check = rules_is_check_after_move(match, (Move) {(Position) {1, 0}, (Position) {1, 4}});
+	bool is_check =
+		rules_is_check_after_move(match, WHITE_PLAYER, (Move) {(Position) {1, 0}, (Position) {1, 4}});
 	cr_assert_eq(is_check, true);
 }
 
@@ -86,7 +90,8 @@ Test(rules, is_check_after_move_returns_true_when_capturing_attacker_exposes_kin
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {1, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {2, 0});
 
-	bool is_check = rules_is_check_after_move(match, (Move) {(Position) {0, 0}, (Position) {1, 0}});
+	bool is_check =
+		rules_is_check_after_move(match, WHITE_PLAYER, (Move) {(Position) {0, 0}, (Position) {1, 0}});
 	cr_assert_eq(is_check, true);
 }
 

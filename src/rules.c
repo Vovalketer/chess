@@ -66,9 +66,8 @@ bool rules_is_check(MatchState *state, Player player) {
 	return rules_is_tile_targeted_by_enemy(state, king_pos, player);
 }
 
-bool rules_is_check_after_move(MatchState *state, Move move) {
+bool rules_is_check_after_move(MatchState *state, Player player, Move move) {
 	assert(state != NULL);
-	Player player = match_get_player_turn(state);
 	Board *board = match_get_board(state);
 	Piece src_piece = board_get_piece(board, move.src);
 	Piece dst_piece = board_get_piece(board, move.dst);
@@ -108,7 +107,7 @@ bool rules_is_checkmate(MatchState *state, Player player) {
 				for (size_t k = 0; k < move_list_size(moves); k++) {
 					Move *move = NULL;
 					move_list_get(moves, k, &move);
-					if (!rules_is_check_after_move(state, *move)) {
+					if (!rules_is_check_after_move(state, player, *move)) {
 						move_list_destroy(&moves);
 						return false;
 					}
@@ -262,7 +261,8 @@ MoveType rules_get_move_type(MatchState *state, Move move) {
 	Piece src_piece = board_get_piece(board, move.src);
 	Player player = match_get_player_turn(state);
 
-	if (src_piece.player == NONE || player != src_piece.player || rules_is_check_after_move(state, move)) {
+	if (src_piece.player == NONE || player != src_piece.player ||
+		rules_is_check_after_move(state, player, move)) {
 		return MOVE_INVALID;
 	}
 

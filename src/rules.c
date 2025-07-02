@@ -6,6 +6,8 @@
 #include "../include/movegen.h"
 #include "../include/movelist.h"
 #include "board.h"
+#include "log.h"
+#include "turn_moves.h"
 
 #define KING_STARTING_X 4
 #define ROOK_QS_STARTING_X 0
@@ -13,7 +15,11 @@
 #define WHITE_STARTING_Y 7
 #define BLACK_STARTING_Y 0
 #define EN_PASSANT_WHITE_ROW 3
+#define EN_PASSANT_WHITE_TARGET_ROW 2
 #define EN_PASSANT_BLACK_ROW 4
+#define EN_PASSANT_BLACK_TARGET_ROW 5
+#define CASTLING_KS_KING_TARGET_COL 6
+#define CASTLING_QS_KING_TARGET_COL 2
 
 static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position pos, Player player);
 
@@ -286,4 +292,144 @@ MoveType rules_get_move_type(MatchState *state, Move move) {
 	} else {
 		return MOVE_INVALID;
 	}
+}
+
+static bool _validate_en_passant_target(MatchState *state, Piece piece, Move move) {
+	if (piece.type != PAWN || !board_is_within_bounds(move.src) || !board_is_within_bounds(move.dst) ||
+		board_get_piece(match_get_board(state), move.dst).type != EMPTY) {
+		return false;
+	}
+	if (move.src.y != EN_PASSANT_WHITE_ROW && move.src.y != EN_PASSANT_BLACK_ROW) {
+		return false;
+	}
+	if (move.dst.y != EN_PASSANT_WHITE_TARGET_ROW && move.dst.y != EN_PASSANT_BLACK_TARGET_ROW) {
+		return false;
+	}
+	Board *board = match_get_board(state);
+	Player player = piece.player;
+	// y = src instead of dst, the enemy pawn is next to the player pawn
+	Position enemy_pawn_pos = (Position) {move.dst.x, move.src.y};
+	Piece target = board_get_piece(board, enemy_pawn_pos);
+	if (target.type == PAWN && target.player != player) {
+		TurnRecord *record = NULL;
+		bool record_get = match_get_last_turn_record(state, &record);
+		if (!record_get) {
+			log_error("Failed to get turn record");
+			exit(1);
+		}
+		if (record->src.type != PAWN || !position_eq(record->move.dst, enemy_pawn_pos) ||
+			record->src.player != target.player) {
+			return false;
+		}
+		if (position_eq(record->move.dst, enemy_pawn_pos) &&
+			abs(record->move.dst.y - record->move.src.y) == 2) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static bool rules_can_en_passant_left(MatchState *state, Piece piece, Position pos, Move *out_move) {
+	int row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
+	Move move = (Move) {.src = pos, .dst = (Position) {.x = pos.x - 1, row}};
+	bool valid = _validate_en_passant_target(state, piece, move);
+	if (valid) {
+		*out_move = move;
+	}
+	return valid;
+}
+
+static bool rules_can_en_passant_right(MatchState *state, Piece piece, Position pos, Move *out_move) {
+	int row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
+	Move move = (Move) {.src = pos, .dst = (Position) {.x = pos.x + 1, row}};
+	bool valid = _validate_en_passant_target(state, piece, move);
+	if (valid) {
+		*out_move = move;
+	}
+	return valid;
+}
+
+static MoveList *rules_generate_piece_moves(MatchState *state, Piece piece, Position pos) {
+	log_trace("Generating piece moves for piece %d at x:%d y:%d", piece.type, pos.x, pos.y);
+	Board *board = match_get_board(state);
+	MoveList *moves = NULL;
+	bool move_list_created = move_list_create(&moves);
+	if (!move_list_created) {
+		log_error("OOM. Failed to create move list");
+		exit(1);
+	}
+	bool generated = movegen_generate(board, pos, moves);
+	if (!generated) {
+		log_error("Failed to generate piece moves");
+		exit(1);
+	}
+
+	MoveList *out_moves = NULL;
+	bool out_moves_create = move_list_create(&out_moves);
+	if (!out_moves_create) {
+		log_error("OOM. Failed to create move list");
+		exit(1);
+	}
+	// filter invalid moves
+	for (size_t i = 0; i < move_list_size(moves); i++) {
+		Move *move = NULL;
+		move_list_get(moves, i, &move);
+		if (!rules_is_check_after_move(state, piece.player, *move)) {
+			move_list_append(out_moves, *move);
+		}
+	}
+	move_list_destroy(&moves);
+
+	// add special moves to the list if applicable
+	if (piece.type == PAWN) {
+		Move tmp;
+		if (rules_can_en_passant_left(state, piece, pos, &tmp)) {
+			move_list_append(out_moves, tmp);
+		}
+		if (rules_can_en_passant_right(state, piece, pos, &tmp)) {
+			move_list_append(out_moves, tmp);
+		}
+	}
+	if (piece.type == KING) {
+		if (rules_can_castle_kingside(state, piece.player)) {
+			Move ks_castling =
+				(Move) {.src = pos, .dst = (Position) {.x = CASTLING_KS_KING_TARGET_COL, .y = pos.y}};
+			move_list_append(out_moves, ks_castling);
+		}
+		if (rules_can_castle_queenside(state, piece.player)) {
+			Move qs_castling =
+				(Move) {.src = pos, .dst = (Position) {.x = CASTLING_QS_KING_TARGET_COL, .y = pos.y}};
+			move_list_append(out_moves, qs_castling);
+		}
+	}
+
+	return out_moves;
+}
+
+TurnMoves *rules_generate_turn_moves(MatchState *state, Player player) {
+	log_trace("Generating turn moves for %d", player);
+	Board *board = match_get_board(state);
+	TurnMoves *tm = NULL;
+	bool tm_create = turn_moves_create(&tm);
+	if (!tm_create) {
+		log_error("OOM. Failed to create turn moves");
+		exit(1);
+	}
+	for (int col = 0; col < 8; col++) {
+		for (int row = 0; row < 8; row++) {
+			Position pos = (Position) {col, row};
+			Piece piece = board_get_piece(board, pos);
+			if (piece.player == player) {
+				MoveList *moves = rules_generate_piece_moves(state, piece, pos);
+				TurnPieceMoves piece_moves = {.pos = pos, .moves = moves};
+				bool append = turn_moves_append(tm, piece_moves);
+				if (!append) {
+					log_error("Failed to append turn moves");
+					exit(1);
+				}
+			}
+		}
+	}
+
+	return tm;
 }

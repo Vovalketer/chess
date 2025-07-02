@@ -24,6 +24,7 @@ struct MatchState {
 	bool w_qs_castling;
 	bool b_ks_castling;
 	bool b_qs_castling;
+	TurnMoves *legal_moves;
 };
 
 bool match_create(MatchState **state) {
@@ -60,6 +61,7 @@ bool match_create_empty(MatchState **state) {
 	m->w_qs_castling = true;
 	m->b_ks_castling = true;
 	m->b_qs_castling = true;
+	m->legal_moves = NULL;
 	m->turn = 0;
 	*state = m;
 	return true;
@@ -341,6 +343,16 @@ bool match_move_en_passant(MatchState *state, Position src, Position dst) {
 	board_remove_piece(state->board, target_pos);
 
 	return true;
+}
+
+TurnMoves *match_get_legal_moves(MatchState *state) {
+	assert(state != NULL);
+	return state->legal_moves;
+}
+
+void match_set_legal_moves(MatchState *state, TurnMoves *moves) {
+	assert(state != NULL);
+	state->legal_moves = moves;
 }
 
 static void match_remove_qs_castling_rights(MatchState *state, Player player) {

@@ -3,6 +3,7 @@
 
 #include "history.h"
 #include "position.h"
+#include "turn_moves.h"
 #include "types.h"
 
 typedef enum { MATCH_IN_PROGRESS, MATCH_DRAW, MATCH_WHITE_WINS, MATCH_BLACK_WINS } MatchStatus;
@@ -35,4 +36,6 @@ bool match_is_kingside_castling_available(MatchState *state, Player player);
 bool match_is_queenside_castling_available(MatchState *state, Player player);
 bool match_move_castling(MatchState *state, Position src, Position dst);
 bool match_move_en_passant(MatchState *state, Position src, Position dst);
+TurnMoves *match_get_legal_moves(MatchState *state);
+void match_set_legal_moves(MatchState *state, TurnMoves *moves);
 #endif

@@ -13,6 +13,13 @@ static bool match_is_castling_rights_available(MatchState *state, Player player)
 static void match_queenside_castling(MatchState *state, Player player);
 static void match_kingside_castling(MatchState *state, Player player);
 
+typedef struct {
+	bool w_ks;
+	bool w_qs;
+	bool b_ks;
+	bool b_qs;
+} CastlingRights;
+
 struct MatchState {
 	Board *board;
 	int turn;
@@ -20,10 +27,7 @@ struct MatchState {
 	PromotionType black_promotion;
 	TurnHistory *history;
 	MatchStatus status;
-	bool w_ks_castling;
-	bool w_qs_castling;
-	bool b_ks_castling;
-	bool b_qs_castling;
+	CastlingRights castling;
 	TurnMoves *legal_moves;
 };
 
@@ -57,10 +61,10 @@ bool match_create_empty(MatchState **state) {
 	m->white_promotion = PROMOTION_QUEEN;
 	m->black_promotion = PROMOTION_QUEEN;
 	m->status = MATCH_IN_PROGRESS;
-	m->w_ks_castling = true;
-	m->w_qs_castling = true;
-	m->b_ks_castling = true;
-	m->b_qs_castling = true;
+	m->castling.w_ks = true;
+	m->castling.w_qs = true;
+	m->castling.b_ks = true;
+	m->castling.b_qs = true;
 	m->legal_moves = NULL;
 	m->turn = 0;
 	*state = m;
@@ -89,10 +93,10 @@ bool match_clone(MatchState **dst, const MatchState *src) {
 	b->white_promotion = src->white_promotion;
 	b->black_promotion = src->black_promotion;
 	b->status = src->status;
-	b->w_ks_castling = src->w_ks_castling;
-	b->w_qs_castling = src->w_qs_castling;
-	b->b_ks_castling = src->b_ks_castling;
-	b->b_qs_castling = src->b_qs_castling;
+	b->castling.w_ks = src->castling.w_ks;
+	b->castling.w_qs = src->castling.w_qs;
+	b->castling.b_ks = src->castling.b_ks;
+	b->castling.b_qs = src->castling.b_qs;
 	*dst = b;
 	return true;
 }
@@ -267,11 +271,11 @@ bool match_undo_move(MatchState *state) {
 }
 
 bool match_is_kingside_castling_available(MatchState *state, Player player) {
-	return player == WHITE_PLAYER ? state->w_ks_castling : state->b_ks_castling;
+	return player == WHITE_PLAYER ? state->castling.w_ks : state->castling.b_ks;
 }
 
 bool match_is_queenside_castling_available(MatchState *state, Player player) {
-	return player == WHITE_PLAYER ? state->w_qs_castling : state->b_qs_castling;
+	return player == WHITE_PLAYER ? state->castling.w_qs : state->castling.b_qs;
 }
 
 static void match_kingside_castling(MatchState *state, Player player) {
@@ -360,9 +364,9 @@ static void match_remove_qs_castling_rights(MatchState *state, Player player) {
 	assert(player != NONE);
 
 	if (player == WHITE_PLAYER) {
-		state->w_qs_castling = false;
+		state->castling.w_qs = false;
 	} else {
-		state->b_qs_castling = false;
+		state->castling.b_qs = false;
 	}
 }
 
@@ -371,9 +375,9 @@ static void match_remove_ks_castling_rights(MatchState *state, Player player) {
 	assert(player != NONE);
 
 	if (player == WHITE_PLAYER) {
-		state->w_ks_castling = false;
+		state->castling.w_ks = false;
 	} else {
-		state->b_ks_castling = false;
+		state->castling.b_ks = false;
 	}
 }
 

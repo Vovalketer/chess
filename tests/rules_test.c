@@ -387,7 +387,7 @@ Test(rules, white_is_castling_kingside) {
 	board_set_piece(board, king, king_pos);
 	board_set_piece(board, rook, rook_pos);
 
-	Move castling_move = (Move) {king_pos, rook_pos};
+	Move castling_move = (Move) {king_pos, (Position) {6, 7}};
 	bool ks_castling = rules_is_castling(match, castling_move);
 
 	cr_assert_eq(ks_castling, true);
@@ -404,7 +404,7 @@ Test(rules, white_is_castling_queenside) {
 	board_set_piece(board, king, king_pos);
 	board_set_piece(board, rook, rook_pos);
 
-	Move castling_move = (Move) {king_pos, rook_pos};
+	Move castling_move = (Move) {king_pos, (Position) {2, 7}};
 	bool qs_castling = rules_is_castling(match, castling_move);
 
 	cr_assert_eq(qs_castling, true);
@@ -421,7 +421,7 @@ Test(rules, black_is_castling_kingside) {
 	board_set_piece(board, king, king_pos);
 	board_set_piece(board, rook, rook_pos);
 
-	Move castling_move = (Move) {king_pos, rook_pos};
+	Move castling_move = (Move) {king_pos, (Position) {6, 0}};
 	bool ks_castling = rules_is_castling(match, castling_move);
 
 	cr_assert_eq(ks_castling, true);
@@ -438,7 +438,7 @@ Test(rules, black_is_castling_queenside) {
 	board_set_piece(board, king, king_pos);
 	board_set_piece(board, rook, rook_pos);
 
-	Move castling_move = (Move) {king_pos, rook_pos};
+	Move castling_move = (Move) {king_pos, (Position) {2, 0}};
 	bool qs_castling = rules_is_castling(match, castling_move);
 
 	cr_assert_eq(qs_castling, true);

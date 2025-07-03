@@ -306,19 +306,28 @@ static void match_queenside_castling(MatchState *state, Player player) {
 
 bool match_move_castling(MatchState *state, Position src, Position dst) {
 	assert(state != NULL);
-	Player p_src = board_get_piece(state->board, src).player;
-	Player p_dst = board_get_piece(state->board, dst).player;
 	Piece king = board_get_piece(state->board, src);
-	Piece rook = board_get_piece(state->board, dst);
-	if (king.type != KING || rook.type != ROOK || p_src != p_dst) {
+	Player p_king = king.player;
+	int rook_col;
+	if (dst.x == 6) {
+		rook_col = 7;
+	} else if (dst.x == 2) {
+		rook_col = 0;
+	} else {
 		return false;
 	}
-	if (dst.x == 0) {
-		match_queenside_castling(state, p_src);
-	} else {
-		match_kingside_castling(state, p_src);
+	Position rook_pos = (Position) {rook_col, dst.y};
+	Piece rook = board_get_piece(state->board, rook_pos);
+	Player p_rook = rook.player;
+	if (king.type != KING || rook.type != ROOK || p_king != p_rook) {
+		return false;
 	}
-	match_remove_all_castling_rights(state, p_src);
+	if (dst.x == 2) {
+		match_queenside_castling(state, p_king);
+	} else {
+		match_kingside_castling(state, p_king);
+	}
+	match_remove_all_castling_rights(state, p_king);
 	return true;
 }
 

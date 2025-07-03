@@ -19,9 +19,12 @@
 #define EN_PASSANT_BLACK_ROW 4
 #define EN_PASSANT_BLACK_TARGET_ROW 5
 #define CASTLING_KS_KING_TARGET_COL 6
+#define CASTLING_KS_ROOK_TARGET_COL 5
 #define CASTLING_QS_KING_TARGET_COL 2
+#define CASTLING_QS_ROOK_TARGET_COL 3
 
 static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position pos, Player player);
+static bool _validate_en_passant_target(MatchState *state, Move move);
 
 bool rules_is_pseudo_legal_move(MatchState *state, Move move) {
 	bool success = false;
@@ -151,14 +154,15 @@ bool rules_can_castle_kingside(MatchState *state, Player player) {
 	assert(expect_king.type == KING);
 
 	// check if the tiles between the king and the rook are empty
-	Position tile1 = {6, row};
-	Position tile2 = {5, row};
-	if (match_get_piece(state, tile1).type != EMPTY || match_get_piece(state, tile2).type != EMPTY) {
+	Position king_target_pos = {CASTLING_KS_KING_TARGET_COL, row};
+	Position rook_target_pos = {CASTLING_KS_ROOK_TARGET_COL, row};
+	if (match_get_piece(state, king_target_pos).type != EMPTY ||
+		match_get_piece(state, rook_target_pos).type != EMPTY) {
 		return false;
 	}
 	// check if the king is in check and if the target tiles are not being threatened by the enemy
-	if (rules_is_check(state, player) || rules_is_tile_targeted_by_enemy(state, tile1, player) ||
-		rules_is_tile_targeted_by_enemy(state, tile2, player)) {
+	if (rules_is_check(state, player) || rules_is_tile_targeted_by_enemy(state, king_target_pos, player) ||
+		rules_is_tile_targeted_by_enemy(state, rook_target_pos, player)) {
 		return false;
 	}
 
@@ -185,15 +189,16 @@ bool rules_can_castle_queenside(MatchState *state, Player player) {
 	assert(expect_rook.type == ROOK);
 	assert(expect_king.type == KING);
 
-	Position tile1 = {1, row};
-	Position tile2 = {2, row};
-	Position tile3 = {3, row};
-	if (match_get_piece(state, tile1).type != EMPTY || match_get_piece(state, tile2).type != EMPTY ||
-		match_get_piece(state, tile3).type != EMPTY) {
+	Position empty_tile = {1, row};
+	Position king_target_pos = {CASTLING_QS_KING_TARGET_COL, row};
+	Position rook_target_pos = {CASTLING_QS_ROOK_TARGET_COL, row};
+	if (match_get_piece(state, empty_tile).type != EMPTY ||
+		match_get_piece(state, king_target_pos).type != EMPTY ||
+		match_get_piece(state, rook_target_pos).type != EMPTY) {
 		return false;
 	}
-	if (rules_is_tile_targeted_by_enemy(state, tile2, player) ||
-		rules_is_tile_targeted_by_enemy(state, tile3, player)) {
+	if (rules_is_tile_targeted_by_enemy(state, king_target_pos, player) ||
+		rules_is_tile_targeted_by_enemy(state, rook_target_pos, player)) {
 		return false;
 	}
 
@@ -203,98 +208,55 @@ bool rules_can_castle_queenside(MatchState *state, Player player) {
 bool rules_is_castling(MatchState *state, Move move) {
 	assert(state != NULL);
 	Board *board = match_get_board(state);
-	if (move.src.y != WHITE_STARTING_Y && move.src.y != BLACK_STARTING_Y) {
+	if ((move.src.y != WHITE_STARTING_Y && move.src.y != BLACK_STARTING_Y) ||
+		(move.dst.y != WHITE_STARTING_Y && move.dst.y != BLACK_STARTING_Y)) {
 		return false;
 	}
 	Piece src_piece = board_get_piece(board, move.src);
-	Piece dst_piece = board_get_piece(board, move.dst);
-	if (src_piece.type != KING || dst_piece.type != ROOK || src_piece.player != dst_piece.player) {
+	if (src_piece.type != KING) {
 		return false;
 	}
 	Player p = src_piece.player;
-	if (move.dst.x == ROOK_KS_STARTING_X) {
+	if (move.dst.x == CASTLING_KS_KING_TARGET_COL) {
 		return rules_can_castle_kingside(state, p);
 	}
-	if (move.dst.x == ROOK_QS_STARTING_X) {
+	if (move.dst.x == CASTLING_QS_KING_TARGET_COL) {
 		return rules_can_castle_queenside(state, p);
 	}
 	return false;
 }
 
 bool rules_is_en_passant(MatchState *state, Move move) {
-	assert(state != NULL);
-	Board *board = match_get_board(state);
-	Piece pawn = board_get_piece(board, move.src);
-	if (pawn.type != PAWN) {
-		return false;
-	}
-	Player player = pawn.player;
-	int step;
-	int en_passant_row;
-	if (player == WHITE_PLAYER) {
-		step = -1;
-		en_passant_row = EN_PASSANT_WHITE_ROW;
-	} else {
-		step = 1;
-		en_passant_row = EN_PASSANT_BLACK_ROW;
-	}
-	// check if the pawn is standing in the row where en passant is possible and
-	// is attempting to advance in diagonal by 1 square
-	if (move.src.y != en_passant_row || abs(move.dst.x - move.src.x) != 1 ||
-		move.dst.y != move.src.y + step) {
-		return false;
-	}
+	return _validate_en_passant_target(state, move);
+}
 
-	Position target_pos = (Position) {move.dst.x, move.dst.y - step};
-	Piece target = board_get_piece(board, target_pos);
-	if (target.type == PAWN && target.player != player) {
-		TurnRecord *record = NULL;
-		bool record_get = match_get_last_turn_record(state, &record);
-		assert(record_get);
-		if (record->src.type != PAWN || !position_eq(record->move.dst, target_pos) ||
-			record->src.player != target.player) {
-			return false;
-		}
-		if (position_eq(record->move.dst, target_pos) && abs(record->move.dst.y - record->move.src.y) == 2) {
-			return true;
-		}
-	}
-	return false;
+bool rules_is_valid_move(MatchState *state, Move move) {
+	TurnMoves *m = match_get_legal_moves(state);
+	return turn_moves_contains(m, move);
 }
 
 MoveType rules_get_move_type(MatchState *state, Move move) {
-	Board *board = match_get_board(state);
-	Piece src_piece = board_get_piece(board, move.src);
-	Player player = match_get_player_turn(state);
-
-	if (src_piece.player == NONE || player != src_piece.player ||
-		rules_is_check_after_move(state, player, move)) {
+	if (!rules_is_valid_move(state, move)) {
 		return MOVE_INVALID;
 	}
 
-	// castling is our only case where src piece and dest piece are friendly
 	if (rules_is_castling(state, move)) {
 		return MOVE_CASTLING;
-	}
-	// fail fast if target is friendly
-	if (board_get_piece(board, move.src).player == board_get_piece(board, move.dst).player) {
-		return MOVE_INVALID;
 	}
 
 	if (rules_is_promotion(state, move.dst)) {
 		return MOVE_PROMOTION;
 	}
+
 	if (rules_is_en_passant(state, move)) {
 		return MOVE_EN_PASSANT;
 	}
-	if (rules_is_pseudo_legal_move(state, move)) {
-		return MOVE_REGULAR;
-	} else {
-		return MOVE_INVALID;
-	}
+
+	return MOVE_REGULAR;
 }
 
-static bool _validate_en_passant_target(MatchState *state, Piece piece, Move move) {
+static bool _validate_en_passant_target(MatchState *state, Move move) {
+	Piece piece = board_get_piece(match_get_board(state), move.src);
 	if (piece.type != PAWN || !board_is_within_bounds(move.src) || !board_is_within_bounds(move.dst) ||
 		board_get_piece(match_get_board(state), move.dst).type != EMPTY) {
 		return false;
@@ -329,20 +291,22 @@ static bool _validate_en_passant_target(MatchState *state, Piece piece, Move mov
 	return false;
 }
 
-static bool rules_can_en_passant_left(MatchState *state, Piece piece, Position pos, Move *out_move) {
+static bool rules_can_en_passant_left(MatchState *state, Position pos, Move *out_move) {
+	Piece piece = board_get_piece(match_get_board(state), pos);
 	int row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
 	Move move = (Move) {.src = pos, .dst = (Position) {.x = pos.x - 1, row}};
-	bool valid = _validate_en_passant_target(state, piece, move);
+	bool valid = _validate_en_passant_target(state, move);
 	if (valid) {
 		*out_move = move;
 	}
 	return valid;
 }
 
-static bool rules_can_en_passant_right(MatchState *state, Piece piece, Position pos, Move *out_move) {
+static bool rules_can_en_passant_right(MatchState *state, Position pos, Move *out_move) {
+	Piece piece = board_get_piece(match_get_board(state), pos);
 	int row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
 	Move move = (Move) {.src = pos, .dst = (Position) {.x = pos.x + 1, row}};
-	bool valid = _validate_en_passant_target(state, piece, move);
+	bool valid = _validate_en_passant_target(state, move);
 	if (valid) {
 		*out_move = move;
 	}
@@ -383,10 +347,10 @@ static MoveList *rules_generate_piece_moves(MatchState *state, Piece piece, Posi
 	// add special moves to the list if applicable
 	if (piece.type == PAWN) {
 		Move tmp;
-		if (rules_can_en_passant_left(state, piece, pos, &tmp)) {
+		if (rules_can_en_passant_left(state, pos, &tmp)) {
 			move_list_append(out_moves, tmp);
 		}
-		if (rules_can_en_passant_right(state, piece, pos, &tmp)) {
+		if (rules_can_en_passant_right(state, pos, &tmp)) {
 			move_list_append(out_moves, tmp);
 		}
 	}

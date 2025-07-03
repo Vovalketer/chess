@@ -118,18 +118,18 @@ void match_set_status(MatchState *state, MatchStatus status) {
 	state->status = status;
 }
 
-bool match_move_piece(MatchState *state, Position src, Position dst) {
+bool match_move_piece(MatchState *state, Move move) {
 	assert(state != NULL);
-	Piece piece = board_get_piece(state->board, src);
+	Piece piece = board_get_piece(state->board, move.src);
 	Player player = piece.player;
-	if (board_move_piece(state->board, src, dst)) {
+	if (board_move_piece(state->board, move.src, move.dst)) {
 		if (match_is_castling_rights_available(state, player)) {
 			if (piece.type == KING) {
 				match_remove_all_castling_rights(state, player);
 			} else if (piece.type == ROOK) {
-				if (src.x == 0) {
+				if (move.src.x == 0) {
 					match_remove_qs_castling_rights(state, player);
-				} else if (src.x == 7) {
+				} else if (move.src.x == 7) {
 					match_remove_ks_castling_rights(state, player);
 				}
 			}
@@ -304,25 +304,25 @@ static void match_queenside_castling(MatchState *state, Player player) {
 	board_move_piece(state->board, rook_pos, rook_castled_pos);
 }
 
-bool match_move_castling(MatchState *state, Position src, Position dst) {
+bool match_move_castling(MatchState *state, Move move) {
 	assert(state != NULL);
-	Piece king = board_get_piece(state->board, src);
+	Piece king = board_get_piece(state->board, move.src);
 	Player p_king = king.player;
 	int rook_col;
-	if (dst.x == 6) {
+	if (move.dst.x == 6) {
 		rook_col = 7;
-	} else if (dst.x == 2) {
+	} else if (move.dst.x == 2) {
 		rook_col = 0;
 	} else {
 		return false;
 	}
-	Position rook_pos = (Position) {rook_col, dst.y};
+	Position rook_pos = (Position) {rook_col, move.dst.y};
 	Piece rook = board_get_piece(state->board, rook_pos);
 	Player p_rook = rook.player;
 	if (king.type != KING || rook.type != ROOK || p_king != p_rook) {
 		return false;
 	}
-	if (dst.x == 2) {
+	if (move.dst.x == 2) {
 		match_queenside_castling(state, p_king);
 	} else {
 		match_kingside_castling(state, p_king);
@@ -331,21 +331,21 @@ bool match_move_castling(MatchState *state, Position src, Position dst) {
 	return true;
 }
 
-bool match_move_en_passant(MatchState *state, Position src, Position dst) {
+bool match_move_en_passant(MatchState *state, Move move) {
 	assert(state != NULL);
-	Piece src_piece = board_get_piece(state->board, src);
+	Piece src_piece = board_get_piece(state->board, move.src);
 	if (src_piece.type != PAWN) {
 		return false;
 	}
 	int step = src_piece.player == WHITE_PLAYER ? 1 : -1;
-	Position target_pos = (Position) {dst.x, dst.y + step};
+	Position target_pos = (Position) {move.dst.x, move.dst.y + step};
 	Piece target = board_get_piece(state->board, target_pos);
 
 	if (target.type != PAWN || target.player == src_piece.player) {
 		return false;
 	}
 
-	bool pawn_move = board_move_piece(state->board, src, dst);
+	bool pawn_move = board_move_piece(state->board, move.src, move.dst);
 	assert(pawn_move);
 	board_remove_piece(state->board, target_pos);
 

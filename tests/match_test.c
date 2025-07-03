@@ -198,7 +198,8 @@ Test(match, white_castling_move_kingside) {
 	Position dst = (Position) {6, 7};
 	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, src);
 	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, dst);
-	bool result = match_move_castling(match, src, dst);
+	Move move = (Move) {src, dst};
+	bool result = match_move_castling(match, move);
 	cr_assert(result);
 
 	Position expect_king_pos = (Position) {6, 7};
@@ -217,7 +218,8 @@ Test(match, white_castling_move_queenside) {
 	Position dst = (Position) {2, 7};
 	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, src);
 	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, dst);
-	bool result = match_move_castling(match, src, dst);
+	Move move = (Move) {src, dst};
+	bool result = match_move_castling(match, move);
 	cr_assert(result);
 
 	Position expect_king_pos = (Position) {2, 7};
@@ -236,7 +238,8 @@ Test(match, black_castling_move_kingside) {
 	Position dst = (Position) {6, 0};
 	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, src);
 	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, dst);
-	bool result = match_move_castling(match, src, dst);
+	Move move = (Move) {src, dst};
+	bool result = match_move_castling(match, move);
 	cr_assert(result);
 
 	Position expect_king_pos = (Position) {6, 0};
@@ -255,7 +258,8 @@ Test(match, black_castling_move_queenside) {
 	Position dst = (Position) {2, 0};
 	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, src);
 	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, dst);
-	bool result = match_move_castling(match, src, dst);
+	Move move = (Move) {src, dst};
+	bool result = match_move_castling(match, move);
 	cr_assert(result);
 
 	Position expect_king_pos = (Position) {2, 0};

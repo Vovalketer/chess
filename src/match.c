@@ -13,13 +13,6 @@ static bool match_is_castling_rights_available(MatchState *state, Player player)
 static void match_queenside_castling(MatchState *state, Player player);
 static void match_kingside_castling(MatchState *state, Player player);
 
-typedef struct {
-	bool w_ks;
-	bool w_qs;
-	bool b_ks;
-	bool b_qs;
-} CastlingRights;
-
 struct MatchState {
 	Board *board;
 	int turn;
@@ -221,6 +214,7 @@ TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type,
 						 .src = match_get_piece(state, move.src),
 						 .dst = match_get_piece(state, move.dst),
 						 .move_type = type,
+						 .castling = state->castling,
 						 .promoted_type = prom};
 }
 

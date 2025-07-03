@@ -4,7 +4,6 @@
 #include "move.h"
 #include "types.h"
 
-// TODO: castling rights
 typedef struct {
 	Move move;
 	Piece src;
@@ -12,6 +11,7 @@ typedef struct {
 	MoveType move_type;
 	PromotionType promoted_type;
 	int turn;
+	CastlingRights castling;
 } TurnRecord;
 
 ARRAY_DEFINE_TYPE(TurnRecord, TurnHistory, history)

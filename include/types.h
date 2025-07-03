@@ -16,6 +16,13 @@ typedef enum {
 	PROMOTION_ROOK,
 } PromotionType;
 
+typedef struct {
+	bool w_ks;
+	bool w_qs;
+	bool b_ks;
+	bool b_qs;
+} CastlingRights;
+
 typedef enum {
 	EMPTY,
 	PAWN,

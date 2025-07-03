@@ -12,5 +12,6 @@ typedef struct {
 } TurnPieceMoves;
 
 ARRAY_DEFINE_TYPE(TurnPieceMoves, TurnMoves, turn_moves)
+bool turn_moves_contains(TurnMoves *moves, Move move);
 
 #endif

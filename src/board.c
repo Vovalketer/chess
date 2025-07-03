@@ -1,12 +1,47 @@
 #include "board.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 struct Board {
 	Piece board[8][8];
 };
+
+void board_print(Board *board) {
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			switch (board->board[i][j].type) {
+				case PAWN:
+					printf("P");
+					break;
+				case ROOK:
+					printf("R");
+					break;
+				case KNIGHT:
+					printf("N");
+					break;
+				case BISHOP:
+					printf("B");
+					break;
+				case QUEEN:
+					printf("Q");
+					break;
+				case KING:
+					printf("K");
+					break;
+				case EMPTY:
+					printf(".");
+					break;
+				default:
+					printf("?");
+					break;
+			}
+		}
+		printf("\n");
+	}
+}
 
 bool board_create(Board **board) {
 	assert(board != NULL);

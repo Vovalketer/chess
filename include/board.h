@@ -18,5 +18,6 @@ bool board_is_empty(const Board *board, Position pos);
 bool board_is_enemy(const Board *board, Player player, Position pos);
 bool board_is_friendly(const Board *board, Player player, Position pos);
 Position board_find_king_pos(const Board *board, Player player);
+void board_print(Board *board);
 
 #endif	// BOARD_H

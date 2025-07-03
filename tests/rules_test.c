@@ -452,9 +452,7 @@ Test(rules, white_is_en_passant_is_true_when_b_pawn_double_moves) {
 	Position b_pawn_target = (Position) {0, 3};
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
 
-	CastlingRights rights = {0};
-	TurnRecord record = (TurnRecord) {
-		move_b, b_pawn, board_get_piece(board, b_pawn_target), MOVE_REGULAR, NO_PROMOTION, 0, rights};
+	TurnRecord record = match_create_turn_record(match, move_b, MOVE_REGULAR, NO_PROMOTION);
 	match_append_turn_record(match, record);
 	board_move_piece(board, b_pawn_pos, b_pawn_target);
 	match_next_turn(match);
@@ -477,9 +475,7 @@ Test(rules, black_is_en_passant_is_true_when_w_pawn_double_moves) {
 	Position w_pawn_target = (Position) {0, 4};
 	Move move = (Move) {w_pawn_pos, w_pawn_target};
 
-	CastlingRights rights = {0};
-	TurnRecord record = (TurnRecord) {
-		move, w_pawn, board_get_piece(board, w_pawn_target), MOVE_REGULAR, NO_PROMOTION, 0, rights};
+	TurnRecord record = match_create_turn_record(match, move, MOVE_REGULAR, NO_PROMOTION);
 	match_append_turn_record(match, record);
 	board_move_piece(board, w_pawn_pos, w_pawn_target);
 	match_next_turn(match);
@@ -501,9 +497,7 @@ Test(rules, white_is_en_passant_is_false_when_b_pawn_single_moves) {
 	Position b_pawn_target = (Position) {0, 3};
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
 
-	CastlingRights rights = {0};
-	TurnRecord record = (TurnRecord) {
-		move_b, b_pawn, board_get_piece(board, b_pawn_target), MOVE_REGULAR, NO_PROMOTION, 0, rights};
+	TurnRecord record = match_create_turn_record(match, move_b, MOVE_REGULAR, NO_PROMOTION);
 	match_append_turn_record(match, record);
 	board_move_piece(board, b_pawn_pos, b_pawn_target);
 	match_next_turn(match);
@@ -526,8 +520,7 @@ Test(rules, black_is_en_passant_is_false_when_w_pawn_single_moves) {
 	Position w_pawn_target = (Position) {0, 3};
 	Move move_w = (Move) {w_pawn_pos, w_pawn_target};
 
-	CastlingRights rights = {0};
-	TurnRecord record = (TurnRecord) {0};
+	TurnRecord record = match_create_turn_record(match, move_w, MOVE_REGULAR, NO_PROMOTION);
 	match_append_turn_record(match, record);
 	board_move_piece(board, w_pawn_pos, w_pawn_target);
 	match_next_turn(match);
@@ -553,9 +546,7 @@ Test(rules, white_is_en_passant_is_false_when_white_doesnt_capture_immediately) 
 	// set turn to black before adding the turn record
 	match_next_turn(match);
 
-	CastlingRights rights = {0};
-	TurnRecord record = (TurnRecord) {
-		move_b, b_pawn, board_get_piece(board, b_pawn_target), MOVE_REGULAR, NO_PROMOTION, 0, rights};
+	TurnRecord record = match_create_turn_record(match, move_b, MOVE_REGULAR, NO_PROMOTION);
 	match_append_turn_record(match, record);
 	board_move_piece(board, b_pawn_pos, b_pawn_target);
 	match_next_turn(match);
@@ -590,9 +581,7 @@ Test(rules, black_is_en_passant_is_false_when_black_doesnt_capture_immediately) 
 	Position w_pawn_target = (Position) {0, 4};
 	Move move_w = (Move) {w_pawn_pos, w_pawn_target};
 
-	CastlingRights rights = {0};
-	TurnRecord record = (TurnRecord) {
-		move_w, w_pawn, board_get_piece(board, w_pawn_target), MOVE_REGULAR, NO_PROMOTION, 0, rights};
+	TurnRecord record = match_create_turn_record(match, move_w, MOVE_REGULAR, NO_PROMOTION);
 	match_append_turn_record(match, record);
 	board_move_piece(board, w_pawn_pos, w_pawn_target);
 	match_next_turn(match);

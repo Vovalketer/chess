@@ -454,13 +454,11 @@ Test(rules, white_is_en_passant_is_true_when_b_pawn_double_moves) {
 	Board *board = match_get_board(match);
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
 	Position b_pawn_pos = (Position) {0, 1};
-	board_set_piece(board, b_pawn, b_pawn_pos);
 	Position b_pawn_target = (Position) {0, 3};
+	board_set_piece(board, b_pawn, b_pawn_pos);
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
+	match_move_piece(match, move_b);
 
-	TurnRecord record = match_create_turn_record(match, move_b, MOVE_REGULAR, NO_PROMOTION);
-	match_append_turn_record(match, record);
-	board_move_piece(board, b_pawn_pos, b_pawn_target);
 	match_next_turn(match);
 
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
@@ -477,13 +475,11 @@ Test(rules, black_is_en_passant_is_true_when_w_pawn_double_moves) {
 	Board *board = match_get_board(match);
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	Position w_pawn_pos = (Position) {0, 6};
-	board_set_piece(board, w_pawn, w_pawn_pos);
 	Position w_pawn_target = (Position) {0, 4};
+	board_set_piece(board, w_pawn, w_pawn_pos);
 	Move move = (Move) {w_pawn_pos, w_pawn_target};
+	match_move_piece(match, move);
 
-	TurnRecord record = match_create_turn_record(match, move, MOVE_REGULAR, NO_PROMOTION);
-	match_append_turn_record(match, record);
-	board_move_piece(board, w_pawn_pos, w_pawn_target);
 	match_next_turn(match);
 
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
@@ -499,13 +495,11 @@ Test(rules, white_is_en_passant_is_false_when_b_pawn_single_moves) {
 	Board *board = match_get_board(match);
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
 	Position b_pawn_pos = (Position) {0, 2};
-	board_set_piece(board, b_pawn, b_pawn_pos);
 	Position b_pawn_target = (Position) {0, 3};
+	board_set_piece(board, b_pawn, b_pawn_pos);
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
+	match_move_piece(match, move_b);
 
-	TurnRecord record = match_create_turn_record(match, move_b, MOVE_REGULAR, NO_PROMOTION);
-	match_append_turn_record(match, record);
-	board_move_piece(board, b_pawn_pos, b_pawn_target);
 	match_next_turn(match);
 
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
@@ -522,13 +516,11 @@ Test(rules, black_is_en_passant_is_false_when_w_pawn_single_moves) {
 	Board *board = match_get_board(match);
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	Position w_pawn_pos = (Position) {0, 2};
-	board_set_piece(board, w_pawn, w_pawn_pos);
 	Position w_pawn_target = (Position) {0, 3};
+	board_set_piece(board, w_pawn, w_pawn_pos);
 	Move move_w = (Move) {w_pawn_pos, w_pawn_target};
+	match_move_piece(match, move_w);
 
-	TurnRecord record = match_create_turn_record(match, move_w, MOVE_REGULAR, NO_PROMOTION);
-	match_append_turn_record(match, record);
-	board_move_piece(board, w_pawn_pos, w_pawn_target);
 	match_next_turn(match);
 
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
@@ -549,11 +541,9 @@ Test(rules, white_is_en_passant_is_false_when_white_doesnt_capture_immediately) 
 	Position b_pawn_target = (Position) {0, 3};
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
 
-	// set turn to black before adding the turn record
+	// set turn to black before moving the piece to add a record
 	match_next_turn(match);
 
-	TurnRecord record = match_create_turn_record(match, move_b, MOVE_REGULAR, NO_PROMOTION);
-	match_append_turn_record(match, record);
 	match_move_piece(match, move_b);
 	match_next_turn(match);
 
@@ -561,8 +551,6 @@ Test(rules, white_is_en_passant_is_false_when_white_doesnt_capture_immediately) 
 	board_set_piece(board, w_irrelevant_piece, (Position) {6, 5});
 	Move move_2 = (Move) {(Position) {6, 5}, (Position) {6, 4}};
 
-	TurnRecord record_2 = match_create_turn_record(match, move_2, MOVE_REGULAR, NO_PROMOTION);
-	match_append_turn_record(match, record_2);
 	match_move_piece(match, move_2);
 	match_next_turn(match);
 
@@ -587,8 +575,6 @@ Test(rules, black_is_en_passant_is_false_when_black_doesnt_capture_immediately) 
 	Position w_pawn_target = (Position) {0, 4};
 	Move move_w = (Move) {w_pawn_pos, w_pawn_target};
 
-	TurnRecord record = match_create_turn_record(match, move_w, MOVE_REGULAR, NO_PROMOTION);
-	match_append_turn_record(match, record);
 	match_move_piece(match, move_w);
 	match_next_turn(match);
 
@@ -596,8 +582,6 @@ Test(rules, black_is_en_passant_is_false_when_black_doesnt_capture_immediately) 
 	board_set_piece(board, b_irrelevant_piece, (Position) {6, 5});
 	Move move_2 = (Move) {(Position) {6, 5}, (Position) {6, 4}};
 
-	TurnRecord record_2 = match_create_turn_record(match, move_2, MOVE_REGULAR, NO_PROMOTION);
-	match_append_turn_record(match, record_2);
 	match_move_piece(match, move_2);
 	match_next_turn(match);
 

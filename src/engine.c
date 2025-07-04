@@ -66,8 +66,7 @@ Piece engine_get_piece(MatchState *state, Position pos) {
 	return board_get_piece(match_get_board(state), pos);
 }
 
-static void _next_turn(MatchState *state, TurnRecord record) {
-	match_append_turn_record(state, record);
+static void _next_turn(MatchState *state) {
 	match_next_turn(state);
 	_update_match_status(state);
 	_update_turn_moves(state);
@@ -80,14 +79,11 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 	}
 
 	Move move = (Move) {src, dst};
-	PromotionType promotion_type = NO_PROMOTION;
 
 	MoveType move_type = rules_get_move_type(state, move);
 	if (move_type == MOVE_INVALID) {
 		return false;
 	}
-
-	TurnRecord record = match_create_turn_record(state, move, move_type, promotion_type);
 
 	switch (move_type) {
 		case MOVE_REGULAR:
@@ -106,7 +102,7 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 			break;
 	}
 
-	_next_turn(state, record);
+	_next_turn(state);
 	return true;
 }
 

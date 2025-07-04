@@ -16,7 +16,7 @@ Board *match_get_board(MatchState *state);
 MatchStatus match_get_status(MatchState *state);
 void match_set_status(MatchState *state, MatchStatus status);
 bool match_move_piece(MatchState *state, Move move);
-PromotionType match_promote_pawn(MatchState *state, Position pos);
+bool match_move_promotion(MatchState *state, Move move);
 Piece match_get_piece(const MatchState *state, Position pos);
 void match_set_next_promotion_type(MatchState *state, Player player, PromotionType type);
 Player match_get_enemy_player(Player player);

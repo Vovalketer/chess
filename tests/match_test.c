@@ -192,11 +192,31 @@ Test(match, undo_turn) {
 }
 
 Test(match, promote_pawn) {
-	Position pos = (Position) {0, 0};
-	board_set_piece(match_get_board(match), (Piece) {WHITE_PLAYER, PAWN}, pos);
-	match_promote_pawn(match, pos);
-	Piece piece = match_get_piece(match, pos);
+	Position src = (Position) {6, 1};
+	Position dst = (Position) {6, 0};
+	board_set_piece(match_get_board(match), (Piece) {WHITE_PLAYER, PAWN}, src);
+	Move move = (Move) {src, dst};
+
+	bool is_prom = match_move_promotion(match, move);
+	cr_assert_eq(is_prom, true);
+
+	Piece piece = match_get_piece(match, dst);
 	cr_assert_eq(piece.type, QUEEN);
+}
+
+Test(match, promote_fails_when_not_pawn) {
+	Position src = (Position) {6, 1};
+	Position dst = (Position) {6, 0};
+	board_set_piece(match_get_board(match), (Piece) {WHITE_PLAYER, ROOK}, src);
+	cr_assert_eq(match_get_piece(match, src).type, ROOK);
+	Move move = (Move) {src, dst};
+
+	bool is_prom = match_move_promotion(match, move);
+	cr_assert_eq(is_prom, false);
+
+	// it hasnt moved from the src position
+	Piece piece = match_get_piece(match, src);
+	cr_assert_eq(piece.type, ROOK);
 }
 
 Test(match, white_castling_move_kingside) {

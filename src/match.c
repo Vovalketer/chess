@@ -172,17 +172,22 @@ static Piece match_get_promoted_piece(Player player, PromotionType type) {
 	return (Piece) {player, piece_type};
 }
 
-// promotes to the piece stored in the state
-PromotionType match_promote_pawn(MatchState *state, Position pos) {
+bool match_move_promotion(MatchState *state, Move move) {
 	assert(state != NULL);
-	Piece piece = match_get_piece(state, pos);
-	assert(piece.type == PAWN);
+	Piece piece = board_get_piece(state->board, move.src);
+	if (piece.type != PAWN) {
+		return false;
+	}
 	PromotionType promotion_type =
 		piece.player == WHITE_PLAYER ? state->white_promotion : state->black_promotion;
 	Piece promoted = match_get_promoted_piece(piece.player, promotion_type);
-	bool set_piece = board_set_piece(state->board, promoted, pos);
-	assert(set_piece);
-	return promotion_type;
+	TurnRecord tr = match_create_turn_record(state, move, MOVE_PROMOTION, promotion_type);
+	board_move_piece(state->board, move.src, move.dst);
+	bool set_piece = board_set_piece(state->board, promoted, move.dst);
+	if (set_piece) {
+		match_append_turn_record(state, tr);
+	}
+	return set_piece;
 }
 
 Player match_get_player_turn(const MatchState *state) {

@@ -101,7 +101,7 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 			assert(is_en_passant);
 			break;
 		case MOVE_PROMOTION:
-			promotion_type = match_promote_pawn(state, src);
+			match_move_promotion(state, move);
 		default:
 			break;
 	}

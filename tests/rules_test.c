@@ -120,27 +120,33 @@ Test(rules, is_checkmate_returns_false_when_king_can_escape) {
 Test(rules, is_promotion_returns_true_when_white_pawn_is_in_last_row) {
 	Board *board = match_get_board(match);
 
-	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = PAWN}, (Position) {0, 0});
+	Position pawn_pos = (Position) {0, 1};
+	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = PAWN}, pawn_pos);
 
-	bool is_promotion = rules_is_promotion(match, (Position) {0, 0});
+	Move move = (Move) {pawn_pos, (Position) {0, 0}};
+	bool is_promotion = rules_is_promotion(match, move);
 	cr_assert_eq(is_promotion, true);
 }
 
 Test(rules, is_promotion_returns_true_when_black_pawn_is_in_first_row) {
 	Board *board = match_get_board(match);
 
-	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = PAWN}, (Position) {0, 7});
+	Position pawn_pos = (Position) {0, 6};
+	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = PAWN}, pawn_pos);
 
-	bool is_promotion = rules_is_promotion(match, (Position) {0, 7});
+	Move move = (Move) {pawn_pos, (Position) {0, 7}};
+	bool is_promotion = rules_is_promotion(match, move);
 	cr_assert_eq(is_promotion, true);
 }
 
 Test(rules, is_promotion_returns_false_when_not_pawn) {
 	Board *board = match_get_board(match);
 
-	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = ROOK}, (Position) {0, 0});
+	Position rook_pos = (Position) {0, 1};
+	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = ROOK}, rook_pos);
 
-	bool is_promotion = rules_is_promotion(match, (Position) {0, 0});
+	Move move = (Move) {rook_pos, (Position) {0, 0}};
+	bool is_promotion = rules_is_promotion(match, move);
 	cr_assert_eq(is_promotion, false);
 }
 

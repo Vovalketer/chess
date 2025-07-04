@@ -128,10 +128,10 @@ bool rules_is_checkmate(MatchState *state, Player player) {
 	return true;
 }
 
-bool rules_is_promotion(MatchState *state, Position pos) {
-	Piece piece = match_get_piece(state, pos);
-	return piece.type == PAWN && ((piece.player == WHITE_PLAYER && pos.y == BLACK_STARTING_Y) ||
-								  (piece.player == BLACK_PLAYER && pos.y == WHITE_STARTING_Y));
+bool rules_is_promotion(MatchState *state, Move move) {
+	Piece piece = match_get_piece(state, move.src);
+	return piece.type == PAWN && ((piece.player == WHITE_PLAYER && move.dst.y == BLACK_STARTING_Y) ||
+								  (piece.player == BLACK_PLAYER && move.dst.y == WHITE_STARTING_Y));
 }
 
 bool rules_can_castle_kingside(MatchState *state, Player player) {
@@ -244,7 +244,7 @@ MoveType rules_get_move_type(MatchState *state, Move move) {
 		return MOVE_CASTLING;
 	}
 
-	if (rules_is_promotion(state, move.dst)) {
+	if (rules_is_promotion(state, move)) {
 		return MOVE_PROMOTION;
 	}
 

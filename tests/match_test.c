@@ -9,7 +9,7 @@
 MatchState *match = NULL;
 
 void setup(void) {
-	match_create(&match);
+	match_create_empty(&match);
 }
 
 void teardown(void) {
@@ -19,7 +19,10 @@ void teardown(void) {
 
 TestSuite(match, .init = setup, .fini = teardown);
 
-Test(match, create_returns_board_with_standard_piece_placement) {
+Test(match_std, create_returns_board_with_standard_piece_placement) {
+	MatchState *match = NULL;
+	bool created = match_create(&match);
+	cr_assert(created);
 	for (int i = 0; i < 8; i++) {
 		Piece b_pawn = match_get_piece(match, (Position) {i, 1});
 		cr_assert_eq(b_pawn.type, PAWN);

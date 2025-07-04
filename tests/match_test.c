@@ -221,11 +221,12 @@ Test(match, promote_fails_when_not_pawn) {
 
 Test(match, white_castling_move_kingside) {
 	Board *board = match_get_board(match);
-	Position src = (Position) {4, 7};
-	Position dst = (Position) {6, 7};
-	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, src);
-	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, dst);
-	Move move = (Move) {src, dst};
+	Position king_src = (Position) {4, 7};
+	Position king_dst = (Position) {6, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, king_src);
+	Position rook_src = (Position) {7, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, rook_src);
+	Move move = (Move) {king_src, king_dst};
 	bool result = match_move_castling(match, move);
 	cr_assert(result);
 
@@ -241,11 +242,12 @@ Test(match, white_castling_move_kingside) {
 
 Test(match, white_castling_move_queenside) {
 	Board *board = match_get_board(match);
-	Position src = (Position) {4, 7};
-	Position dst = (Position) {2, 7};
-	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, src);
-	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, dst);
-	Move move = (Move) {src, dst};
+	Position king_src = (Position) {4, 7};
+	Position king_dst = (Position) {2, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, king_src);
+	Position rook_src = (Position) {0, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, rook_src);
+	Move move = (Move) {king_src, king_dst};
 	bool result = match_move_castling(match, move);
 	cr_assert(result);
 
@@ -261,11 +263,12 @@ Test(match, white_castling_move_queenside) {
 
 Test(match, black_castling_move_kingside) {
 	Board *board = match_get_board(match);
-	Position src = (Position) {4, 0};
-	Position dst = (Position) {6, 0};
-	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, src);
-	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, dst);
-	Move move = (Move) {src, dst};
+	Position king_src = (Position) {4, 0};
+	Position king_dst = (Position) {6, 0};
+	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, king_src);
+	Position rook_src = (Position) {7, 0};
+	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, rook_src);
+	Move move = (Move) {king_src, king_dst};
 	bool result = match_move_castling(match, move);
 	cr_assert(result);
 
@@ -281,11 +284,12 @@ Test(match, black_castling_move_kingside) {
 
 Test(match, black_castling_move_queenside) {
 	Board *board = match_get_board(match);
-	Position src = (Position) {4, 0};
-	Position dst = (Position) {2, 0};
-	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, src);
-	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, dst);
-	Move move = (Move) {src, dst};
+	Position king_src = (Position) {4, 0};
+	Position king_dst = (Position) {2, 0};
+	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, king_src);
+	Position rook_src = (Position) {0, 0};
+	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, rook_src);
+	Move move = (Move) {king_src, king_dst};
 	bool result = match_move_castling(match, move);
 	cr_assert(result);
 

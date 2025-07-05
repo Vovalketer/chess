@@ -282,15 +282,45 @@ TurnHistory *match_get_history(MatchState *state) {
 
 bool match_undo_move(MatchState *state) {
 	assert(state != NULL);
-	TurnRecord *r = NULL;
-	bool removed = history_pop_last(state->history, &r);
+	if (history_size(state->history) == 0) {
+		return false;
+	}
+	TurnRecord *tr = NULL;
+	bool removed = history_pop_last(state->history, &tr);
 	if (!removed) {
 		return false;
 	}
-	board_move_piece(state->board, r->move.dst, r->move.src);
-	// if no piece was captured then it'll just set the tile to NONE
-	board_set_piece(state->board, r->captured_piece, r->move.dst);
-	free(r);
+	switch (tr->move_type) {
+		case MOVE_CASTLING:
+			state->castling = tr->castling;
+			board_set_piece(state->board, tr->moving_piece, tr->move.src);
+			board_set_piece(state->board, tr->captured_piece, tr->move.dst);
+
+			board_set_piece(state->board,
+							(Piece) {.player = tr->moving_piece.player, .type = ROOK},
+							tr->special_move_info.rook_move.src);
+			board_remove_piece(state->board, tr->special_move_info.rook_move.dst);
+			break;
+		case MOVE_PROMOTION:
+			board_set_piece(state->board, tr->moving_piece, tr->move.src);
+			board_set_piece(state->board, tr->captured_piece, tr->move.dst);
+			break;
+		case MOVE_EN_PASSANT:
+			board_set_piece(state->board, tr->moving_piece, tr->move.src);
+			board_remove_piece(state->board, tr->move.dst);
+
+			board_set_piece(state->board, tr->captured_piece, tr->special_move_info.captured_pawn_pos);
+			break;
+		case MOVE_REGULAR:
+			board_set_piece(state->board, tr->moving_piece, tr->move.src);
+			board_set_piece(state->board, tr->captured_piece, tr->move.dst);
+			break;
+		case MOVE_INVALID:
+			log_error("Attempted to undo an invalid move type");
+			exit(1);
+			break;
+	}
+	free(tr);
 	return true;
 }
 

@@ -117,7 +117,7 @@ Test(match, append_turn_record_appends_move_to_history) {
 	match_get_turn_record(match, 0, &record);
 	cr_assert(move_eq(move, record->move));
 	cr_assert_eq(record->turn, 0);
-	cr_assert_eq(record->dst.type, EMPTY);
+	cr_assert_eq(record->captured_piece.type, EMPTY);
 
 	match_next_turn(match);
 	Position src2 = (Position) {0, 1};
@@ -129,7 +129,7 @@ Test(match, append_turn_record_appends_move_to_history) {
 	match_get_turn_record(match, 1, &record2);
 	cr_assert(move_eq(move2, record2->move));
 	cr_assert_eq(record2->turn, 1);
-	cr_assert_eq(record2->dst.type, EMPTY);
+	cr_assert_eq(record2->captured_piece.type, EMPTY);
 }
 
 Test(match, turn_record_contains_captured_piece) {
@@ -146,8 +146,8 @@ Test(match, turn_record_contains_captured_piece) {
 	match_get_turn_record(match, 0, &record);
 	cr_assert(move_eq(move, record->move));
 	cr_assert_eq(record->turn, 0);
-	cr_assert_eq(record->dst.type, PAWN);
-	cr_assert_eq(record->dst.player, BLACK_PLAYER);
+	cr_assert_eq(record->captured_piece.type, PAWN);
+	cr_assert_eq(record->captured_piece.player, BLACK_PLAYER);
 }
 
 Test(match, history_contains_moves) {

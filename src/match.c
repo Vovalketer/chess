@@ -4,16 +4,7 @@
 #include <stdlib.h>
 
 #include "board.h"
-
-static Piece match_get_promoted_piece(Player player, PromotionType type);
-static void match_remove_ks_castling_rights(MatchState *state, Player player);
-static void match_remove_qs_castling_rights(MatchState *state, Player player);
-static void match_remove_all_castling_rights(MatchState *state, Player player);
-static bool match_is_castling_rights_available(MatchState *state, Player player);
-static void match_queenside_castling(MatchState *state, Player player);
-static void match_kingside_castling(MatchState *state, Player player);
-TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type, PromotionType prom);
-bool match_append_turn_record(MatchState *state, TurnRecord record);
+#include "log.h"
 
 struct MatchState {
 	Board *board;
@@ -25,6 +16,22 @@ struct MatchState {
 	CastlingRights castling;
 	TurnMoves *legal_moves;
 };
+
+typedef struct {
+	Move king_move;
+	Move rook_move;
+} CastlingMove;
+
+static Piece match_get_promoted_piece(Player player, PromotionType type);
+static void match_remove_ks_castling_rights(MatchState *state, Player player);
+static void match_remove_qs_castling_rights(MatchState *state, Player player);
+static void match_remove_all_castling_rights(MatchState *state, Player player);
+static bool match_is_castling_rights_available(MatchState *state, Player player);
+static CastlingMove match_queenside_castling(MatchState *state, Player player);
+static CastlingMove match_kingside_castling(MatchState *state, Player player);
+TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type, Piece moving_piece,
+									Piece captured_piece, SpecialMoveInfo special);
+bool match_append_turn_record(MatchState *state, TurnRecord record);
 
 bool match_create(MatchState **state) {
 	if (!match_create_empty(state)) {
@@ -123,10 +130,9 @@ void match_set_status(MatchState *state, MatchStatus status) {
 bool match_move_piece(MatchState *state, Move move) {
 	assert(state != NULL);
 	Piece src_piece = board_get_piece(state->board, move.src);
+	Piece dst_piece = board_get_piece(state->board, move.dst);
 	Player player = src_piece.player;
-	TurnRecord tr = match_create_turn_record(state, move, MOVE_REGULAR, NO_PROMOTION);
 	if (board_move_piece(state->board, move.src, move.dst)) {
-		match_append_turn_record(state, tr);
 		if (match_is_castling_rights_available(state, player)) {
 			if (src_piece.type == KING) {
 				match_remove_all_castling_rights(state, player);
@@ -138,6 +144,13 @@ bool match_move_piece(MatchState *state, Move move) {
 				}
 			}
 		}
+		TurnRecord tr = (TurnRecord) {.move = move,
+									  .turn = state->turn,
+									  .moving_piece = src_piece,
+									  .captured_piece = dst_piece,
+									  .move_type = MOVE_REGULAR,
+									  .castling = state->castling};
+		match_append_turn_record(state, tr);
 	}
 	return false;
 }
@@ -174,16 +187,23 @@ static Piece match_get_promoted_piece(Player player, PromotionType type) {
 
 bool match_move_promotion(MatchState *state, Move move) {
 	assert(state != NULL);
-	Piece piece = board_get_piece(state->board, move.src);
-	if (piece.type != PAWN) {
+	Piece src_piece = board_get_piece(state->board, move.src);
+	Piece dst_piece = board_get_piece(state->board, move.dst);
+	if (src_piece.type != PAWN) {
 		return false;
 	}
 	PromotionType promotion_type =
-		piece.player == WHITE_PLAYER ? state->white_promotion : state->black_promotion;
-	Piece promoted = match_get_promoted_piece(piece.player, promotion_type);
-	TurnRecord tr = match_create_turn_record(state, move, MOVE_PROMOTION, promotion_type);
-	board_move_piece(state->board, move.src, move.dst);
+		src_piece.player == WHITE_PLAYER ? state->white_promotion : state->black_promotion;
+	Piece promoted = match_get_promoted_piece(src_piece.player, promotion_type);
+
 	bool set_piece = board_set_piece(state->board, promoted, move.dst);
+	TurnRecord tr = (TurnRecord) {.move = move,
+								  .turn = state->turn,
+								  .moving_piece = src_piece,
+								  .captured_piece = dst_piece,
+								  .move_type = MOVE_PROMOTION,
+								  .special_move_info = (SpecialMoveInfo) {.promotion = promotion_type},
+								  .castling = state->castling};
 	if (set_piece) {
 		match_append_turn_record(state, tr);
 	}
@@ -217,14 +237,15 @@ Piece match_get_piece(const MatchState *state, Position pos) {
 	return board_get_piece(state->board, pos);
 }
 
-TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type, PromotionType prom) {
+TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type, Piece moving_piece,
+									Piece captured_piece, SpecialMoveInfo special) {
 	return (TurnRecord) {.move = move,
 						 .turn = state->turn,
-						 .src = match_get_piece(state, move.src),
-						 .dst = match_get_piece(state, move.dst),
+						 .moving_piece = moving_piece,
+						 .captured_piece = captured_piece,
 						 .move_type = type,
-						 .castling = state->castling,
-						 .promoted_type = prom};
+						 .special_move_info = special,
+						 .castling = state->castling};
 }
 
 bool match_append_turn_record(MatchState *state, TurnRecord record) {
@@ -268,7 +289,7 @@ bool match_undo_move(MatchState *state) {
 	}
 	board_move_piece(state->board, r->move.dst, r->move.src);
 	// if no piece was captured then it'll just set the tile to NONE
-	board_set_piece(state->board, r->dst, r->move.dst);
+	board_set_piece(state->board, r->captured_piece, r->move.dst);
 	free(r);
 	return true;
 }
@@ -281,7 +302,7 @@ bool match_is_queenside_castling_available(MatchState *state, Player player) {
 	return player == WHITE_PLAYER ? state->castling.w_qs : state->castling.b_qs;
 }
 
-static void match_kingside_castling(MatchState *state, Player player) {
+static CastlingMove match_kingside_castling(MatchState *state, Player player) {
 	assert(player != NONE);
 	int row = player == WHITE_PLAYER ? 7 : 0;
 	int king_col = 4;
@@ -295,9 +316,11 @@ static void match_kingside_castling(MatchState *state, Player player) {
 	Position rook_castled_pos = (Position) {5, row};
 	board_move_piece(state->board, king_pos, king_castled_pos);
 	board_move_piece(state->board, rook_pos, rook_castled_pos);
+	return (CastlingMove) {.king_move = (Move) {king_pos, king_castled_pos},
+						   .rook_move = (Move) {rook_pos, rook_castled_pos}};
 }
 
-static void match_queenside_castling(MatchState *state, Player player) {
+static CastlingMove match_queenside_castling(MatchState *state, Player player) {
 	assert(player != NONE);
 	int row = player == WHITE_PLAYER ? 7 : 0;
 	int king_col = 4;
@@ -311,11 +334,14 @@ static void match_queenside_castling(MatchState *state, Player player) {
 	Position rook_castled_pos = (Position) {3, row};
 	board_move_piece(state->board, king_pos, king_castled_pos);
 	board_move_piece(state->board, rook_pos, rook_castled_pos);
+	return (CastlingMove) {.king_move = (Move) {king_pos, king_castled_pos},
+						   .rook_move = (Move) {rook_pos, rook_castled_pos}};
 }
 
 bool match_move_castling(MatchState *state, Move move) {
 	assert(state != NULL);
 	Piece king = board_get_piece(state->board, move.src);
+	Piece king_target = board_get_piece(state->board, move.dst);
 	Player p_king = king.player;
 	int rook_col;
 	if (move.dst.x == 6) {
@@ -331,15 +357,26 @@ bool match_move_castling(MatchState *state, Move move) {
 	if (king.type != KING || rook.type != ROOK || p_king != p_rook) {
 		return false;
 	}
-	TurnRecord tr = match_create_turn_record(state, move, MOVE_CASTLING, NO_PROMOTION);
+	CastlingMove cm;
 	if (move.dst.x == 2) {
-		match_queenside_castling(state, p_king);
+		cm = match_queenside_castling(state, p_king);
+	} else if (move.dst.x == 6) {
+		cm = match_kingside_castling(state, p_king);
 	} else {
-		match_kingside_castling(state, p_king);
+		log_error("Invalid castling move");
+		exit(1);
 	}
 	match_remove_all_castling_rights(state, p_king);
 
+	TurnRecord tr = (TurnRecord) {.move = move,
+								  .turn = state->turn,
+								  .moving_piece = king,
+								  .captured_piece = king_target,
+								  .move_type = MOVE_CASTLING,
+								  .special_move_info = (SpecialMoveInfo) {.rook_move = cm.rook_move},
+								  .castling = state->castling};
 	match_append_turn_record(state, tr);
+
 	return true;
 }
 
@@ -357,11 +394,17 @@ bool match_move_en_passant(MatchState *state, Move move) {
 		return false;
 	}
 
-	TurnRecord tr = match_create_turn_record(state, move, MOVE_EN_PASSANT, NO_PROMOTION);
 	bool pawn_move = board_move_piece(state->board, move.src, move.dst);
 	assert(pawn_move);
 	board_remove_piece(state->board, target_pos);
 
+	TurnRecord tr = (TurnRecord) {.move = move,
+								  .turn = state->turn,
+								  .moving_piece = src_piece,
+								  .captured_piece = target,
+								  .move_type = MOVE_EN_PASSANT,
+								  .special_move_info = (SpecialMoveInfo) {.captured_pawn_pos = target_pos},
+								  .castling = state->castling};
 	match_append_turn_record(state, tr);
 	return true;
 }

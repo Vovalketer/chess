@@ -4,12 +4,20 @@
 #include "move.h"
 #include "types.h"
 
+typedef union {
+	Position captured_pawn_pos;	 // only used during en passant
+	Move rook_move;				 // only used during castling
+	PromotionType promotion;	 // only used during promotions
+} SpecialMoveInfo;
+
 typedef struct {
 	Move move;
-	Piece src;
-	Piece dst;
+	Piece moving_piece;
+	Piece captured_piece;
+
 	MoveType move_type;
-	PromotionType promoted_type;
+	SpecialMoveInfo special_move_info;
+
 	int turn;
 	CastlingRights castling;
 } TurnRecord;

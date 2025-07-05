@@ -279,8 +279,8 @@ static bool _validate_en_passant_target(MatchState *state, Move move) {
 			log_error("Failed to get turn record");
 			exit(1);
 		}
-		if (record->src.type != PAWN || !position_eq(record->move.dst, enemy_pawn_pos) ||
-			record->src.player != target.player) {
+		if (record->moving_piece.type != PAWN || !position_eq(record->move.dst, enemy_pawn_pos) ||
+			record->moving_piece.player != target.player) {
 			return false;
 		}
 		if (position_eq(record->move.dst, enemy_pawn_pos) &&

@@ -58,7 +58,7 @@ void init_rendering(int window_width, int window_height) {
 	_load_textures();
 }
 
-static void _draw_board(const MatchState* state, int width, int height) {
+static void _draw_board(MatchState* state, int width, int height) {
 	DRAWN_TILE_W_SIZE = width / 8;
 	DRAWN_TILE_H_SIZE = height / 8;
 	for (int row = 0; row < 8; row++) {

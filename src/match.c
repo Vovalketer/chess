@@ -396,7 +396,6 @@ bool match_move_castling(MatchState *state, Move move) {
 		log_error("Invalid castling move");
 		exit(1);
 	}
-	match_remove_all_castling_rights(state, p_king);
 
 	TurnRecord tr = (TurnRecord) {.move = move,
 								  .turn = state->turn,
@@ -407,6 +406,8 @@ bool match_move_castling(MatchState *state, Move move) {
 								  .castling = state->castling};
 	match_append_turn_record(state, tr);
 
+	// this has to be done after the turn record is appended
+	match_remove_all_castling_rights(state, p_king);
 	return true;
 }
 

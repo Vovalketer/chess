@@ -29,8 +29,6 @@ static void match_remove_all_castling_rights(MatchState *state, Player player);
 static bool match_is_castling_rights_available(MatchState *state, Player player);
 static CastlingMove match_queenside_castling(MatchState *state, Player player);
 static CastlingMove match_kingside_castling(MatchState *state, Player player);
-TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type, Piece moving_piece,
-									Piece captured_piece, SpecialMoveInfo special);
 bool match_append_turn_record(MatchState *state, TurnRecord record);
 
 bool match_create(MatchState **state) {
@@ -235,17 +233,6 @@ int match_previous_turn(MatchState *state) {
 Piece match_get_piece(const MatchState *state, Position pos) {
 	assert(state != NULL);
 	return board_get_piece(state->board, pos);
-}
-
-TurnRecord match_create_turn_record(MatchState *state, Move move, MoveType type, Piece moving_piece,
-									Piece captured_piece, SpecialMoveInfo special) {
-	return (TurnRecord) {.move = move,
-						 .turn = state->turn,
-						 .moving_piece = moving_piece,
-						 .captured_piece = captured_piece,
-						 .move_type = type,
-						 .special_move_info = special,
-						 .castling = state->castling};
 }
 
 bool match_append_turn_record(MatchState *state, TurnRecord record) {
@@ -485,8 +472,4 @@ static bool match_is_castling_rights_available(MatchState *state, Player player)
 	assert(player != NONE);
 	return match_is_kingside_castling_available(state, player) ||
 		   match_is_queenside_castling_available(state, player);
-}
-
-Player match_get_enemy_player(Player player) {
-	return player == WHITE_PLAYER ? BLACK_PLAYER : WHITE_PLAYER;
 }

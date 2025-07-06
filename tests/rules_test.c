@@ -457,7 +457,7 @@ Test(rules, white_is_en_passant_is_true_when_b_pawn_double_moves) {
 	Position b_pawn_target = (Position) {0, 3};
 	board_set_piece(board, b_pawn, b_pawn_pos);
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
-	match_move_piece(match, move_b);
+	match_apply_move(match, move_b, MOVE_REGULAR);
 
 	match_next_turn(match);
 
@@ -478,7 +478,7 @@ Test(rules, black_is_en_passant_is_true_when_w_pawn_double_moves) {
 	Position w_pawn_target = (Position) {0, 4};
 	board_set_piece(board, w_pawn, w_pawn_pos);
 	Move move = (Move) {w_pawn_pos, w_pawn_target};
-	match_move_piece(match, move);
+	match_apply_move(match, move, MOVE_REGULAR);
 
 	match_next_turn(match);
 
@@ -498,7 +498,7 @@ Test(rules, white_is_en_passant_is_false_when_b_pawn_single_moves) {
 	Position b_pawn_target = (Position) {0, 3};
 	board_set_piece(board, b_pawn, b_pawn_pos);
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
-	match_move_piece(match, move_b);
+	match_apply_move(match, move_b, MOVE_REGULAR);
 
 	match_next_turn(match);
 
@@ -519,7 +519,7 @@ Test(rules, black_is_en_passant_is_false_when_w_pawn_single_moves) {
 	Position w_pawn_target = (Position) {0, 3};
 	board_set_piece(board, w_pawn, w_pawn_pos);
 	Move move_w = (Move) {w_pawn_pos, w_pawn_target};
-	match_move_piece(match, move_w);
+	match_apply_move(match, move_w, MOVE_REGULAR);
 
 	match_next_turn(match);
 
@@ -544,14 +544,14 @@ Test(rules, white_is_en_passant_is_false_when_white_doesnt_capture_immediately) 
 	// set turn to black before moving the piece to add a record
 	match_next_turn(match);
 
-	match_move_piece(match, move_b);
+	match_apply_move(match, move_b, MOVE_REGULAR);
 	match_next_turn(match);
 
 	Piece w_irrelevant_piece = (Piece) {WHITE_PLAYER, PAWN};
 	board_set_piece(board, w_irrelevant_piece, (Position) {6, 5});
 	Move move_2 = (Move) {(Position) {6, 5}, (Position) {6, 4}};
 
-	match_move_piece(match, move_2);
+	match_apply_move(match, move_2, MOVE_REGULAR);
 	match_next_turn(match);
 
 	// skip black turn
@@ -575,14 +575,14 @@ Test(rules, black_is_en_passant_is_false_when_black_doesnt_capture_immediately) 
 	Position w_pawn_target = (Position) {0, 4};
 	Move move_w = (Move) {w_pawn_pos, w_pawn_target};
 
-	match_move_piece(match, move_w);
+	match_apply_move(match, move_w, MOVE_REGULAR);
 	match_next_turn(match);
 
 	Piece b_irrelevant_piece = (Piece) {BLACK_PLAYER, PAWN};
 	board_set_piece(board, b_irrelevant_piece, (Position) {6, 5});
 	Move move_2 = (Move) {(Position) {6, 5}, (Position) {6, 4}};
 
-	match_move_piece(match, move_2);
+	match_apply_move(match, move_2, MOVE_REGULAR);
 	match_next_turn(match);
 
 	// skip white turn

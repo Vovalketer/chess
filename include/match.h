@@ -19,10 +19,7 @@ Piece match_get_piece(const MatchState *state, Position pos);
 Board *match_get_board(MatchState *state);
 
 // perform move
-bool match_move_piece(MatchState *state, Move move);
-bool match_move_promotion(MatchState *state, Move move);
-bool match_move_castling(MatchState *state, Move move);
-bool match_move_en_passant(MatchState *state, Move move);
+bool match_apply_move(MatchState *state, Move move, MoveType move_type);
 bool match_undo_move(MatchState *state);
 
 // legal moves

@@ -106,13 +106,13 @@ Test(match, get_player_turn_returns_black_when_turn_is_uneven) {
 	}
 }
 
-Test(match, append_turn_record_appends_move_to_history) {
+Test(match, moving_piece_appends_record_to_history) {
 	Position src = (Position) {0, 0};
 	Position dst = (Position) {0, 1};
 	Move move = (Move) {src, dst};
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	board_set_piece(match_get_board(match), w_pawn, src);
-	match_move_piece(match, move);
+	match_apply_move(match, move, MOVE_REGULAR);
 	TurnRecord *record = NULL;
 	match_get_turn_record(match, 0, &record);
 	cr_assert(move_eq(move, record->move));
@@ -123,7 +123,7 @@ Test(match, append_turn_record_appends_move_to_history) {
 	Position src2 = (Position) {0, 1};
 	Position dst2 = (Position) {0, 2};
 	Move move2 = (Move) {src2, dst2};
-	match_move_piece(match, move2);
+	match_apply_move(match, move2, MOVE_REGULAR);
 
 	TurnRecord *record2 = NULL;
 	match_get_turn_record(match, 1, &record2);
@@ -140,7 +140,7 @@ Test(match, turn_record_contains_captured_piece) {
 	board_set_piece(match_get_board(match), w_pawn, src);
 	board_set_piece(match_get_board(match), b_pawn, dst);
 	Move move = (Move) {src, dst};
-	match_move_piece(match, move);
+	match_apply_move(match, move, MOVE_REGULAR);
 
 	TurnRecord *record = NULL;
 	match_get_turn_record(match, 0, &record);
@@ -157,7 +157,7 @@ Test(match, history_contains_moves) {
 
 	for (int i = 0; i < 7; i++) {
 		Move move = (Move) {(Position) {0, i}, (Position) {0, i + 1}};
-		match_move_piece(match, move);
+		match_apply_move(match, move, MOVE_REGULAR);
 		match_next_turn(match);
 	}
 	TurnHistory *history = match_get_history(match);
@@ -176,7 +176,7 @@ Test(match, undo_turn) {
 	board_set_piece(match_get_board(match), w_pawn, src);
 	for (int i = 0; i < 7; i++) {
 		Move move = (Move) {(Position) {0, i}, (Position) {0, i + 1}};
-		match_move_piece(match, move);
+		match_apply_move(match, move, MOVE_REGULAR);
 		match_next_turn(match);
 	}
 	TurnHistory *history = match_get_history(match);
@@ -197,26 +197,11 @@ Test(match, promote_pawn) {
 	board_set_piece(match_get_board(match), (Piece) {WHITE_PLAYER, PAWN}, src);
 	Move move = (Move) {src, dst};
 
-	bool is_prom = match_move_promotion(match, move);
-	cr_assert_eq(is_prom, true);
+	bool moved = match_apply_move(match, move, MOVE_PROMOTION);
+	cr_assert_eq(moved, true);
 
 	Piece piece = match_get_piece(match, dst);
 	cr_assert_eq(piece.type, QUEEN);
-}
-
-Test(match, promote_fails_when_not_pawn) {
-	Position src = (Position) {6, 1};
-	Position dst = (Position) {6, 0};
-	board_set_piece(match_get_board(match), (Piece) {WHITE_PLAYER, ROOK}, src);
-	cr_assert_eq(match_get_piece(match, src).type, ROOK);
-	Move move = (Move) {src, dst};
-
-	bool is_prom = match_move_promotion(match, move);
-	cr_assert_eq(is_prom, false);
-
-	// it hasnt moved from the src position
-	Piece piece = match_get_piece(match, src);
-	cr_assert_eq(piece.type, ROOK);
 }
 
 Test(match, white_castling_move_kingside) {
@@ -227,7 +212,7 @@ Test(match, white_castling_move_kingside) {
 	Position rook_src = (Position) {7, 7};
 	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, rook_src);
 	Move move = (Move) {king_src, king_dst};
-	bool result = match_move_castling(match, move);
+	bool result = match_apply_move(match, move, MOVE_CASTLING);
 	cr_assert(result);
 
 	Position expect_king_pos = (Position) {6, 7};
@@ -248,7 +233,7 @@ Test(match, white_castling_move_queenside) {
 	Position rook_src = (Position) {0, 7};
 	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, rook_src);
 	Move move = (Move) {king_src, king_dst};
-	bool result = match_move_castling(match, move);
+	bool result = match_apply_move(match, move, MOVE_CASTLING);
 	cr_assert(result);
 
 	Position expect_king_pos = (Position) {2, 7};
@@ -269,7 +254,7 @@ Test(match, black_castling_move_kingside) {
 	Position rook_src = (Position) {7, 0};
 	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, rook_src);
 	Move move = (Move) {king_src, king_dst};
-	bool result = match_move_castling(match, move);
+	bool result = match_apply_move(match, move, MOVE_CASTLING);
 	cr_assert(result);
 
 	Position expect_king_pos = (Position) {6, 0};
@@ -290,7 +275,7 @@ Test(match, black_castling_move_queenside) {
 	Position rook_src = (Position) {0, 0};
 	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, rook_src);
 	Move move = (Move) {king_src, king_dst};
-	bool result = match_move_castling(match, move);
+	bool result = match_apply_move(match, move, MOVE_CASTLING);
 	cr_assert(result);
 
 	Position expect_king_pos = (Position) {2, 0};

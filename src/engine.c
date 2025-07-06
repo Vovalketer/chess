@@ -84,22 +84,10 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 	if (move_type == MOVE_INVALID) {
 		return false;
 	}
-
-	switch (move_type) {
-		case MOVE_REGULAR:
-			match_move_piece(state, move);
-			break;
-		case MOVE_CASTLING:
-			match_move_castling(state, move);
-			break;
-		case MOVE_EN_PASSANT:
-			bool is_en_passant = match_move_en_passant(state, move);
-			assert(is_en_passant);
-			break;
-		case MOVE_PROMOTION:
-			match_move_promotion(state, move);
-		default:
-			break;
+	bool applied = match_apply_move(state, move, move_type);
+	if(!applied){
+		log_error("Failed to apply move");
+		exit(1);
 	}
 
 	_next_turn(state);

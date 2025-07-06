@@ -208,8 +208,8 @@ bool rules_can_castle_queenside(MatchState *state, Player player) {
 bool rules_is_castling(MatchState *state, Move move) {
 	assert(state != NULL);
 	Board *board = match_get_board(state);
-	if ((move.src.y != WHITE_STARTING_Y && move.src.y != BLACK_STARTING_Y) ||
-		(move.dst.y != WHITE_STARTING_Y && move.dst.y != BLACK_STARTING_Y)) {
+	if ((move.src.y != WHITE_STARTING_Y || move.dst.y != WHITE_STARTING_Y) &&
+		(move.src.y != BLACK_STARTING_Y || move.dst.y != BLACK_STARTING_Y)) {
 		return false;
 	}
 	Piece src_piece = board_get_piece(board, move.src);

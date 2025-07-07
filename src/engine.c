@@ -97,11 +97,15 @@ bool engine_move_piece(GameState *state, Position src, Position dst) {
 bool _update_gstate_status(GameState *state) {
 	Player player = gstate_get_player_turn(state);
 	bool is_checkmate = rules_is_checkmate(state, player);
-	log_info("Checkmate: %s\n", is_checkmate ? "true" : "false");
 	if (is_checkmate) {
 		MatchStatus winner = player == WHITE_PLAYER ? MATCH_BLACK_WINS : MATCH_WHITE_WINS;
 		gstate_set_status(state, winner);
 		log_info("Winner: %s\n", gstate_get_status(state) == MATCH_BLACK_WINS ? "Black" : "White");
+	}
+	bool _is_fifty_moves_draw = rules_is_fifty_moves_draw(state);
+	if (_is_fifty_moves_draw) {
+		gstate_set_status(state, MATCH_DRAW);
+		log_info("Fifty move draw");
 	}
 	return is_checkmate;
 }

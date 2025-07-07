@@ -397,3 +397,10 @@ TurnMoves *rules_generate_turn_moves(GameState *state, Player player) {
 
 	return tm;
 }
+
+bool rules_is_fifty_moves_draw(GameState *state) {
+	assert(state != NULL);
+	int halfmove_clock = gstate_get_halfmove_clock(state);
+
+	return halfmove_clock >= 100;
+}

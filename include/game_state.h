@@ -17,6 +17,7 @@ void gstate_destroy(GameState **state);
 // query
 Piece gstate_get_piece(const GameState *state, Position pos);
 Board *gstate_get_board(GameState *state);
+int gstate_get_halfmove_clock(GameState *state);
 
 // perform move
 bool gstate_apply_move(GameState *state, Move move, MoveType move_type);

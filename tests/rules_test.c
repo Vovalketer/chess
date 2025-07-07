@@ -597,3 +597,68 @@ Test(rules, black_is_en_passant_is_false_when_black_doesnt_capture_immediately) 
 	bool is_en_passant = rules_is_en_passant(match, en_passant);
 	cr_assert_eq(is_en_passant, false);
 }
+
+Test(rules, fifty_moves_draw_when_no_pawn_or_captures_occur) {
+	Board *board = gstate_get_board(match);
+	for (int i = 0; i < 100; i++) {
+		Piece w_pawn = (Piece) {WHITE_PLAYER, ROOK};
+		Position w_pawn_pos = (Position) {0, 0};
+		board_set_piece(board, w_pawn, w_pawn_pos);
+		Position w_pawn_target = (Position) {0, 1};
+		Move move_w = (Move) {w_pawn_pos, w_pawn_target};
+		gstate_apply_move(match, move_w, MOVE_REGULAR);
+
+		gstate_next_turn(match);
+
+		gstate_apply_move(match, (Move) {(Position) {0, 1}, (Position) {0, 0}}, MOVE_REGULAR);
+
+		gstate_next_turn(match);
+	}
+	bool is_fifty_moves_draw = rules_is_fifty_moves_draw(match);
+	cr_assert_eq(is_fifty_moves_draw, true);
+}
+
+Test(rules, fifty_moves_rule_is_not_draw_when_pawn_moves) {
+	Board *board = gstate_get_board(match);
+	for (int i = 0; i < 100; i++) {
+		Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
+		Position w_pawn_pos = (Position) {0, 0};
+		board_set_piece(board, w_pawn, w_pawn_pos);
+		Position w_pawn_target = (Position) {0, 1};
+		Move move_w = (Move) {w_pawn_pos, w_pawn_target};
+		gstate_apply_move(match, move_w, MOVE_REGULAR);
+
+		gstate_next_turn(match);
+
+		gstate_apply_move(match, (Move) {(Position) {0, 1}, (Position) {0, 0}}, MOVE_REGULAR);
+
+		gstate_next_turn(match);
+	}
+	bool is_fifty_moves_draw = rules_is_fifty_moves_draw(match);
+	cr_assert_eq(is_fifty_moves_draw, false);
+}
+
+Test(rules, fifty_moves_rule_resets_when_capture) {
+	Board *board = gstate_get_board(match);
+	for (int i = 0; i < 100; i++) {
+		Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
+		Position w_pawn_pos = (Position) {0, 0};
+		board_set_piece(board, w_pawn, w_pawn_pos);
+		Position w_pawn_target = (Position) {0, 1};
+		Move move_w = (Move) {w_pawn_pos, w_pawn_target};
+		gstate_apply_move(match, move_w, MOVE_REGULAR);
+
+		gstate_next_turn(match);
+
+		Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
+		Position b_pawn_pos = (Position) {0, 1};
+		board_set_piece(board, b_pawn, b_pawn_pos);
+		Position b_pawn_target = (Position) {0, 0};
+		Move move_b = (Move) {b_pawn_pos, b_pawn_target};
+		gstate_apply_move(match, move_b, MOVE_REGULAR);
+
+		gstate_next_turn(match);
+	}
+	bool is_fifty_moves_draw = rules_is_fifty_moves_draw(match);
+	cr_assert_eq(is_fifty_moves_draw, false);
+}

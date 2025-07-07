@@ -10,6 +10,7 @@
 struct GameState {
 	Board *board;
 	int turn;
+	int halfmove_clock;
 	PromotionType w_prom;
 	PromotionType b_prom;
 	TurnHistory *history;
@@ -271,6 +272,11 @@ void gstate_set_legal_moves(GameState *state, TurnMoves *moves) {
 	state->legal_moves = moves;
 }
 
+int gstate_get_halfmove_clock(GameState *state) {
+	assert(state != NULL);
+	return state->halfmove_clock;
+}
+
 static void _remove_qs_castling_rights(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
@@ -306,6 +312,10 @@ static bool _is_castling_rights_available(GameState *state, Player player) {
 	assert(player != NONE);
 	return gstate_is_kingside_castling_available(state, player) ||
 		   gstate_is_queenside_castling_available(state, player);
+}
+
+static bool _is_quiet_move(TurnRecord record) {
+	return record.moving_piece.type != PAWN && record.captured_piece.player == NONE;
 }
 
 static void _apply_record_to_board(GameState *state, TurnRecord record) {
@@ -458,5 +468,12 @@ bool gstate_apply_move(GameState *state, Move move, MoveType move_type) {
 
 	_apply_record_to_board(state, tr);
 	history_append(state->history, tr);
+
+	if(_is_quiet_move(tr)){
+		state->halfmove_clock++;
+	} else {
+		state->halfmove_clock = 0;
+	}
+
 	return true;
 }

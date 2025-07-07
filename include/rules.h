@@ -10,6 +10,7 @@ bool rules_is_check_after_move(GameState *state, Player player, Move move);
 TurnMoves *rules_generate_turn_moves(GameState *state, Player player);
 bool rules_is_checkmate(GameState *state, Player player);
 bool rules_is_fifty_moves_draw(GameState *state);
+bool rules_is_stalemate(GameState *state);
 bool rules_is_promotion(GameState *state, Move move);
 bool rules_is_castling(GameState *state, Move move);
 bool rules_is_en_passant(GameState *state, Move move);

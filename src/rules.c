@@ -408,3 +408,10 @@ bool rules_is_fifty_moves_draw(GameState *state) {
 
 	return halfmove_clock >= 100;
 }
+
+bool rules_is_stalemate(GameState *state) {
+	assert(state != NULL);
+	TurnMoves *moves = gstate_get_legal_moves(state);
+
+	return turn_moves_size(moves) == 0 && !rules_is_check(state, gstate_get_player_turn(state));
+}

@@ -107,6 +107,11 @@ bool _update_gstate_status(GameState *state) {
 		gstate_set_status(state, MATCH_DRAW);
 		log_info("Fifty move draw");
 	}
+
+	if (rules_is_stalemate(state)) {
+		gstate_set_status(state, MATCH_DRAW);
+		log_info("Stalemate");
+	}
 	return is_checkmate;
 }
 

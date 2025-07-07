@@ -662,3 +662,61 @@ Test(rules, fifty_moves_rule_resets_when_capture) {
 	bool is_fifty_moves_draw = rules_is_fifty_moves_draw(match);
 	cr_assert_eq(is_fifty_moves_draw, false);
 }
+
+Test(rules, is_stalemate_returns_true_when_no_legal_moves_and_no_check) {
+	Board *board = gstate_get_board(match);
+	Position king_pos = (Position) {0, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, king_pos);
+
+	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
+	board_set_piece(board, b_pawn, (Position) {0, 5});
+	board_set_piece(board, b_pawn, (Position) {1, 5});
+	board_set_piece(board, b_pawn, (Position) {2, 5});
+	board_set_piece(board, b_pawn, (Position) {2, 6});
+	board_set_piece(board, b_pawn, (Position) {2, 7});
+
+	TurnMoves *moves = rules_generate_turn_moves(match, WHITE_PLAYER);
+	gstate_set_legal_moves(match, moves);
+
+	bool is_stalemate = rules_is_stalemate(match);
+
+	cr_assert_eq(is_stalemate, true);
+}
+
+Test(rules, is_stalemate_returns_false_when_move_is_possible) {
+	Board *board = gstate_get_board(match);
+	Position king_pos = (Position) {0, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, king_pos);
+
+	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
+	board_set_piece(board, b_pawn, (Position) {0, 5});
+	board_set_piece(board, b_pawn, (Position) {1, 5});
+	board_set_piece(board, b_pawn, (Position) {2, 5});
+
+	TurnMoves *moves = rules_generate_turn_moves(match, WHITE_PLAYER);
+	gstate_set_legal_moves(match, moves);
+
+	bool is_stalemate = rules_is_stalemate(match);
+
+	cr_assert_eq(is_stalemate, false);
+}
+
+Test(rules, is_stalemate_returns_false_when_king_is_in_check) {
+	Board *board = gstate_get_board(match);
+	Position king_pos = (Position) {0, 7};
+	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, king_pos);
+
+	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
+	board_set_piece(board, b_pawn, (Position) {0, 5});
+	board_set_piece(board, b_pawn, (Position) {1, 5});
+	board_set_piece(board, b_pawn, (Position) {1, 6});
+	board_set_piece(board, b_pawn, (Position) {2, 6});
+	board_set_piece(board, b_pawn, (Position) {2, 7});
+
+	TurnMoves *moves = rules_generate_turn_moves(match, WHITE_PLAYER);
+	gstate_set_legal_moves(match, moves);
+
+	bool is_stalemate = rules_is_stalemate(match);
+
+	cr_assert_eq(is_stalemate, false);
+}

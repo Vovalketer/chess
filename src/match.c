@@ -10,8 +10,8 @@
 struct MatchState {
 	Board *board;
 	int turn;
-	PromotionType white_promotion;
-	PromotionType black_promotion;
+	PromotionType w_prom;
+	PromotionType b_prom;
 	TurnHistory *history;
 	MatchStatus status;
 	CastlingRights castling;
@@ -55,8 +55,8 @@ bool match_create_empty(MatchState **state) {
 		return false;
 	}
 
-	m->white_promotion = PROMOTION_QUEEN;
-	m->black_promotion = PROMOTION_QUEEN;
+	m->w_prom = PROMOTION_QUEEN;
+	m->b_prom = PROMOTION_QUEEN;
 	m->status = MATCH_IN_PROGRESS;
 	m->castling.w_ks = true;
 	m->castling.w_qs = true;
@@ -87,8 +87,8 @@ bool match_clone(MatchState **dst, const MatchState *src) {
 		return false;
 	}
 	b->turn = src->turn;
-	b->white_promotion = src->white_promotion;
-	b->black_promotion = src->black_promotion;
+	b->w_prom = src->w_prom;
+	b->b_prom = src->b_prom;
 	b->status = src->status;
 	b->castling.w_ks = src->castling.w_ks;
 	b->castling.w_qs = src->castling.w_qs;
@@ -125,14 +125,14 @@ void match_set_status(MatchState *state, MatchStatus status) {
 void match_set_next_promotion_type(MatchState *state, Player player, PromotionType type) {
 	assert(state != NULL);
 	if (player == WHITE_PLAYER) {
-		state->white_promotion = type;
+		state->w_prom = type;
 	} else {
-		state->black_promotion = type;
+		state->b_prom = type;
 	}
 }
 
 static PromotionType match_get_promotion_type(MatchState *state, Player player) {
-	return player == WHITE_PLAYER ? state->white_promotion : state->black_promotion;
+	return player == WHITE_PLAYER ? state->w_prom : state->b_prom;
 }
 
 static Piece match_get_promoted_piece(PromotionType type, Player player) {

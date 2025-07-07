@@ -4,36 +4,36 @@
 #include <stdlib.h>
 
 #include "../include/board.h"
-#include "../include/match.h"
+#include "../include/game_state.h"
 #include "../include/movelist.h"
 #include "../include/rules.h"
 #include "log.h"
 
-static bool _update_match_status(MatchState *state);
-static void _update_turn_moves(MatchState *state);
+static bool _update_gstate_status(GameState *state);
+static void _update_turn_moves(GameState *state);
 
-bool engine_create_match(MatchState **state) {
-	MatchState *b;
-	bool result = match_create(&b);
+bool engine_create_match(GameState **state) {
+	GameState *b;
+	bool result = gstate_create(&b);
 	if (!result) {
 		return false;
 	}
 	*state = b;
-	TurnMoves *turn_moves = rules_generate_turn_moves(b, match_get_player_turn(b));
-	match_set_legal_moves(b, turn_moves);
+	TurnMoves *turn_moves = rules_generate_turn_moves(b, gstate_get_player_turn(b));
+	gstate_set_legal_moves(b, turn_moves);
 
 	return true;
 }
 
-MoveMask engine_get_valid_moves(MatchState *state, Position pos) {
+MoveMask engine_get_valid_moves(GameState *state, Position pos) {
 	MoveMask mm = {0};
-	if (match_get_piece(state, pos).player != match_get_player_turn(state)) {
+	if (gstate_get_piece(state, pos).player != gstate_get_player_turn(state)) {
 		return mm;
 	}
-	TurnMoves *turn_moves = match_get_legal_moves(state);
+	TurnMoves *turn_moves = gstate_get_legal_moves(state);
 	if (!turn_moves) {
 		log_error("Failed to get legal moves for player %s",
-				  match_get_player_turn(state) == WHITE_PLAYER ? "White" : "Black");
+				  gstate_get_player_turn(state) == WHITE_PLAYER ? "White" : "Black");
 		return mm;
 	}
 	MoveList *moves = NULL;
@@ -62,19 +62,19 @@ MoveMask engine_get_valid_moves(MatchState *state, Position pos) {
 	return mm;
 }
 
-Piece engine_get_piece(MatchState *state, Position pos) {
-	return board_get_piece(match_get_board(state), pos);
+Piece engine_get_piece(GameState *state, Position pos) {
+	return board_get_piece(gstate_get_board(state), pos);
 }
 
-static void _next_turn(MatchState *state) {
-	match_next_turn(state);
-	_update_match_status(state);
+static void _next_turn(GameState *state) {
+	gstate_next_turn(state);
+	_update_gstate_status(state);
 	_update_turn_moves(state);
 }
 
-bool engine_move_piece(MatchState *state, Position src, Position dst) {
-	if (position_eq(src, dst) || match_get_status(state) != MATCH_IN_PROGRESS ||
-		match_get_player_turn(state) != match_get_piece(state, src).player) {
+bool engine_move_piece(GameState *state, Position src, Position dst) {
+	if (position_eq(src, dst) || gstate_get_status(state) != MATCH_IN_PROGRESS ||
+		gstate_get_player_turn(state) != gstate_get_piece(state, src).player) {
 		return false;
 	}
 
@@ -84,7 +84,7 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 	if (move_type == MOVE_INVALID) {
 		return false;
 	}
-	bool applied = match_apply_move(state, move, move_type);
+	bool applied = gstate_apply_move(state, move, move_type);
 	if(!applied){
 		log_error("Failed to apply move");
 		exit(1);
@@ -94,40 +94,40 @@ bool engine_move_piece(MatchState *state, Position src, Position dst) {
 	return true;
 }
 
-bool _update_match_status(MatchState *state) {
-	Player player = match_get_player_turn(state);
+bool _update_gstate_status(GameState *state) {
+	Player player = gstate_get_player_turn(state);
 	bool is_checkmate = rules_is_checkmate(state, player);
 	log_info("Checkmate: %s\n", is_checkmate ? "true" : "false");
 	if (is_checkmate) {
 		MatchStatus winner = player == WHITE_PLAYER ? MATCH_BLACK_WINS : MATCH_WHITE_WINS;
-		match_set_status(state, winner);
-		log_info("Winner: %s\n", match_get_status(state) == MATCH_BLACK_WINS ? "Black" : "White");
+		gstate_set_status(state, winner);
+		log_info("Winner: %s\n", gstate_get_status(state) == MATCH_BLACK_WINS ? "Black" : "White");
 	}
 	return is_checkmate;
 }
 
-void _update_turn_moves(MatchState *state) {
-	TurnMoves *moves = match_get_legal_moves(state);
+void _update_turn_moves(GameState *state) {
+	TurnMoves *moves = gstate_get_legal_moves(state);
 	turn_moves_destroy(&moves);
-	match_set_legal_moves(state, rules_generate_turn_moves(state, match_get_player_turn(state)));
+	gstate_set_legal_moves(state, rules_generate_turn_moves(state, gstate_get_player_turn(state)));
 }
 
-void engine_undo_move(MatchState *state) {
-	bool undone = match_undo_move(state);
+void engine_undo_move(GameState *state) {
+	bool undone = gstate_undo_move(state);
 	if (undone) {
-		match_previous_turn(state);
+		gstate_previous_turn(state);
 		_update_turn_moves(state);
 	}
 }
 
-void engine_set_next_promotion_type(MatchState *state, Player player, PromotionType type) {
+void engine_set_next_promotion_type(GameState *state, Player player, PromotionType type) {
 	assert(state != NULL);
 	if (type == NO_PROMOTION) {
 		return;
 	}
-	match_set_next_promotion_type(state, player, type);
+	gstate_set_next_promotion_type(state, player, type);
 }
 
-void engine_destroy_match(MatchState **state) {
-	match_destroy(state);
+void engine_destroy_match(GameState **state) {
+	gstate_destroy(state);
 }

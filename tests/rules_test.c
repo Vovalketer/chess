@@ -3,23 +3,23 @@
 #include "board.h"
 #include "criterion/criterion.h"
 #include "criterion/new/assert.h"
-#include "match.h"
+#include "game_state.h"
 #include "types.h"
-MatchState *match = NULL;
+GameState *match = NULL;
 
 void setup(void) {
-	match_create_empty(&match);
+	gstate_create_empty(&match);
 }
 
 void teardown(void) {
-	match_destroy(&match);
+	gstate_destroy(&match);
 	match = NULL;
 }
 
 TestSuite(rules, .init = setup, .fini = teardown);
 
 Test(rules, is_check_returns_true_when_king_is_endangered) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {1, 0});
@@ -29,7 +29,7 @@ Test(rules, is_check_returns_true_when_king_is_endangered) {
 }
 
 Test(rules, is_check_returns_false_when_king_is_not_endangered) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = ROOK}, (Position) {1, 0});
@@ -39,7 +39,7 @@ Test(rules, is_check_returns_false_when_king_is_not_endangered) {
 }
 
 Test(rules, is_check_after_move_returns_true_when_king_would_be_endangered) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {2, 1});
@@ -50,7 +50,7 @@ Test(rules, is_check_after_move_returns_true_when_king_would_be_endangered) {
 }
 
 Test(rules, is_check_after_move_returns_false_when_king_would_not_be_endangered) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {3, 1});
@@ -61,7 +61,7 @@ Test(rules, is_check_after_move_returns_false_when_king_would_not_be_endangered)
 }
 
 Test(rules, is_check_after_move_returns_false_when_attacker_is_captured) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = QUEEN}, (Position) {1, 0});
@@ -72,7 +72,7 @@ Test(rules, is_check_after_move_returns_false_when_attacker_is_captured) {
 }
 
 Test(rules, is_check_after_move_returns_true_when_move_exposes_king) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = ROOK}, (Position) {1, 0});
@@ -84,7 +84,7 @@ Test(rules, is_check_after_move_returns_true_when_move_exposes_king) {
 }
 
 Test(rules, is_check_after_move_returns_true_when_capturing_attacker_exposes_king) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {1, 0});
@@ -96,7 +96,7 @@ Test(rules, is_check_after_move_returns_true_when_capturing_attacker_exposes_kin
 }
 
 Test(rules, is_checkmate_returns_true_when_king_cannot_escape) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {1, 0});
@@ -107,7 +107,7 @@ Test(rules, is_checkmate_returns_true_when_king_cannot_escape) {
 }
 
 Test(rules, is_checkmate_returns_false_when_king_can_escape) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KING}, (Position) {0, 0});
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = ROOK}, (Position) {2, 0});
@@ -118,7 +118,7 @@ Test(rules, is_checkmate_returns_false_when_king_can_escape) {
 }
 
 Test(rules, is_promotion_returns_true_when_white_pawn_is_in_last_row) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Position pawn_pos = (Position) {0, 1};
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = PAWN}, pawn_pos);
@@ -129,7 +129,7 @@ Test(rules, is_promotion_returns_true_when_white_pawn_is_in_last_row) {
 }
 
 Test(rules, is_promotion_returns_true_when_black_pawn_is_in_first_row) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Position pawn_pos = (Position) {0, 6};
 	board_set_piece(board, (Piece) {.player = BLACK_PLAYER, .type = PAWN}, pawn_pos);
@@ -140,7 +140,7 @@ Test(rules, is_promotion_returns_true_when_black_pawn_is_in_first_row) {
 }
 
 Test(rules, is_promotion_returns_false_when_not_pawn) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Position rook_pos = (Position) {0, 1};
 	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = ROOK}, rook_pos);
@@ -151,7 +151,7 @@ Test(rules, is_promotion_returns_false_when_not_pawn) {
 }
 
 Test(rules, white_can_kingside_castling) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {WHITE_PLAYER, KING};
 	Position king_pos = (Position) {4, 7};
@@ -167,7 +167,7 @@ Test(rules, white_can_kingside_castling) {
 }
 
 Test(rules, white_kingside_castling_blocked_by_friendly) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {WHITE_PLAYER, KING};
 	Position king_pos = (Position) {4, 7};
@@ -187,7 +187,7 @@ Test(rules, white_kingside_castling_blocked_by_friendly) {
 }
 
 Test(rules, white_kingside_castling_blocked_by_enemy) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {WHITE_PLAYER, KING};
 	Position king_pos = (Position) {4, 7};
@@ -207,7 +207,7 @@ Test(rules, white_kingside_castling_blocked_by_enemy) {
 }
 
 Test(rules, white_kingside_castling_blocked_by_check) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {WHITE_PLAYER, KING};
 	Position king_pos = (Position) {4, 7};
@@ -227,7 +227,7 @@ Test(rules, white_kingside_castling_blocked_by_check) {
 }
 
 Test(rules, white_kingside_castling_blocked_by_enemy_targeting_castling_tile_f1) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {WHITE_PLAYER, KING};
 	Position king_pos = (Position) {4, 7};
@@ -247,7 +247,7 @@ Test(rules, white_kingside_castling_blocked_by_enemy_targeting_castling_tile_f1)
 }
 
 Test(rules, white_kingside_castling_blocked_by_enemy_targeting_castling_tile_g1) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {WHITE_PLAYER, KING};
 	Position king_pos = (Position) {4, 7};
@@ -267,7 +267,7 @@ Test(rules, white_kingside_castling_blocked_by_enemy_targeting_castling_tile_g1)
 }
 
 Test(rules, black_can_kingside_castling) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {BLACK_PLAYER, KING};
 	Position king_pos = (Position) {4, 0};
@@ -283,7 +283,7 @@ Test(rules, black_can_kingside_castling) {
 }
 
 Test(rules, black_kingside_castling_blocked_by_friendly) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {BLACK_PLAYER, KING};
 	Position king_pos = (Position) {4, 0};
@@ -303,7 +303,7 @@ Test(rules, black_kingside_castling_blocked_by_friendly) {
 }
 
 Test(rules, black_kingside_castling_blocked_by_enemy) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {BLACK_PLAYER, KING};
 	Position king_pos = (Position) {4, 0};
@@ -323,7 +323,7 @@ Test(rules, black_kingside_castling_blocked_by_enemy) {
 }
 
 Test(rules, black_kingside_castling_blocked_by_check) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {BLACK_PLAYER, KING};
 	Position king_pos = (Position) {4, 0};
@@ -343,7 +343,7 @@ Test(rules, black_kingside_castling_blocked_by_check) {
 }
 
 Test(rules, black_kingside_castling_blocked_by_enemy_targeting_castling_tile_f8) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {BLACK_PLAYER, KING};
 	Position king_pos = (Position) {4, 0};
@@ -363,7 +363,7 @@ Test(rules, black_kingside_castling_blocked_by_enemy_targeting_castling_tile_f8)
 }
 
 Test(rules, black_kingside_castling_blocked_by_enemy_targeting_castling_tile_g8) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {BLACK_PLAYER, KING};
 	Position king_pos = (Position) {4, 0};
@@ -383,7 +383,7 @@ Test(rules, black_kingside_castling_blocked_by_enemy_targeting_castling_tile_g8)
 }
 
 Test(rules, white_is_castling_kingside) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {WHITE_PLAYER, KING};
 	Position king_pos = (Position) {4, 7};
@@ -400,7 +400,7 @@ Test(rules, white_is_castling_kingside) {
 }
 
 Test(rules, white_is_castling_queenside) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {WHITE_PLAYER, KING};
 	Position king_pos = (Position) {4, 7};
@@ -417,7 +417,7 @@ Test(rules, white_is_castling_queenside) {
 }
 
 Test(rules, black_is_castling_kingside) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {BLACK_PLAYER, KING};
 	Position king_pos = (Position) {4, 0};
@@ -434,7 +434,7 @@ Test(rules, black_is_castling_kingside) {
 }
 
 Test(rules, black_is_castling_queenside) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 
 	Piece king = (Piece) {BLACK_PLAYER, KING};
 	Position king_pos = (Position) {4, 0};
@@ -451,15 +451,15 @@ Test(rules, black_is_castling_queenside) {
 }
 
 Test(rules, white_is_en_passant_is_true_when_b_pawn_double_moves) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
 	Position b_pawn_pos = (Position) {0, 1};
 	Position b_pawn_target = (Position) {0, 3};
 	board_set_piece(board, b_pawn, b_pawn_pos);
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
-	match_apply_move(match, move_b, MOVE_REGULAR);
+	gstate_apply_move(match, move_b, MOVE_REGULAR);
 
-	match_next_turn(match);
+	gstate_next_turn(match);
 
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	Position w_pawn_pos = (Position) {1, 3};
@@ -472,15 +472,15 @@ Test(rules, white_is_en_passant_is_true_when_b_pawn_double_moves) {
 }
 
 Test(rules, black_is_en_passant_is_true_when_w_pawn_double_moves) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	Position w_pawn_pos = (Position) {0, 6};
 	Position w_pawn_target = (Position) {0, 4};
 	board_set_piece(board, w_pawn, w_pawn_pos);
 	Move move = (Move) {w_pawn_pos, w_pawn_target};
-	match_apply_move(match, move, MOVE_REGULAR);
+	gstate_apply_move(match, move, MOVE_REGULAR);
 
-	match_next_turn(match);
+	gstate_next_turn(match);
 
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
 	Position b_pawn_pos = (Position) {1, 4};
@@ -492,15 +492,15 @@ Test(rules, black_is_en_passant_is_true_when_w_pawn_double_moves) {
 }
 
 Test(rules, white_is_en_passant_is_false_when_b_pawn_single_moves) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
 	Position b_pawn_pos = (Position) {0, 2};
 	Position b_pawn_target = (Position) {0, 3};
 	board_set_piece(board, b_pawn, b_pawn_pos);
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
-	match_apply_move(match, move_b, MOVE_REGULAR);
+	gstate_apply_move(match, move_b, MOVE_REGULAR);
 
-	match_next_turn(match);
+	gstate_next_turn(match);
 
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	Position w_pawn_pos = (Position) {1, 3};
@@ -513,15 +513,15 @@ Test(rules, white_is_en_passant_is_false_when_b_pawn_single_moves) {
 }
 
 Test(rules, black_is_en_passant_is_false_when_w_pawn_single_moves) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	Position w_pawn_pos = (Position) {0, 2};
 	Position w_pawn_target = (Position) {0, 3};
 	board_set_piece(board, w_pawn, w_pawn_pos);
 	Move move_w = (Move) {w_pawn_pos, w_pawn_target};
-	match_apply_move(match, move_w, MOVE_REGULAR);
+	gstate_apply_move(match, move_w, MOVE_REGULAR);
 
-	match_next_turn(match);
+	gstate_next_turn(match);
 
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
 	Position b_pawn_pos = (Position) {1, 4};
@@ -534,7 +534,7 @@ Test(rules, black_is_en_passant_is_false_when_w_pawn_single_moves) {
 }
 
 Test(rules, white_is_en_passant_is_false_when_white_doesnt_capture_immediately) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
 	Position b_pawn_pos = (Position) {0, 1};
 	board_set_piece(board, b_pawn, b_pawn_pos);
@@ -542,20 +542,20 @@ Test(rules, white_is_en_passant_is_false_when_white_doesnt_capture_immediately) 
 	Move move_b = (Move) {b_pawn_pos, b_pawn_target};
 
 	// set turn to black before moving the piece to add a record
-	match_next_turn(match);
+	gstate_next_turn(match);
 
-	match_apply_move(match, move_b, MOVE_REGULAR);
-	match_next_turn(match);
+	gstate_apply_move(match, move_b, MOVE_REGULAR);
+	gstate_next_turn(match);
 
 	Piece w_irrelevant_piece = (Piece) {WHITE_PLAYER, PAWN};
 	board_set_piece(board, w_irrelevant_piece, (Position) {6, 5});
 	Move move_2 = (Move) {(Position) {6, 5}, (Position) {6, 4}};
 
-	match_apply_move(match, move_2, MOVE_REGULAR);
-	match_next_turn(match);
+	gstate_apply_move(match, move_2, MOVE_REGULAR);
+	gstate_next_turn(match);
 
 	// skip black turn
-	match_next_turn(match);
+	gstate_next_turn(match);
 
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	Position w_pawn_pos = (Position) {1, 3};
@@ -568,25 +568,25 @@ Test(rules, white_is_en_passant_is_false_when_white_doesnt_capture_immediately) 
 }
 
 Test(rules, black_is_en_passant_is_false_when_black_doesnt_capture_immediately) {
-	Board *board = match_get_board(match);
+	Board *board = gstate_get_board(match);
 	Piece w_pawn = (Piece) {WHITE_PLAYER, PAWN};
 	Position w_pawn_pos = (Position) {0, 6};
 	board_set_piece(board, w_pawn, w_pawn_pos);
 	Position w_pawn_target = (Position) {0, 4};
 	Move move_w = (Move) {w_pawn_pos, w_pawn_target};
 
-	match_apply_move(match, move_w, MOVE_REGULAR);
-	match_next_turn(match);
+	gstate_apply_move(match, move_w, MOVE_REGULAR);
+	gstate_next_turn(match);
 
 	Piece b_irrelevant_piece = (Piece) {BLACK_PLAYER, PAWN};
 	board_set_piece(board, b_irrelevant_piece, (Position) {6, 5});
 	Move move_2 = (Move) {(Position) {6, 5}, (Position) {6, 4}};
 
-	match_apply_move(match, move_2, MOVE_REGULAR);
-	match_next_turn(match);
+	gstate_apply_move(match, move_2, MOVE_REGULAR);
+	gstate_next_turn(match);
 
 	// skip white turn
-	match_next_turn(match);
+	gstate_next_turn(match);
 
 	Piece b_pawn = (Piece) {BLACK_PLAYER, PAWN};
 	Position b_pawn_pos = (Position) {1, 4};

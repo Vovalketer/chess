@@ -1,4 +1,4 @@
-#include "match.h"
+#include "game_state.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -7,7 +7,7 @@
 #include "board.h"
 #include "log.h"
 
-struct MatchState {
+struct GameState {
 	Board *board;
 	int turn;
 	PromotionType w_prom;
@@ -20,25 +20,24 @@ struct MatchState {
 	bool en_passant_available;
 };
 
-static Piece match_get_promoted_piece(PromotionType type, Player player);
-static void match_remove_ks_castling_rights(MatchState *state, Player player);
-static void match_remove_qs_castling_rights(MatchState *state, Player player);
-static void match_remove_all_castling_rights(MatchState *state, Player player);
-static bool match_is_castling_rights_available(MatchState *state, Player player);
-static PromotionType match_get_promotion_type(MatchState *state, Player player);
-bool match_append_turn_record(MatchState *state, TurnRecord record);
+static void _remove_ks_castling_rights(GameState *state, Player player);
+static void _remove_qs_castling_rights(GameState *state, Player player);
+static void _remove_all_castling_rights(GameState *state, Player player);
+static bool _is_castling_rights_available(GameState *state, Player player);
+static Piece _get_promoted_piece(PromotionType type, Player player);
+static PromotionType _get_promotion_type(GameState *state, Player player);
 
-bool match_create(MatchState **state) {
-	if (!match_create_empty(state)) {
+bool gstate_create(GameState **state) {
+	if (!gstate_create_empty(state)) {
 		return false;
 	}
 	board_init_positions((*state)->board);
 	return true;
 }
 
-bool match_create_empty(MatchState **state) {
+bool gstate_create_empty(GameState **state) {
 	assert(state != NULL);
-	MatchState *m = NULL;
+	GameState *m = NULL;
 	m = calloc(1, sizeof(**state));
 	if (!m) {
 		return false;
@@ -68,10 +67,10 @@ bool match_create_empty(MatchState **state) {
 	return true;
 }
 
-bool match_clone(MatchState **dst, const MatchState *src) {
+bool gstate_clone(GameState **dst, const GameState *src) {
 	assert(dst != NULL);
 	assert(src != NULL);
-	MatchState *b = NULL;
+	GameState *b = NULL;
 	b = malloc(sizeof(**dst));
 	if (!b) {
 		return false;
@@ -98,7 +97,7 @@ bool match_clone(MatchState **dst, const MatchState *src) {
 	return true;
 }
 
-void match_destroy(MatchState **state) {
+void gstate_destroy(GameState **state) {
 	if (state && *state) {
 		board_destroy(&(*state)->board);
 		history_destroy(&(*state)->history);
@@ -107,22 +106,22 @@ void match_destroy(MatchState **state) {
 	}
 }
 
-Board *match_get_board(MatchState *state) {
+Board *gstate_get_board(GameState *state) {
 	assert(state != NULL);
 	return state->board;
 }
 
-MatchStatus match_get_status(MatchState *state) {
+MatchStatus gstate_get_status(GameState *state) {
 	assert(state != NULL);
 	return state->status;
 }
 
-void match_set_status(MatchState *state, MatchStatus status) {
+void gstate_set_status(GameState *state, MatchStatus status) {
 	assert(state != NULL);
 	state->status = status;
 }
 
-void match_set_next_promotion_type(MatchState *state, Player player, PromotionType type) {
+void gstate_set_next_promotion_type(GameState *state, Player player, PromotionType type) {
 	assert(state != NULL);
 	if (player == WHITE_PLAYER) {
 		state->w_prom = type;
@@ -131,11 +130,11 @@ void match_set_next_promotion_type(MatchState *state, Player player, PromotionTy
 	}
 }
 
-static PromotionType match_get_promotion_type(MatchState *state, Player player) {
+static PromotionType _get_promotion_type(GameState *state, Player player) {
 	return player == WHITE_PLAYER ? state->w_prom : state->b_prom;
 }
 
-static Piece match_get_promoted_piece(PromotionType type, Player player) {
+static Piece _get_promoted_piece(PromotionType type, Player player) {
 	PieceType piece_type = PAWN;
 	switch (type) {
 		case PROMOTION_QUEEN:
@@ -156,52 +155,47 @@ static Piece match_get_promoted_piece(PromotionType type, Player player) {
 	return (Piece) {player, piece_type};
 }
 
-Player match_get_player_turn(const MatchState *state) {
+Player gstate_get_player_turn(const GameState *state) {
 	assert(state != NULL);
 	return state->turn % 2 == 0 ? WHITE_PLAYER : BLACK_PLAYER;
 }
 
-int match_get_turn(const MatchState *state) {
+int gstate_get_turn(const GameState *state) {
 	assert(state != NULL);
 	return state->turn;
 }
 
-int match_next_turn(MatchState *state) {
+int gstate_next_turn(GameState *state) {
 	assert(state != NULL);
 	state->turn++;
 	return state->turn;
 }
 
-int match_previous_turn(MatchState *state) {
+int gstate_previous_turn(GameState *state) {
 	assert(state != NULL);
 	state->turn--;
 	return state->turn;
 }
 
-Piece match_get_piece(const MatchState *state, Position pos) {
+Piece gstate_get_piece(const GameState *state, Position pos) {
 	assert(state != NULL);
 	return board_get_piece(state->board, pos);
 }
 
-bool match_append_turn_record(MatchState *state, TurnRecord record) {
-	assert(state != NULL);
-	return history_append(state->history, record);
-}
-
-bool match_get_turn_record(MatchState *state, size_t turn, TurnRecord **out_record) {
+bool gstate_get_turn_record(GameState *state, size_t turn, TurnRecord **out_record) {
 	assert(state != NULL);
 	assert(out_record != NULL);
 	return history_get(state->history, turn, out_record);
 }
 
-bool match_get_last_turn_record(MatchState *state, TurnRecord **out_record) {
+bool gstate_get_last_turn_record(GameState *state, TurnRecord **out_record) {
 	assert(state != NULL);
 	assert(out_record != NULL);
 	return history_get_last(state->history, out_record);
 }
 
 // Returns a clone of the history. User is in charge of freeing the memory
-bool match_get_history_clone(MatchState *state, TurnHistory **out_history) {
+bool gstate_get_history_clone(GameState *state, TurnHistory **out_history) {
 	TurnHistory *clone = NULL;
 	if (!history_clone(&clone, state->history)) {
 		return false;
@@ -210,12 +204,12 @@ bool match_get_history_clone(MatchState *state, TurnHistory **out_history) {
 	return true;
 }
 
-TurnHistory *match_get_history(MatchState *state) {
+TurnHistory *gstate_get_history(GameState *state) {
 	assert(state != NULL);
 	return state->history;
 }
 
-bool match_undo_move(MatchState *state) {
+bool gstate_undo_move(GameState *state) {
 	assert(state != NULL);
 	if (history_size(state->history) == 0) {
 		return false;
@@ -259,25 +253,25 @@ bool match_undo_move(MatchState *state) {
 	return true;
 }
 
-bool match_is_kingside_castling_available(MatchState *state, Player player) {
+bool gstate_is_kingside_castling_available(GameState *state, Player player) {
 	return player == WHITE_PLAYER ? state->castling.w_ks : state->castling.b_ks;
 }
 
-bool match_is_queenside_castling_available(MatchState *state, Player player) {
+bool gstate_is_queenside_castling_available(GameState *state, Player player) {
 	return player == WHITE_PLAYER ? state->castling.w_qs : state->castling.b_qs;
 }
 
-TurnMoves *match_get_legal_moves(MatchState *state) {
+TurnMoves *gstate_get_legal_moves(GameState *state) {
 	assert(state != NULL);
 	return state->legal_moves;
 }
 
-void match_set_legal_moves(MatchState *state, TurnMoves *moves) {
+void gstate_set_legal_moves(GameState *state, TurnMoves *moves) {
 	assert(state != NULL);
 	state->legal_moves = moves;
 }
 
-static void match_remove_qs_castling_rights(MatchState *state, Player player) {
+static void _remove_qs_castling_rights(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
 
@@ -288,7 +282,7 @@ static void match_remove_qs_castling_rights(MatchState *state, Player player) {
 	}
 }
 
-static void match_remove_ks_castling_rights(MatchState *state, Player player) {
+static void _remove_ks_castling_rights(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
 
@@ -299,22 +293,22 @@ static void match_remove_ks_castling_rights(MatchState *state, Player player) {
 	}
 }
 
-static void match_remove_all_castling_rights(MatchState *state, Player player) {
+static void _remove_all_castling_rights(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
 
-	match_remove_ks_castling_rights(state, player);
-	match_remove_qs_castling_rights(state, player);
+	_remove_ks_castling_rights(state, player);
+	_remove_qs_castling_rights(state, player);
 }
 
-static bool match_is_castling_rights_available(MatchState *state, Player player) {
+static bool _is_castling_rights_available(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	return match_is_kingside_castling_available(state, player) ||
-		   match_is_queenside_castling_available(state, player);
+	return gstate_is_kingside_castling_available(state, player) ||
+		   gstate_is_queenside_castling_available(state, player);
 }
 
-static void match_apply_record_to_board(MatchState *state, TurnRecord record) {
+static void _apply_record_to_board(GameState *state, TurnRecord record) {
 	bool moved = board_move_piece(state->board, record.move.src, record.move.dst);
 	if (!moved) {
 		log_error("Failed to move piece from %d:%d to %d:%d",
@@ -337,13 +331,13 @@ static void match_apply_record_to_board(MatchState *state, TurnRecord record) {
 						  record.special_move_info.rook_move.dst.y);
 				exit(1);
 			}
-			match_remove_all_castling_rights(state, record.moving_piece.player);
+			_remove_all_castling_rights(state, record.moving_piece.player);
 			break;
 
 		case MOVE_PROMOTION:
 			board_set_piece(
 				state->board,
-				match_get_promoted_piece(record.special_move_info.promotion, record.moving_piece.player),
+				_get_promoted_piece(record.special_move_info.promotion, record.moving_piece.player),
 				record.move.dst);
 			break;
 
@@ -354,18 +348,18 @@ static void match_apply_record_to_board(MatchState *state, TurnRecord record) {
 		case MOVE_REGULAR:
 			switch (record.moving_piece.type) {
 				case KING:
-					if (match_is_castling_rights_available(state, record.moving_piece.player)) {
-						match_remove_all_castling_rights(state, record.moving_piece.player);
+					if (_is_castling_rights_available(state, record.moving_piece.player)) {
+						_remove_all_castling_rights(state, record.moving_piece.player);
 					}
 					break;
 
 				case ROOK:
 					if (record.move.src.x == 0 &&
-						match_is_queenside_castling_available(state, record.moving_piece.player)) {
-						match_remove_qs_castling_rights(state, record.moving_piece.player);
+						gstate_is_queenside_castling_available(state, record.moving_piece.player)) {
+						_remove_qs_castling_rights(state, record.moving_piece.player);
 					} else if (record.move.src.x == 7 &&
-							   match_is_kingside_castling_available(state, record.moving_piece.player)) {
-						match_remove_ks_castling_rights(state, record.moving_piece.player);
+							   gstate_is_kingside_castling_available(state, record.moving_piece.player)) {
+						_remove_ks_castling_rights(state, record.moving_piece.player);
 					}
 					break;
 
@@ -389,7 +383,7 @@ static void match_apply_record_to_board(MatchState *state, TurnRecord record) {
 	}
 }
 
-static TurnRecord _create_turn_record(MatchState *state, Move move, MoveType move_type) {
+static TurnRecord _create_turn_record(GameState *state, Move move, MoveType move_type) {
 	Piece moving_piece = board_get_piece(state->board, move.src);
 
 	TurnRecord tr = (TurnRecord) {.move = move,
@@ -449,7 +443,7 @@ static TurnRecord _create_turn_record(MatchState *state, Move move, MoveType mov
 
 		case MOVE_PROMOTION:
 			tr.captured_piece = board_get_piece(state->board, move.dst);
-			tr.special_move_info.promotion = match_get_promotion_type(state, moving_piece.player);
+			tr.special_move_info.promotion = _get_promotion_type(state, moving_piece.player);
 			break;
 
 		case MOVE_INVALID:
@@ -459,10 +453,10 @@ static TurnRecord _create_turn_record(MatchState *state, Move move, MoveType mov
 	return tr;
 }
 
-bool match_apply_move(MatchState *state, Move move, MoveType move_type) {
+bool gstate_apply_move(GameState *state, Move move, MoveType move_type) {
 	TurnRecord tr = _create_turn_record(state, move, move_type);
 
-	match_apply_record_to_board(state, tr);
+	_apply_record_to_board(state, tr);
 	history_append(state->history, tr);
 	return true;
 }

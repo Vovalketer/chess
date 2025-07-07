@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include "../include/match.h"
+#include "../include/game_state.h"
 #include "../include/movegen.h"
 #include "../include/movelist.h"
 #include "board.h"
@@ -23,14 +23,14 @@
 #define CASTLING_QS_KING_TARGET_COL 2
 #define CASTLING_QS_ROOK_TARGET_COL 3
 
-static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position pos, Player player);
-static bool _validate_en_passant_target(MatchState *state, Move move);
+static bool rules_is_tile_targeted_by_enemy(GameState *state, Position pos, Player player);
+static bool _validate_en_passant_target(GameState *state, Move move);
 
-bool rules_is_pseudo_legal_move(MatchState *state, Move move) {
+bool rules_is_pseudo_legal_move(GameState *state, Move move) {
 	bool success = false;
-	Board *board = match_get_board(state);
+	Board *board = gstate_get_board(state);
 	Piece src_piece = board_get_piece(board, move.src);
-	if (src_piece.player != match_get_player_turn(state) || src_piece.type == EMPTY) {
+	if (src_piece.player != gstate_get_player_turn(state) || src_piece.type == EMPTY) {
 		success = false;
 	} else {
 		success = movegen_contains(board, move);
@@ -38,10 +38,10 @@ bool rules_is_pseudo_legal_move(MatchState *state, Move move) {
 	return success;
 }
 
-static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position target, Player player) {
+static bool rules_is_tile_targeted_by_enemy(GameState *state, Position target, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	Board *board = match_get_board(state);
+	Board *board = gstate_get_board(state);
 	MoveList *moves = NULL;
 	bool created = move_list_create(&moves);
 	assert(created != false);
@@ -66,18 +66,18 @@ static bool rules_is_tile_targeted_by_enemy(MatchState *state, Position target, 
 	return false;
 }
 
-bool rules_is_check(MatchState *state, Player player) {
+bool rules_is_check(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	const Board *board = match_get_board(state);
+	const Board *board = gstate_get_board(state);
 	Position king_pos = board_find_king_pos(board, player);
 	assert(board_is_within_bounds(king_pos));
 	return rules_is_tile_targeted_by_enemy(state, king_pos, player);
 }
 
-bool rules_is_check_after_move(MatchState *state, Player player, Move move) {
+bool rules_is_check_after_move(GameState *state, Player player, Move move) {
 	assert(state != NULL);
-	Board *board = match_get_board(state);
+	Board *board = gstate_get_board(state);
 	Piece src_piece = board_get_piece(board, move.src);
 	Piece dst_piece = board_get_piece(board, move.dst);
 	if (src_piece.player == dst_piece.player) {
@@ -94,7 +94,7 @@ bool rules_is_check_after_move(MatchState *state, Player player, Move move) {
 	return is_check;
 }
 
-bool rules_is_checkmate(MatchState *state, Player player) {
+bool rules_is_checkmate(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
 
@@ -102,7 +102,7 @@ bool rules_is_checkmate(MatchState *state, Player player) {
 		return false;
 	}
 
-	const Board *board = match_get_board(state);
+	const Board *board = gstate_get_board(state);
 
 	MoveList *moves = NULL;
 	bool created = move_list_create(&moves);
@@ -128,16 +128,16 @@ bool rules_is_checkmate(MatchState *state, Player player) {
 	return true;
 }
 
-bool rules_is_promotion(MatchState *state, Move move) {
-	Piece piece = match_get_piece(state, move.src);
+bool rules_is_promotion(GameState *state, Move move) {
+	Piece piece = gstate_get_piece(state, move.src);
 	return piece.type == PAWN && ((piece.player == WHITE_PLAYER && move.dst.y == BLACK_STARTING_Y) ||
 								  (piece.player == BLACK_PLAYER && move.dst.y == WHITE_STARTING_Y));
 }
 
-bool rules_can_castle_kingside(MatchState *state, Player player) {
+bool rules_can_castle_kingside(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	if (!match_is_kingside_castling_available(state, player)) {
+	if (!gstate_is_kingside_castling_available(state, player)) {
 		return false;
 	}
 	int row;
@@ -146,8 +146,8 @@ bool rules_can_castle_kingside(MatchState *state, Player player) {
 	} else {
 		row = BLACK_STARTING_Y;
 	}
-	Piece expect_rook = match_get_piece(state, (Position) {ROOK_KS_STARTING_X, row});
-	Piece expect_king = match_get_piece(state, (Position) {KING_STARTING_X, row});
+	Piece expect_rook = gstate_get_piece(state, (Position) {ROOK_KS_STARTING_X, row});
+	Piece expect_king = gstate_get_piece(state, (Position) {KING_STARTING_X, row});
 	// if castling is available then the king and the rook should be in the original positions
 	assert(expect_rook.player == expect_king.player);
 	assert(expect_rook.type == ROOK);
@@ -156,8 +156,8 @@ bool rules_can_castle_kingside(MatchState *state, Player player) {
 	// check if the tiles between the king and the rook are empty
 	Position king_target_pos = {CASTLING_KS_KING_TARGET_COL, row};
 	Position rook_target_pos = {CASTLING_KS_ROOK_TARGET_COL, row};
-	if (match_get_piece(state, king_target_pos).type != EMPTY ||
-		match_get_piece(state, rook_target_pos).type != EMPTY) {
+	if (gstate_get_piece(state, king_target_pos).type != EMPTY ||
+		gstate_get_piece(state, rook_target_pos).type != EMPTY) {
 		return false;
 	}
 	// check if the king is in check and if the target tiles are not being threatened by the enemy
@@ -169,10 +169,10 @@ bool rules_can_castle_kingside(MatchState *state, Player player) {
 	return true;
 }
 
-bool rules_can_castle_queenside(MatchState *state, Player player) {
+bool rules_can_castle_queenside(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	if (!match_is_queenside_castling_available(state, player)) {
+	if (!gstate_is_queenside_castling_available(state, player)) {
 		return false;
 	}
 	int row;
@@ -182,8 +182,8 @@ bool rules_can_castle_queenside(MatchState *state, Player player) {
 		row = BLACK_STARTING_Y;
 	}
 
-	Piece expect_rook = match_get_piece(state, (Position) {ROOK_QS_STARTING_X, row});
-	Piece expect_king = match_get_piece(state, (Position) {KING_STARTING_X, row});
+	Piece expect_rook = gstate_get_piece(state, (Position) {ROOK_QS_STARTING_X, row});
+	Piece expect_king = gstate_get_piece(state, (Position) {KING_STARTING_X, row});
 	// if castling is available then the king and the rook should be in the original positions
 	assert(expect_rook.player == expect_king.player);
 	assert(expect_rook.type == ROOK);
@@ -192,9 +192,9 @@ bool rules_can_castle_queenside(MatchState *state, Player player) {
 	Position empty_tile = {1, row};
 	Position king_target_pos = {CASTLING_QS_KING_TARGET_COL, row};
 	Position rook_target_pos = {CASTLING_QS_ROOK_TARGET_COL, row};
-	if (match_get_piece(state, empty_tile).type != EMPTY ||
-		match_get_piece(state, king_target_pos).type != EMPTY ||
-		match_get_piece(state, rook_target_pos).type != EMPTY) {
+	if (gstate_get_piece(state, empty_tile).type != EMPTY ||
+		gstate_get_piece(state, king_target_pos).type != EMPTY ||
+		gstate_get_piece(state, rook_target_pos).type != EMPTY) {
 		return false;
 	}
 	if (rules_is_tile_targeted_by_enemy(state, king_target_pos, player) ||
@@ -205,9 +205,9 @@ bool rules_can_castle_queenside(MatchState *state, Player player) {
 	return true;
 }
 
-bool rules_is_castling(MatchState *state, Move move) {
+bool rules_is_castling(GameState *state, Move move) {
 	assert(state != NULL);
-	Board *board = match_get_board(state);
+	Board *board = gstate_get_board(state);
 	if ((move.src.y != WHITE_STARTING_Y || move.dst.y != WHITE_STARTING_Y) &&
 		(move.src.y != BLACK_STARTING_Y || move.dst.y != BLACK_STARTING_Y)) {
 		return false;
@@ -226,16 +226,16 @@ bool rules_is_castling(MatchState *state, Move move) {
 	return false;
 }
 
-bool rules_is_en_passant(MatchState *state, Move move) {
+bool rules_is_en_passant(GameState *state, Move move) {
 	return _validate_en_passant_target(state, move);
 }
 
-bool rules_is_valid_move(MatchState *state, Move move) {
-	TurnMoves *m = match_get_legal_moves(state);
+bool rules_is_valid_move(GameState *state, Move move) {
+	TurnMoves *m = gstate_get_legal_moves(state);
 	return turn_moves_contains(m, move);
 }
 
-MoveType rules_get_move_type(MatchState *state, Move move) {
+MoveType rules_get_move_type(GameState *state, Move move) {
 	if (!rules_is_valid_move(state, move)) {
 		return MOVE_INVALID;
 	}
@@ -255,10 +255,10 @@ MoveType rules_get_move_type(MatchState *state, Move move) {
 	return MOVE_REGULAR;
 }
 
-static bool _validate_en_passant_target(MatchState *state, Move move) {
-	Piece piece = board_get_piece(match_get_board(state), move.src);
+static bool _validate_en_passant_target(GameState *state, Move move) {
+	Piece piece = board_get_piece(gstate_get_board(state), move.src);
 	if (piece.type != PAWN || !board_is_within_bounds(move.src) || !board_is_within_bounds(move.dst) ||
-		board_get_piece(match_get_board(state), move.dst).type != EMPTY) {
+		board_get_piece(gstate_get_board(state), move.dst).type != EMPTY) {
 		return false;
 	}
 	if (move.src.y != EN_PASSANT_WHITE_ROW && move.src.y != EN_PASSANT_BLACK_ROW) {
@@ -267,14 +267,14 @@ static bool _validate_en_passant_target(MatchState *state, Move move) {
 	if (move.dst.y != EN_PASSANT_WHITE_TARGET_ROW && move.dst.y != EN_PASSANT_BLACK_TARGET_ROW) {
 		return false;
 	}
-	Board *board = match_get_board(state);
+	Board *board = gstate_get_board(state);
 	Player player = piece.player;
 	// y = src instead of dst, the enemy pawn is next to the player pawn
 	Position enemy_pawn_pos = (Position) {move.dst.x, move.src.y};
 	Piece target = board_get_piece(board, enemy_pawn_pos);
 	if (target.type == PAWN && target.player != player) {
 		TurnRecord *record = NULL;
-		bool record_get = match_get_last_turn_record(state, &record);
+		bool record_get = gstate_get_last_turn_record(state, &record);
 		if (!record_get) {
 			log_error("Failed to get turn record");
 			exit(1);
@@ -291,8 +291,8 @@ static bool _validate_en_passant_target(MatchState *state, Move move) {
 	return false;
 }
 
-static bool rules_can_en_passant_left(MatchState *state, Position pos, Move *out_move) {
-	Piece piece = board_get_piece(match_get_board(state), pos);
+static bool rules_can_en_passant_left(GameState *state, Position pos, Move *out_move) {
+	Piece piece = board_get_piece(gstate_get_board(state), pos);
 	int row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
 	Move move = (Move) {.src = pos, .dst = (Position) {.x = pos.x - 1, row}};
 	bool valid = _validate_en_passant_target(state, move);
@@ -302,8 +302,8 @@ static bool rules_can_en_passant_left(MatchState *state, Position pos, Move *out
 	return valid;
 }
 
-static bool rules_can_en_passant_right(MatchState *state, Position pos, Move *out_move) {
-	Piece piece = board_get_piece(match_get_board(state), pos);
+static bool rules_can_en_passant_right(GameState *state, Position pos, Move *out_move) {
+	Piece piece = board_get_piece(gstate_get_board(state), pos);
 	int row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
 	Move move = (Move) {.src = pos, .dst = (Position) {.x = pos.x + 1, row}};
 	bool valid = _validate_en_passant_target(state, move);
@@ -313,9 +313,9 @@ static bool rules_can_en_passant_right(MatchState *state, Position pos, Move *ou
 	return valid;
 }
 
-static MoveList *rules_generate_piece_moves(MatchState *state, Piece piece, Position pos) {
+static MoveList *rules_generate_piece_moves(GameState *state, Piece piece, Position pos) {
 	log_trace("Generating piece moves for piece %d at x:%d y:%d", piece.type, pos.x, pos.y);
-	Board *board = match_get_board(state);
+	Board *board = gstate_get_board(state);
 	MoveList *moves = NULL;
 	bool move_list_created = move_list_create(&moves);
 	if (!move_list_created) {
@@ -370,9 +370,9 @@ static MoveList *rules_generate_piece_moves(MatchState *state, Piece piece, Posi
 	return out_moves;
 }
 
-TurnMoves *rules_generate_turn_moves(MatchState *state, Player player) {
+TurnMoves *rules_generate_turn_moves(GameState *state, Player player) {
 	log_trace("Generating turn moves for %d", player);
-	Board *board = match_get_board(state);
+	Board *board = gstate_get_board(state);
 	TurnMoves *tm = NULL;
 	bool tm_create = turn_moves_create(&tm);
 	if (!tm_create) {

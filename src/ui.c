@@ -58,7 +58,7 @@ void init_rendering(int window_width, int window_height) {
 	_load_textures();
 }
 
-static void _draw_board(MatchState* state, int width, int height) {
+static void _draw_board(GameState* state, int width, int height) {
 	DRAWN_TILE_W_SIZE = width / 8;
 	DRAWN_TILE_H_SIZE = height / 8;
 	for (int row = 0; row < 8; row++) {
@@ -117,7 +117,7 @@ static void _draw_valid_moves(MoveMask mm) {
 	}
 }
 
-void game_loop(MatchState* state) {
+void game_loop(GameState* state) {
 	int tile_w_size = CURRENT_WINDOW_WIDTH / 8;
 	int tile_h_size = CURRENT_WINDOW_HEIGHT / 8;
 	Vector2 mouse_position = {0, 0};

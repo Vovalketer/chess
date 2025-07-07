@@ -24,8 +24,8 @@ Chess implementation, written in C
 
 - [x] Implement "Check" state when a King is under threat.
 - [x] Implement "Checkmate" detection when the King is under threat and no legal move can avoid it.
-- [ ] Implement "Stalemate" detection (draw scenario).
-- [ ] Implement King safety checks to prevent illegal moves that place your own King in check.
+- [x] Implement "Stalemate" detection (draw scenario).
+- [x] Implement King safety checks to prevent illegal moves that place your own King in check.
 
 ### Game Turn & Validity
 
@@ -35,9 +35,9 @@ Chess implementation, written in C
 
 ### Game End Conditions
 
-- [ ] Implement Checkmate (Game over when the opponent's King is checkmated).
-- [ ] Implement Stalemate (Draw if no valid moves and the King is not in check).
-- [ ] Implement draw conditions (insufficient material, 50-move rule, etc.).
+- [x] Implement Checkmate (Game over when the opponent's King is checkmated).
+- [x] Implement Stalemate (Draw if no valid moves and the King is not in check).
+- [x] Implement draw conditions (insufficient material, 50-move rule, etc.).
 
 ### Basic User Interface
 

@@ -149,9 +149,9 @@ bool rules_can_castle_kingside(GameState *state, Player player) {
 	Piece expect_rook = gstate_get_piece(state, (Position) {ROOK_KS_STARTING_X, row});
 	Piece expect_king = gstate_get_piece(state, (Position) {KING_STARTING_X, row});
 	// if castling is available then the king and the rook should be in the original positions
-	assert(expect_rook.player == expect_king.player);
-	assert(expect_rook.type == ROOK);
-	assert(expect_king.type == KING);
+	if (expect_rook.type != ROOK || expect_king.type != KING || expect_rook.player != expect_king.player) {
+		return false;
+	}
 
 	// check if the tiles between the king and the rook are empty
 	Position king_target_pos = {CASTLING_KS_KING_TARGET_COL, row};
@@ -185,9 +185,9 @@ bool rules_can_castle_queenside(GameState *state, Player player) {
 	Piece expect_rook = gstate_get_piece(state, (Position) {ROOK_QS_STARTING_X, row});
 	Piece expect_king = gstate_get_piece(state, (Position) {KING_STARTING_X, row});
 	// if castling is available then the king and the rook should be in the original positions
-	assert(expect_rook.player == expect_king.player);
-	assert(expect_rook.type == ROOK);
-	assert(expect_king.type == KING);
+	if (expect_rook.type != ROOK || expect_king.type != KING || expect_rook.player != expect_king.player) {
+		return false;
+	}
 
 	Position empty_tile = {1, row};
 	Position king_target_pos = {CASTLING_QS_KING_TARGET_COL, row};

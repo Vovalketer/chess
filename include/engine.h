@@ -9,13 +9,13 @@ typedef struct {
 	int count;
 } MoveMask;
 
-bool engine_create_match(MatchState **state);
-void engine_destroy_match(MatchState **state);
-Player engine_get_active_player(MatchState *state);
-int engine_get_turn(MatchState *state);
-Piece engine_get_piece(MatchState *state, Position pos);
-bool engine_move_piece(MatchState *state, Position src, Position dst);
-MoveMask engine_get_valid_moves(MatchState *state, Position pos);
-void engine_undo_move(MatchState *state);
+bool engine_create_match(GameState **state);
+void engine_destroy_match(GameState **state);
+Player engine_get_active_player(GameState *state);
+int engine_get_turn(GameState *state);
+Piece engine_get_piece(GameState *state, Position pos);
+bool engine_move_piece(GameState *state, Position src, Position dst);
+MoveMask engine_get_valid_moves(GameState *state, Position pos);
+void engine_undo_move(GameState *state);
 
 #endif

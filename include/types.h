@@ -38,7 +38,7 @@ typedef struct {
 	PieceType type;
 } Piece;
 
-typedef struct MatchState MatchState;
+typedef struct GameState GameState;
 typedef struct Board Board;
 
 #endif

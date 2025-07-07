@@ -385,6 +385,10 @@ TurnMoves *rules_generate_turn_moves(GameState *state, Player player) {
 			Piece piece = board_get_piece(board, pos);
 			if (piece.player == player) {
 				MoveList *moves = rules_generate_piece_moves(state, piece, pos);
+				if (move_list_size(moves) == 0) {
+					move_list_destroy(&moves);
+					continue;
+				}
 				TurnPieceMoves piece_moves = {.pos = pos, .moves = moves};
 				bool append = turn_moves_append(tm, piece_moves);
 				if (!append) {

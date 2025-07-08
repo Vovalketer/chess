@@ -137,7 +137,7 @@ bool rules_is_promotion(GameState *state, Move move) {
 bool rules_can_castle_kingside(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	if (!gstate_is_kingside_castling_available(state, player)) {
+	if (!gstate_has_castling_rights_kingside(state, player)) {
 		return false;
 	}
 	int row;
@@ -172,7 +172,7 @@ bool rules_can_castle_kingside(GameState *state, Player player) {
 bool rules_can_castle_queenside(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	if (!gstate_is_queenside_castling_available(state, player)) {
+	if (!gstate_has_castling_rights_queenside(state, player)) {
 		return false;
 	}
 	int row;

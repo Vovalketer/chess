@@ -254,11 +254,11 @@ bool gstate_undo_move(GameState *state) {
 	return true;
 }
 
-bool gstate_is_kingside_castling_available(GameState *state, Player player) {
+bool gstate_has_castling_rights_kingside(GameState *state, Player player) {
 	return player == WHITE_PLAYER ? state->castling.w_ks : state->castling.b_ks;
 }
 
-bool gstate_is_queenside_castling_available(GameState *state, Player player) {
+bool gstate_has_castling_rights_queenside(GameState *state, Player player) {
 	return player == WHITE_PLAYER ? state->castling.w_qs : state->castling.b_qs;
 }
 
@@ -310,8 +310,8 @@ static void _remove_all_castling_rights(GameState *state, Player player) {
 static bool _is_castling_rights_available(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
-	return gstate_is_kingside_castling_available(state, player) ||
-		   gstate_is_queenside_castling_available(state, player);
+	return gstate_has_castling_rights_kingside(state, player) ||
+		   gstate_has_castling_rights_queenside(state, player);
 }
 
 static bool _is_quiet_move(TurnRecord record) {
@@ -365,10 +365,10 @@ static void _apply_record_to_board(GameState *state, TurnRecord record) {
 
 				case ROOK:
 					if (record.move.src.x == 0 &&
-						gstate_is_queenside_castling_available(state, record.moving_piece.player)) {
+						gstate_has_castling_rights_queenside(state, record.moving_piece.player)) {
 						_remove_qs_castling_rights(state, record.moving_piece.player);
 					} else if (record.move.src.x == 7 &&
-							   gstate_is_kingside_castling_available(state, record.moving_piece.player)) {
+							   gstate_has_castling_rights_kingside(state, record.moving_piece.player)) {
 						_remove_ks_castling_rights(state, record.moving_piece.player);
 					}
 					break;

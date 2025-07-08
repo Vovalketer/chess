@@ -28,8 +28,8 @@ TurnMoves *gstate_get_legal_moves(GameState *state);
 void gstate_set_legal_moves(GameState *state, TurnMoves *moves);
 
 // castling rights
-bool gstate_is_kingside_castling_available(GameState *state, Player player);
-bool gstate_is_queenside_castling_available(GameState *state, Player player);
+bool gstate_has_castling_rights_kingside(GameState *state, Player player);
+bool gstate_has_castling_rights_queenside(GameState *state, Player player);
 
 // turn
 int gstate_get_turn(const GameState *state);

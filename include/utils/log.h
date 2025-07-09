@@ -9,6 +9,7 @@
 #define LOG_INFO 2
 #define LOG_WARN 3
 #define LOG_ERROR 4
+#define LOG_NONE 10
 
 void log_set_level(int level);
 int log_get_level(void);

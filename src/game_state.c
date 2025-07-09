@@ -166,6 +166,15 @@ int gstate_get_turn(const GameState *state) {
 	return state->turn;
 }
 
+void gstate_set_turn(GameState *state, int turn) {
+	assert(state != NULL);
+	state->turn = turn;
+}
+
+int gstate_get_fullmove_counter(GameState *state) {
+	return gstate_get_turn(state) * 0.5;
+}
+
 int gstate_next_turn(GameState *state) {
 	assert(state != NULL);
 	state->turn++;
@@ -178,9 +187,13 @@ int gstate_previous_turn(GameState *state) {
 	return state->turn;
 }
 
-Piece gstate_get_piece(const GameState *state, Position pos) {
+Piece gstate_get_piece(GameState *state, Position pos) {
 	assert(state != NULL);
 	return board_get_piece(state->board, pos);
+}
+
+bool gstate_set_piece(GameState *state, Piece piece, Position pos) {
+	return board_set_piece(state->board, piece, pos);
 }
 
 bool gstate_get_turn_record(GameState *state, size_t turn, TurnRecord **out_record) {
@@ -262,6 +275,36 @@ bool gstate_has_castling_rights_queenside(GameState *state, Player player) {
 	return player == WHITE_PLAYER ? state->castling.w_qs : state->castling.b_qs;
 }
 
+void gstate_set_castling_rights_kingside(GameState *state, Player player, bool available) {
+	assert(state != NULL);
+	assert(player != NONE);
+	if (player == WHITE_PLAYER) {
+		state->castling.w_ks = available;
+	} else {
+		state->castling.b_ks = available;
+	}
+}
+
+void gstate_set_castling_rights_queenside(GameState *state, Player player, bool available) {
+	assert(state != NULL);
+	assert(player != NONE);
+	if (player == WHITE_PLAYER) {
+		state->castling.w_qs = available;
+	} else {
+		state->castling.b_qs = available;
+	}
+}
+
+void gstate_set_en_passant_target(GameState *state, Position pos) {
+	assert(state != NULL);
+	state->en_passant_target = pos;
+}
+
+Position gstate_get_en_passant_target(GameState *state) {
+	assert(state != NULL);
+	return state->en_passant_target;
+}
+
 TurnMoves *gstate_get_legal_moves(GameState *state) {
 	assert(state != NULL);
 	return state->legal_moves;
@@ -275,6 +318,11 @@ void gstate_set_legal_moves(GameState *state, TurnMoves *moves) {
 int gstate_get_halfmove_clock(GameState *state) {
 	assert(state != NULL);
 	return state->halfmove_clock;
+}
+
+void gstate_set_halfmove_clock(GameState *state, int halfmove_clock) {
+	assert(state != NULL);
+	state->halfmove_clock = halfmove_clock;
 }
 
 static void _remove_qs_castling_rights(GameState *state, Player player) {
@@ -469,7 +517,7 @@ bool gstate_apply_move(GameState *state, Move move, MoveType move_type) {
 	_apply_record_to_board(state, tr);
 	history_append(state->history, tr);
 
-	if(_is_quiet_move(tr)){
+	if (_is_quiet_move(tr)) {
 		state->halfmove_clock++;
 	} else {
 		state->halfmove_clock = 0;

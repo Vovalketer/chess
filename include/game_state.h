@@ -14,10 +14,12 @@ bool gstate_create_empty(GameState **state);
 bool gstate_clone(GameState **dst, const GameState *src);
 void gstate_destroy(GameState **state);
 
-// query
-Piece gstate_get_piece(const GameState *state, Position pos);
+// to be deleted
 Board *gstate_get_board(GameState *state);
-int gstate_get_halfmove_clock(GameState *state);
+
+// piece
+Piece gstate_get_piece(GameState *state, Position pos);
+bool gstate_set_piece(GameState *state, Piece piece, Position pos);
 
 // perform move
 bool gstate_apply_move(GameState *state, Move move, MoveType move_type);
@@ -30,12 +32,22 @@ void gstate_set_legal_moves(GameState *state, TurnMoves *moves);
 // castling rights
 bool gstate_has_castling_rights_kingside(GameState *state, Player player);
 bool gstate_has_castling_rights_queenside(GameState *state, Player player);
+void gstate_set_castling_rights_kingside(GameState *state, Player player, bool available);
+void gstate_set_castling_rights_queenside(GameState *state, Player player, bool available);
+
+// en passant
+void gstate_set_en_passant_target(GameState *state, Position pos);
+Position gstate_get_en_passant_target(GameState *state);
 
 // turn
 int gstate_get_turn(const GameState *state);
+void gstate_set_turn(GameState *state, int turn);
 int gstate_previous_turn(GameState *state);
 int gstate_next_turn(GameState *state);
 Player gstate_get_player_turn(const GameState *state);
+int gstate_get_halfmove_clock(GameState *state);
+void gstate_set_halfmove_clock(GameState *state, int halfmove_clock);
+int gstate_get_fullmove_counter(GameState *state);
 
 // promotion
 void gstate_set_next_promotion_type(GameState *state, Player player, PromotionType type);

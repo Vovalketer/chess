@@ -116,8 +116,6 @@ bool _update_gstate_status(GameState *state) {
 }
 
 void _update_turn_moves(GameState *state) {
-	TurnMoves *moves = gstate_get_legal_moves(state);
-	turn_moves_destroy(&moves);
 	gstate_set_legal_moves(state, rules_generate_turn_moves(state, gstate_get_player_turn(state)));
 }
 

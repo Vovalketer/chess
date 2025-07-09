@@ -312,6 +312,9 @@ TurnMoves *gstate_get_legal_moves(GameState *state) {
 
 void gstate_set_legal_moves(GameState *state, TurnMoves *moves) {
 	assert(state != NULL);
+	if (state->legal_moves != NULL) {
+		turn_moves_destroy(&state->legal_moves);
+	}
 	state->legal_moves = moves;
 }
 

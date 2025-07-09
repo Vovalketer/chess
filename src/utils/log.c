@@ -56,4 +56,5 @@ void log_write(int level, const char *file, int line, const char *fmt, ...) {
 	va_end(args);
 
 	fprintf(out, "\n");
+	fflush(out);
 }

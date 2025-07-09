@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#define MAX_TIME_SIZE 20
+
 // TODO: thread safety: lock the log level and output file
 
 int log_level = LOG_INFO;
@@ -41,8 +43,8 @@ static char *log_get_log_type(int level) {
 void log_write(int level, const char *file, int line, const char *fmt, ...) {
 	time_t now = time(NULL);
 	struct tm *tm_info = localtime(&now);
-	char timebuf[20];
-	strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", tm_info);
+	char timebuf[MAX_TIME_SIZE];
+	strftime(timebuf, MAX_TIME_SIZE, "%Y-%m-%d %H:%M:%S", tm_info);
 
 	FILE *out = log_file ? log_file : stderr;
 

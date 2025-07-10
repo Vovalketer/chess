@@ -14,25 +14,25 @@ void board_print(Board *board) {
 		for (int j = 0; j < 8; j++) {
 			switch (board->board[i][j].type) {
 				case PAWN:
-					printf("P");
+					board->board[i][j].player == WHITE_PLAYER ? printf(" P") : printf(" p");
 					break;
 				case ROOK:
-					printf("R");
+					board->board[i][j].player == WHITE_PLAYER ? printf(" R") : printf(" r");
 					break;
 				case KNIGHT:
-					printf("N");
+					board->board[i][j].player == WHITE_PLAYER ? printf(" N") : printf(" n");
 					break;
 				case BISHOP:
-					printf("B");
+					board->board[i][j].player == WHITE_PLAYER ? printf(" B") : printf(" b");
 					break;
 				case QUEEN:
-					printf("Q");
+					board->board[i][j].player == WHITE_PLAYER ? printf(" Q") : printf(" q");
 					break;
 				case KING:
-					printf("K");
+					board->board[i][j].player == WHITE_PLAYER ? printf(" K") : printf(" k");
 					break;
 				case EMPTY:
-					printf(".");
+					printf(" .");
 					break;
 				default:
 					printf("?");

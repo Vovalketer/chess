@@ -85,13 +85,17 @@ bool engine_move_piece(GameState *state, Position src, Position dst) {
 		return false;
 	}
 	bool applied = gstate_apply_move(state, move, move_type);
-	if(!applied){
+	if (!applied) {
 		log_error("Failed to apply move");
 		exit(1);
 	}
 
 	_next_turn(state);
 	return true;
+}
+
+const TurnMoves *engine_get_legal_moves(GameState *state) {
+	return gstate_get_legal_moves(state);
 }
 
 bool _update_gstate_status(GameState *state) {

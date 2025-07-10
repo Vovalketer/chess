@@ -2,6 +2,7 @@
 #define ENGINE_H
 
 #include "position.h"
+#include "turn_moves.h"
 #include "types.h"
 
 typedef struct {
@@ -16,6 +17,7 @@ int engine_get_turn(GameState *state);
 Piece engine_get_piece(GameState *state, Position pos);
 bool engine_move_piece(GameState *state, Position src, Position dst);
 MoveMask engine_get_valid_moves(GameState *state, Position pos);
+const TurnMoves *engine_get_legal_moves(GameState *state);
 void engine_undo_move(GameState *state);
 
 #endif

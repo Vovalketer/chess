@@ -233,10 +233,10 @@ bool gstate_undo_move(GameState *state) {
 	if (!removed) {
 		return false;
 	}
+	state->castling = tr->castling;
 	state->turn = tr->turn;
 	switch (tr->move_type) {
 		case MOVE_CASTLING:
-			state->castling = tr->castling;
 			board_set_piece(state->board, tr->moving_piece, tr->move.src);
 			board_set_piece(state->board, tr->captured_piece, tr->move.dst);
 

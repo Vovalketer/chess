@@ -144,7 +144,6 @@ void _update_turn_moves(GameState *state) {
 void engine_undo_move(GameState *state) {
 	bool undone = gstate_undo_move(state);
 	if (undone) {
-		gstate_previous_turn(state);
 		_update_turn_moves(state);
 	}
 }

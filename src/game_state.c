@@ -233,6 +233,7 @@ bool gstate_undo_move(GameState *state) {
 	if (!removed) {
 		return false;
 	}
+	state->turn = tr->turn;
 	switch (tr->move_type) {
 		case MOVE_CASTLING:
 			state->castling = tr->castling;

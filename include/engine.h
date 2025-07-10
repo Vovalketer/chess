@@ -11,6 +11,7 @@ typedef struct {
 } MoveMask;
 
 bool engine_create_match(GameState **state);
+bool engine_create_match_from_fen(GameState **state, const char *fen);
 void engine_destroy_match(GameState **state);
 Player engine_get_active_player(GameState *state);
 int engine_get_turn(GameState *state);

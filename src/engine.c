@@ -7,6 +7,7 @@
 #include "../include/game_state.h"
 #include "../include/movelist.h"
 #include "../include/rules.h"
+#include "fen.h"
 #include "log.h"
 
 static bool _update_gstate_status(GameState *state);
@@ -22,6 +23,23 @@ bool engine_create_match(GameState **state) {
 	TurnMoves *turn_moves = rules_generate_turn_moves(b, gstate_get_player_turn(b));
 	gstate_set_legal_moves(b, turn_moves);
 
+	return true;
+}
+
+bool engine_create_match_from_fen(GameState **state, const char *fen) {
+	GameState *g;
+	bool result = gstate_create_empty(&g);
+	if (!result) {
+		log_error("Failed to create game");
+		return false;
+	}
+	if (!fen_parse(fen, g)) {
+		log_error("Failed to parse FEN");
+		return false;
+	}
+	TurnMoves *turn_moves = rules_generate_turn_moves(g, gstate_get_player_turn(g));
+	gstate_set_legal_moves(g, turn_moves);
+	*state = g;
 	return true;
 }
 

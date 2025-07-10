@@ -160,3 +160,15 @@ void engine_set_next_promotion_type(GameState *state, Player player, PromotionTy
 void engine_destroy_match(GameState **state) {
 	gstate_destroy(state);
 }
+
+const TurnHistory *engine_get_history(GameState *state) {
+	assert(state != NULL);
+	return gstate_get_history(state);
+}
+
+const TurnRecord *engine_get_last_turn_record(GameState *state) {
+	assert(state != NULL);
+	TurnRecord *t;
+	gstate_get_last_turn_record(state, &t);
+	return t;
+}

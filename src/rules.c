@@ -134,29 +134,37 @@ bool rules_is_promotion(GameState *state, Move move) {
 								  (piece.player == BLACK_PLAYER && move.dst.y == WHITE_STARTING_Y));
 }
 
+typedef enum { _CASTLING_KS, _CASTLING_QS } CastlingType;
+
+static int _get_castling_row(Player player) {
+	return player == WHITE_PLAYER ? WHITE_STARTING_Y : BLACK_STARTING_Y;
+}
+
+static bool _validate_castling_piece_types_and_positions(GameState *state, Player player,
+														 CastlingType castling_type) {
+	int col = castling_type == _CASTLING_KS ? ROOK_KS_STARTING_X : ROOK_QS_STARTING_X;
+	int row = _get_castling_row(player);
+	Piece expect_rook = gstate_get_piece(state, (Position) {col, row});
+	Piece expect_king = gstate_get_piece(state, (Position) {KING_STARTING_X, row});
+	// if castling is available then the king and the rook should be in the original positions
+	if (expect_rook.type != ROOK || expect_king.type != KING || expect_rook.player != expect_king.player) {
+		return false;
+	}
+	return true;
+}
+
 bool rules_can_castle_kingside(GameState *state, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);
 	if (!gstate_has_castling_rights_kingside(state, player)) {
 		return false;
 	}
-	int row;
-	if (player == WHITE_PLAYER) {
-		row = WHITE_STARTING_Y;
-	} else {
-		row = BLACK_STARTING_Y;
-	}
-	Piece expect_rook = gstate_get_piece(state, (Position) {ROOK_KS_STARTING_X, row});
-	Piece expect_king = gstate_get_piece(state, (Position) {KING_STARTING_X, row});
-	// if castling is available then the king and the rook should be in the original positions
-	if (expect_rook.type != ROOK || expect_king.type != KING || expect_rook.player != expect_king.player) {
-		return false;
-	}
-	if (rules_is_check(state, player)) {
+	if (!_validate_castling_piece_types_and_positions(state, player, _CASTLING_KS)) {
 		return false;
 	}
 
 	// check if the tiles between the king and the rook are empty
+	int row = _get_castling_row(player);
 	Position king_target_pos = {CASTLING_KS_KING_TARGET_COL, row};
 	Position rook_target_pos = {CASTLING_KS_ROOK_TARGET_COL, row};
 	if (gstate_get_piece(state, king_target_pos).type != EMPTY ||
@@ -178,23 +186,11 @@ bool rules_can_castle_queenside(GameState *state, Player player) {
 	if (!gstate_has_castling_rights_queenside(state, player)) {
 		return false;
 	}
-	int row;
-	if (player == WHITE_PLAYER) {
-		row = WHITE_STARTING_Y;
-	} else {
-		row = BLACK_STARTING_Y;
-	}
-
-	Piece expect_rook = gstate_get_piece(state, (Position) {ROOK_QS_STARTING_X, row});
-	Piece expect_king = gstate_get_piece(state, (Position) {KING_STARTING_X, row});
-	// if castling is available then the king and the rook should be in the original positions
-	if (expect_rook.type != ROOK || expect_king.type != KING || expect_rook.player != expect_king.player) {
-		return false;
-	}
-	if (rules_is_check(state, player)) {
+	if (!_validate_castling_piece_types_and_positions(state, player, _CASTLING_QS)) {
 		return false;
 	}
 
+	int row = _get_castling_row(player);
 	Position empty_tile = {1, row};
 	Position king_target_pos = {CASTLING_QS_KING_TARGET_COL, row};
 	Position rook_target_pos = {CASTLING_QS_ROOK_TARGET_COL, row};

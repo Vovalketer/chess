@@ -24,7 +24,7 @@
 #define CASTLING_QS_ROOK_TARGET_COL 3
 
 static bool rules_is_tile_targeted_by_enemy(GameState *state, Position pos, Player player);
-static bool _validate_en_passant_target(GameState *state, Move move);
+static bool rules_can_en_passant(GameState *state, Position pos, Move *out_move);
 
 bool rules_is_pseudo_legal_move(GameState *state, Move move) {
 	bool success = false;
@@ -233,7 +233,11 @@ bool rules_is_castling(GameState *state, Move move) {
 }
 
 bool rules_is_en_passant(GameState *state, Move move) {
-	return _validate_en_passant_target(state, move);
+	Move ep_move;
+	if (!rules_can_en_passant(state, move.src, &ep_move)) {
+		return false;
+	}
+	return position_eq(ep_move.dst, move.dst);
 }
 
 bool rules_is_valid_move(GameState *state, Move move) {
@@ -261,62 +265,19 @@ MoveType rules_get_move_type(GameState *state, Move move) {
 	return MOVE_REGULAR;
 }
 
-static bool _validate_en_passant_target(GameState *state, Move move) {
-	Piece piece = board_get_piece(gstate_get_board(state), move.src);
-	if (piece.type != PAWN || !board_is_within_bounds(move.src) || !board_is_within_bounds(move.dst) ||
-		board_get_piece(gstate_get_board(state), move.dst).type != EMPTY) {
+static bool rules_can_en_passant(GameState *state, Position pos, Move *out_move) {
+	Piece piece = board_get_piece(gstate_get_board(state), pos);
+	if (piece.type != PAWN || !gstate_is_en_passant_available(state)) {
 		return false;
 	}
-	if (move.src.y != EN_PASSANT_WHITE_ROW && move.src.y != EN_PASSANT_BLACK_ROW) {
-		return false;
-	}
-	if (move.dst.y != EN_PASSANT_WHITE_TARGET_ROW && move.dst.y != EN_PASSANT_BLACK_TARGET_ROW) {
-		return false;
-	}
-	Board *board = gstate_get_board(state);
-	Player player = piece.player;
-	// y = src instead of dst, the enemy pawn is next to the player pawn
-	Position enemy_pawn_pos = (Position) {move.dst.x, move.src.y};
-	Piece target = board_get_piece(board, enemy_pawn_pos);
-	if (target.type == PAWN && target.player != player) {
-		TurnRecord *record = NULL;
-		bool record_get = gstate_get_last_turn_record(state, &record);
-		if (!record_get) {
-			log_error("Failed to get turn record");
-			exit(1);
-		}
-		if (record->moving_piece.type != PAWN || !position_eq(record->move.dst, enemy_pawn_pos) ||
-			record->moving_piece.player != target.player) {
-			return false;
-		}
-		if (position_eq(record->move.dst, enemy_pawn_pos) &&
-			abs(record->move.dst.y - record->move.src.y) == 2) {
-			return true;
-		}
+	int target_row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
+	Position ep_target = gstate_get_en_passant_target(state);
+	if (pos.y == ep_target.y && abs(pos.x - ep_target.x) == 1) {
+		out_move->src = pos;
+		out_move->dst = (Position) {.x = ep_target.x, .y = target_row};
+		return true;
 	}
 	return false;
-}
-
-static bool rules_can_en_passant_left(GameState *state, Position pos, Move *out_move) {
-	Piece piece = board_get_piece(gstate_get_board(state), pos);
-	int row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
-	Move move = (Move) {.src = pos, .dst = (Position) {.x = pos.x - 1, row}};
-	bool valid = _validate_en_passant_target(state, move);
-	if (valid) {
-		*out_move = move;
-	}
-	return valid;
-}
-
-static bool rules_can_en_passant_right(GameState *state, Position pos, Move *out_move) {
-	Piece piece = board_get_piece(gstate_get_board(state), pos);
-	int row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
-	Move move = (Move) {.src = pos, .dst = (Position) {.x = pos.x + 1, row}};
-	bool valid = _validate_en_passant_target(state, move);
-	if (valid) {
-		*out_move = move;
-	}
-	return valid;
 }
 
 static MoveList *rules_generate_piece_moves(GameState *state, Piece piece, Position pos) {
@@ -353,10 +314,7 @@ static MoveList *rules_generate_piece_moves(GameState *state, Piece piece, Posit
 	// add special moves to the list if applicable
 	if (piece.type == PAWN) {
 		Move tmp;
-		if (rules_can_en_passant_left(state, pos, &tmp)) {
-			move_list_append(out_moves, tmp);
-		}
-		if (rules_can_en_passant_right(state, pos, &tmp)) {
+		if (rules_can_en_passant(state, pos, &tmp)) {
 			move_list_append(out_moves, tmp);
 		}
 	}

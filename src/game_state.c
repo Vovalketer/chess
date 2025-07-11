@@ -539,5 +539,6 @@ bool gstate_apply_move(GameState *state, Move move, MoveType move_type) {
 		state->halfmove_clock = 0;
 	}
 
+	gstate_next_turn(state);
 	return true;
 }

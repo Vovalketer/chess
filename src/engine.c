@@ -85,7 +85,6 @@ Piece engine_get_piece(GameState *state, Position pos) {
 }
 
 static void _next_turn(GameState *state) {
-	gstate_next_turn(state);
 	_update_gstate_status(state);
 	_update_turn_moves(state);
 }

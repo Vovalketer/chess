@@ -177,15 +177,13 @@ static void _gen_pawn(const Board *board, Piece piece, Position pos, MoveList *m
 		forward_left = (Position) {pos.x - 1, pos.y + 1};
 		forward_right = (Position) {pos.x + 1, pos.y + 1};
 	}
-	if (pos.y != starting_row) {
-		if (board_is_within_bounds(forward) && board_is_empty(board, forward)) {
-			move_list_append(moves, move_create(pos, forward));
-		}
-	} else {
+	if (pos.y == starting_row) {
 		if (board_is_empty(board, forward) && board_is_empty(board, forward2)) {
 			move_list_append(moves, move_create(pos, forward2));
-			move_list_append(moves, move_create(pos, forward));
 		}
+	}
+	if (board_is_empty(board, forward)) {
+		move_list_append(moves, move_create(pos, forward));
 	}
 	// check for possible captures
 	if (board_is_enemy(board, piece.player, forward_left)) {

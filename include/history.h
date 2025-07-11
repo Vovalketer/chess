@@ -19,6 +19,11 @@ typedef struct {
 	SpecialMoveInfo special_move_info;
 
 	int turn;
+	int halfmove_clock;
+
+	Position en_passant_target;
+	bool en_passant_available;
+
 	CastlingRights castling;
 } TurnRecord;
 

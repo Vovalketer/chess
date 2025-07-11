@@ -235,6 +235,10 @@ bool gstate_undo_move(GameState *state) {
 	}
 	state->castling = tr->castling;
 	state->turn = tr->turn;
+	state->halfmove_clock = tr->halfmove_clock;
+	state->en_passant_available = tr->en_passant_available;
+	state->en_passant_target = tr->en_passant_target;
+
 	switch (tr->move_type) {
 		case MOVE_CASTLING:
 			board_set_piece(state->board, tr->moving_piece, tr->move.src);
@@ -386,6 +390,7 @@ static void _apply_record_to_board(GameState *state, TurnRecord record) {
 		exit(1);
 	}
 
+	state->en_passant_available = false;
 	switch (record.move_type) {
 		case MOVE_CASTLING:
 			bool moved = board_move_piece(
@@ -440,7 +445,6 @@ static void _apply_record_to_board(GameState *state, TurnRecord record) {
 				default:
 					break;
 			}
-			state->en_passant_available = false;
 			break;
 
 		case MOVE_INVALID:
@@ -455,9 +459,12 @@ static TurnRecord _create_turn_record(GameState *state, Move move, MoveType move
 
 	TurnRecord tr = (TurnRecord) {.move = move,
 								  .turn = state->turn,
+								  .halfmove_clock = state->halfmove_clock,
 								  .moving_piece = moving_piece,
 								  .move_type = move_type,
-								  .castling = state->castling};
+								  .castling = state->castling,
+								  .en_passant_target = state->en_passant_target,
+								  .en_passant_available = state->en_passant_available};
 
 	switch (move_type) {
 		case MOVE_REGULAR:

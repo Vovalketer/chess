@@ -199,7 +199,7 @@ bool rules_can_castle_queenside(GameState *state, Player player) {
 		gstate_get_piece(state, rook_target_pos).type != EMPTY) {
 		return false;
 	}
-	if (rules_is_tile_targeted_by_enemy(state, king_target_pos, player) ||
+	if (rules_is_check(state, player) || rules_is_tile_targeted_by_enemy(state, king_target_pos, player) ||
 		rules_is_tile_targeted_by_enemy(state, rook_target_pos, player)) {
 		return false;
 	}

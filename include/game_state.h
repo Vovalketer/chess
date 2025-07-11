@@ -38,6 +38,7 @@ void gstate_set_castling_rights_queenside(GameState *state, Player player, bool 
 // en passant
 void gstate_set_en_passant_target(GameState *state, Position pos);
 Position gstate_get_en_passant_target(GameState *state);
+bool gstate_is_en_passant_available(GameState *state);
 
 // turn
 int gstate_get_turn(const GameState *state);

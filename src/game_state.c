@@ -306,6 +306,11 @@ Position gstate_get_en_passant_target(GameState *state) {
 	return state->en_passant_target;
 }
 
+bool gstate_is_en_passant_available(GameState *state) {
+	assert(state != NULL);
+	return state->en_passant_available;
+}
+
 TurnMoves *gstate_get_legal_moves(GameState *state) {
 	assert(state != NULL);
 	return state->legal_moves;

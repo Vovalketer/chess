@@ -65,8 +65,7 @@ MoveMask engine_get_valid_moves(GameState *state, Position pos) {
 	}
 
 	if (!moves) {
-		log_error("Failed to get valid moves for piece at pos %d:%d", pos.x, pos.y);
-		exit(1);
+		return mm;
 	}
 
 	for (size_t i = 0; i < move_list_size(moves); i++) {

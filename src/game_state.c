@@ -540,5 +540,21 @@ bool gstate_apply_move(GameState *state, Move move, MoveType move_type) {
 	}
 
 	gstate_next_turn(state);
+
 	return true;
+}
+
+void gstate_debug_print_state(GameState *state) {
+	printf("GameState:\n");
+	board_print(state->board);
+	printf("Status: %d\n", state->status);
+	printf("Castling:\n");
+	printf("Queenside: w:%d b:%d\n", state->castling.w_qs, state->castling.b_qs);
+	printf("Kingside: w:%d b:%d\n", state->castling.w_ks, state->castling.b_ks);
+	printf("En passant target: %d:%d - available: %d\n",
+		   state->en_passant_target.x,
+		   state->en_passant_target.y,
+		   state->en_passant_available);
+	printf("Legal moves:%zu\n", turn_moves_size(state->legal_moves));
+	printf("Halfmove clock: %d\n", state->halfmove_clock);
 }

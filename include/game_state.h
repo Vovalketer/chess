@@ -63,4 +63,5 @@ bool gstate_get_turn_record(GameState *state, size_t turn, TurnRecord **out_reco
 bool gstate_get_last_turn_record(GameState *state, TurnRecord **out_record);
 bool gstate_get_history_clone(GameState *state, TurnHistory **out_history);
 
+void gstate_debug_print_state(GameState *state);
 #endif

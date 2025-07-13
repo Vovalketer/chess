@@ -4,7 +4,6 @@
 #include "turn_moves.h"
 #include "types.h"
 
-bool rules_is_pseudo_legal_move(GameState *state, Move move);
 bool rules_is_check(GameState *state, Player player);
 bool rules_is_check_after_move(GameState *state, Player player, Move move);
 TurnMoves *rules_generate_turn_moves(GameState *state, Player player);

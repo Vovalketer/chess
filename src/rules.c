@@ -26,18 +26,6 @@
 static bool rules_is_tile_targeted_by_enemy(GameState *state, Position pos, Player player);
 static bool rules_can_en_passant(GameState *state, Position pos, Move *out_move);
 
-bool rules_is_pseudo_legal_move(GameState *state, Move move) {
-	bool success = false;
-	Board *board = gstate_get_board(state);
-	Piece src_piece = board_get_piece(board, move.src);
-	if (src_piece.player != gstate_get_player_turn(state) || src_piece.type == EMPTY) {
-		success = false;
-	} else {
-		success = movegen_contains(board, move);
-	}
-	return success;
-}
-
 static bool rules_is_tile_targeted_by_enemy(GameState *state, Position target, Player player) {
 	assert(state != NULL);
 	assert(player != NONE);

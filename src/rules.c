@@ -63,22 +63,15 @@ bool rules_is_check(GameState *state, Player player) {
 	return rules_is_tile_targeted_by_enemy(state, king_pos, player);
 }
 
-bool rules_is_check_after_move(GameState *state, Player player, Move move) {
+bool rules_is_check_after_move(GameState *state, Player player, Move move, MoveType move_type) {
 	assert(state != NULL);
-	Board *board = gstate_get_board(state);
-	Piece src_piece = board_get_piece(board, move.src);
-	Piece dst_piece = board_get_piece(board, move.dst);
-	if (src_piece.player == dst_piece.player) {
-		return false;
+	bool is_apply = gstate_apply_move(state, move, move_type);
+	if (!is_apply) {
+		log_error("Failed to apply move");
+		exit(1);
 	}
-	bool is_move = board_move_piece(board, move.src, move.dst);
-	assert(is_move == true);
 	bool is_check = rules_is_check(state, player);
-	// undo move
-	bool set_src = board_set_piece(board, src_piece, move.src);
-	bool set_dst = board_set_piece(board, dst_piece, move.dst);
-	assert(set_src == true);
-	assert(set_dst == true);
+	gstate_undo_move(state);
 	return is_check;
 }
 
@@ -104,7 +97,7 @@ bool rules_is_checkmate(GameState *state, Player player) {
 				for (size_t k = 0; k < move_list_size(moves); k++) {
 					Move *move = NULL;
 					move_list_get(moves, k, &move);
-					if (!rules_is_check_after_move(state, player, *move)) {
+					if (!rules_is_check_after_move(state, player, *move, MOVE_REGULAR)) {
 						move_list_destroy(&moves);
 						return false;
 					}
@@ -250,15 +243,17 @@ MoveType rules_get_move_type(GameState *state, Move move) {
 }
 
 static bool rules_can_en_passant(GameState *state, Position pos, Move *out_move) {
-	Piece piece = board_get_piece(gstate_get_board(state), pos);
+	Piece piece = gstate_get_piece(state, pos);
 	if (piece.type != PAWN || !gstate_is_en_passant_available(state)) {
 		return false;
 	}
 	int target_row = piece.player == WHITE_PLAYER ? EN_PASSANT_WHITE_TARGET_ROW : EN_PASSANT_BLACK_TARGET_ROW;
 	Position ep_target = gstate_get_en_passant_target(state);
-	if (pos.y == ep_target.y && abs(pos.x - ep_target.x) == 1) {
-		out_move->src = pos;
-		out_move->dst = (Position) {.x = ep_target.x, .y = target_row};
+	Position move_target_pos = (Position) {.x = ep_target.x, .y = target_row};
+	Move m = (Move) {.src = pos, .dst = move_target_pos};
+	if (pos.y == ep_target.y && abs(pos.x - ep_target.x) == 1 &&
+		!rules_is_check_after_move(state, piece.player, m, MOVE_EN_PASSANT)) {
+		*out_move = m;
 		return true;
 	}
 	return false;
@@ -289,7 +284,7 @@ static MoveList *rules_generate_piece_moves(GameState *state, Piece piece, Posit
 	for (size_t i = 0; i < move_list_size(moves); i++) {
 		Move *move = NULL;
 		move_list_get(moves, i, &move);
-		if (!rules_is_check_after_move(state, piece.player, *move)) {
+		if (!rules_is_check_after_move(state, piece.player, *move, MOVE_REGULAR)) {
 			move_list_append(out_moves, *move);
 		}
 	}

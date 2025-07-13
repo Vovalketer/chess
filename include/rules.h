@@ -5,7 +5,7 @@
 #include "types.h"
 
 bool rules_is_check(GameState *state, Player player);
-bool rules_is_check_after_move(GameState *state, Player player, Move move);
+bool rules_is_check_after_move(GameState *state, Player player, Move move, MoveType move_type);
 TurnMoves *rules_generate_turn_moves(GameState *state, Player player);
 bool rules_is_checkmate(GameState *state, Player player);
 bool rules_is_fifty_moves_draw(GameState *state);

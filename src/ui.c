@@ -58,11 +58,42 @@ void init_rendering(int window_width, int window_height) {
 	_load_textures();
 }
 
+static char _get_file(int col) {
+	switch (col) {
+		case 0:
+			return 'a';
+		case 1:
+			return 'b';
+		case 2:
+			return 'c';
+		case 3:
+			return 'd';
+		case 4:
+			return 'e';
+		case 5:
+			return 'f';
+		case 6:
+			return 'g';
+		case 7:
+			return 'h';
+		default:
+			return '?';
+	}
+}
+
+static char _get_rank(int row) {
+	return 8 - row + '0';
+}
+
 static void _draw_board(GameState* state, int width, int height) {
 	DRAWN_TILE_W_SIZE = width / 8;
 	DRAWN_TILE_H_SIZE = height / 8;
 	for (int row = 0; row < 8; row++) {
 		for (int col = 0; col < 8; col++) {
+			char fr[3];
+			fr[0] = _get_file(col);
+			fr[1] = _get_rank(row);
+			fr[2] = '\0';
 			DrawRectangle(DRAWN_TILE_W_SIZE * col,
 						  DRAWN_TILE_H_SIZE * row,
 						  DRAWN_TILE_W_SIZE,
@@ -98,6 +129,7 @@ static void _draw_board(GameState* state, int width, int height) {
 
 			int posY = (DRAWN_TILE_H_SIZE * row) + ((DRAWN_TILE_H_SIZE - piece_tex.height) / 2);
 			int posX = (DRAWN_TILE_W_SIZE * col) + ((DRAWN_TILE_W_SIZE - piece_tex.width) / 2);
+			DrawText(fr, posX, posY, 20, BLACK);
 			DrawTexture(piece_tex, posX, posY, WHITE);
 		}
 	}

@@ -5,177 +5,159 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Board {
-	Piece board[8][8];
-};
+#include "bits.h"
+#include "stdint.h"
+#include "types.h"
 
-void board_print(Board *board) {
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			switch (board->board[i][j].type) {
-				case PAWN:
-					board->board[i][j].player == WHITE_PLAYER ? printf(" P") : printf(" p");
-					break;
-				case ROOK:
-					board->board[i][j].player == WHITE_PLAYER ? printf(" R") : printf(" r");
-					break;
-				case KNIGHT:
-					board->board[i][j].player == WHITE_PLAYER ? printf(" N") : printf(" n");
-					break;
-				case BISHOP:
-					board->board[i][j].player == WHITE_PLAYER ? printf(" B") : printf(" b");
-					break;
-				case QUEEN:
-					board->board[i][j].player == WHITE_PLAYER ? printf(" Q") : printf(" q");
-					break;
-				case KING:
-					board->board[i][j].player == WHITE_PLAYER ? printf(" K") : printf(" k");
-					break;
-				case EMPTY:
-					printf(" .");
-					break;
-				default:
-					printf("?");
-					break;
-			}
-		}
-		printf("\n");
+#define TOTAL_PIECE_TYPES 6
+
+bool   board_is_within_bounds(Square sqr);
+Player board_get_piece_player(PieceType piece);
+
+static char board_piece_to_char(Piece piece) {
+	switch (piece) {
+		case W_PAWN:
+			return 'P';
+		case W_ROOK:
+			return 'R';
+		case W_KNIGHT:
+			return 'N';
+		case W_BISHOP:
+			return 'B';
+		case W_QUEEN:
+			return 'Q';
+		case W_KING:
+			return 'K';
+		case B_PAWN:
+			return 'p';
+		case B_ROOK:
+			return 'r';
+		case B_KNIGHT:
+			return 'n';
+		case B_BISHOP:
+			return 'b';
+		case B_QUEEN:
+			return 'q';
+		case B_KING:
+			return 'k';
+		case EMPTY:
+			return '.';
 	}
 }
 
-bool board_create(Board **board) {
+static Piece to_piece(Player player, PieceType piece) {
+	switch (player) {
+		case PLAYER_W:
+			return W_PAWN + piece;
+		case PLAYER_B:
+			return B_PAWN + piece;
+		default:
+			return EMPTY;
+	}
+}
+
+static void set_castling_rights(Board *board, CastlingRights cr) {
 	assert(board != NULL);
-	Board *b;
-	b = malloc(sizeof(Board));
-	if (!b) {
-		return false;
-	}
-	*board = b;
-	return true;
+	board->castling_rights |= cr;
 }
 
-bool board_destroy(Board **board) {
+static void remove_castling_rights(Board *board, CastlingRights cr) {
+	assert(board != NULL);
+	board->castling_rights &= ~cr;
+}
+
+static Player get_opponent(Player player) {
+	return player == PLAYER_W ? PLAYER_B : PLAYER_W;
+}
+
+static Player get_occupant(const Board *board, Square sqr) {
+	assert(board != NULL);
+	assert(board_is_within_bounds(sqr));
+	if (bits_get(board->occupancies[PLAYER_W], sqr)) {
+		return PLAYER_W;
+	} else if (bits_get(board->occupancies[PLAYER_B], sqr)) {
+		return PLAYER_B;
+	} else {
+		return PLAYER_NONE;
+	}
+}
+
+Board *board_create(void) {
+	Board *b;
+	b = calloc(1, sizeof(*b));
+	if (!b) {
+		// TODO: logging
+		return NULL;
+	}
+	return b;
+}
+
+void board_destroy(Board **board) {
 	if (board && *board) {
 		free(*board);
 		*board = NULL;
 	}
+}
+
+bool board_is_within_bounds(Square sqr) {
+	return sqr > SQ_NONE && sqr < SQ_CNT;
+}
+
+bool board_set_piece(Board *board, Player player, PieceType piece, Square sqr) {
+	assert(board != NULL);
+	if (!board_is_within_bounds(sqr)) {
+		return false;
+	}
+	bits_set(&board->pieces[piece], sqr);
+	bits_set(&board->occupancies[player], sqr);
 	return true;
 }
 
-bool board_clone(Board **clone, const Board *board) {
-	assert(clone != NULL);
+void board_remove_piece(Board *board, Square sqr) {
 	assert(board != NULL);
-	bool result = board_create(clone);
-	if (!result) {
-		return false;
+	assert(board_is_within_bounds(sqr));
+	Player p = get_occupant(board, sqr);
+	if (p == PLAYER_NONE) {
+		return;
+	};
+
+	bits_clear(&board->occupancies[p], sqr);
+	// bulldoze over the arrays to reduce the branching
+	for (int i = 0; i < TOTAL_PIECE_TYPES; i++) {
+		bits_clear(&board->pieces[i], sqr);
 	}
-	memcpy(*clone, board, sizeof(Board));
-	return true;
 }
 
-bool board_is_within_bounds(Position pos) {
-	return pos.x >= 0 && pos.x <= 7 && pos.y >= 0 && pos.y <= 7;
-}
-
-bool board_set_piece(Board *board, Piece piece, Position pos) {
+PieceType board_get_piece(const Board *board, Square sqr) {
 	assert(board != NULL);
-	if (!board_is_within_bounds(pos)) {
-		return false;
-	}
-	board->board[pos.y][pos.x] = piece;
-	return true;
-}
-
-void board_remove_piece(Board *board, Position pos) {
-	assert(board != NULL);
-	board_set_piece(board, (Piece) {NONE, EMPTY}, pos);
-}
-
-Piece board_get_piece(const Board *board, Position pos) {
-	assert(board != NULL);
-	if (!board_is_within_bounds(pos)) {
-		return (Piece) {NONE, EMPTY};
-	}
-	return board->board[pos.y][pos.x];
-}
-
-bool board_move_piece(Board *board, Position src, Position dst) {
-	assert(board != NULL);
-	if (!board_is_within_bounds(src) || !board_is_within_bounds(dst)) {
-		return false;
-	}
-	Piece orig = board_get_piece(board, src);
-	if (orig.type == EMPTY) {
-		return false;
-	}
-	board_set_piece(board, orig, dst);
-	board_remove_piece(board, src);
-	return true;
-}
-
-void board_init_positions(Board *board) {
-	for (int i = 0; i < 8; i++) {
-		board_set_piece(board, (Piece) {WHITE_PLAYER, PAWN}, (Position) {i, 6});
-	}
-
-	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, (Position) {0, 7});
-	board_set_piece(board, (Piece) {WHITE_PLAYER, KNIGHT}, (Position) {1, 7});
-	board_set_piece(board, (Piece) {WHITE_PLAYER, BISHOP}, (Position) {2, 7});
-	board_set_piece(board, (Piece) {WHITE_PLAYER, QUEEN}, (Position) {3, 7});
-	board_set_piece(board, (Piece) {WHITE_PLAYER, KING}, (Position) {4, 7});
-	board_set_piece(board, (Piece) {WHITE_PLAYER, BISHOP}, (Position) {5, 7});
-	board_set_piece(board, (Piece) {WHITE_PLAYER, KNIGHT}, (Position) {6, 7});
-	board_set_piece(board, (Piece) {WHITE_PLAYER, ROOK}, (Position) {7, 7});
-
-	for (int i = 0; i < 8; i++) {
-		board_set_piece(board, (Piece) {BLACK_PLAYER, PAWN}, (Position) {i, 1});
-	}
-
-	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, (Position) {0, 0});
-	board_set_piece(board, (Piece) {BLACK_PLAYER, KNIGHT}, (Position) {1, 0});
-	board_set_piece(board, (Piece) {BLACK_PLAYER, BISHOP}, (Position) {2, 0});
-	board_set_piece(board, (Piece) {BLACK_PLAYER, QUEEN}, (Position) {3, 0});
-	board_set_piece(board, (Piece) {BLACK_PLAYER, KING}, (Position) {4, 0});
-	board_set_piece(board, (Piece) {BLACK_PLAYER, BISHOP}, (Position) {5, 0});
-	board_set_piece(board, (Piece) {BLACK_PLAYER, KNIGHT}, (Position) {6, 0});
-	board_set_piece(board, (Piece) {BLACK_PLAYER, ROOK}, (Position) {7, 0});
-}
-
-bool board_is_empty(const Board *board, Position pos) {
-	assert(board != NULL);
-	return board_get_piece(board, pos).type == EMPTY;
-}
-
-bool board_is_enemy(const Board *board, Player player, Position pos) {
-	assert(board != NULL);
-	switch (player) {
-		case WHITE_PLAYER:
-			return board_get_piece(board, pos).player == BLACK_PLAYER;
-		case BLACK_PLAYER:
-			return board_get_piece(board, pos).player == WHITE_PLAYER;
-		case NONE:
-			return false;
-	}
-	return false;  // should never reach this point but is required by the compiler
-}
-
-bool board_is_friendly(const Board *board, Player player, Position pos) {
-	assert(board != NULL);
-	Piece piece = board_get_piece(board, pos);
-	return piece.player == player;
-}
-
-Position board_find_king_pos(const Board *board, Player player) {
-	assert(board != NULL);
-	assert(player != NONE);
-	for (int col = 0; col < 8; col++) {
-		for (int row = 0; row < 8; row++) {
-			Position pos = (Position) {col, row};
-			Piece piece = board_get_piece(board, pos);
-			if (piece.player == player && piece.type == KING) {
-				return pos;
-			}
+	assert(board_is_within_bounds(sqr));
+	for (int i = 0; i < TOTAL_PIECE_TYPES; i++) {
+		if (bits_get(board->pieces[i], sqr)) {
+			return i;
 		}
 	}
-	return (Position) {-1, -1};	 // should never reach this point but is required by the compiler
+}
+
+Piece get_player_piece(const Board *board, Square sqr) {
+	Player p = get_occupant(board, sqr);
+	if (p == PLAYER_NONE) {
+		return EMPTY;
+	}
+	PieceType piece = board_get_piece(board, sqr);
+	if (p == PLAYER_W) {
+		return W_PAWN + piece;
+	} else {
+		return B_PAWN + piece;
+	}
+}
+
+void board_print(const Board *board) {
+	for (int row = 7; row >= 0; row--) {
+		printf("\n %d ", row + 1);
+		for (int col = 0; col < 8; col++) {
+			Piece p = get_player_piece(board, row * 8 + col);
+			printf("%2c", board_piece_to_char(p));
+		}
+	}
+	printf("\n    a b c d e f g h \n");
 }

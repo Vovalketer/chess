@@ -14,9 +14,15 @@ void bits_clear(uint64_t *bits, int offset) {
 	*bits &= ~(1ULL << offset);
 }
 
-int8_t bits_pop(uint64_t *bits) {
+int8_t bits_pop_lsb(uint64_t *bits) {
 	uint64_t bit = bits_get_lsb(*bits);
 	*bits &= (*bits - 1);
+	return bit;
+}
+
+int8_t bits_pop_msb(uint64_t *bits) {
+	uint64_t bit = bits_get_msb(*bits);
+	bits_clear(bits, bit);
 	return bit;
 }
 
@@ -36,7 +42,7 @@ int8_t bits_get_lsb(const uint64_t bits) {
 }
 
 int8_t bits_get_msb(const uint64_t bits) {
-	return __builtin_clzll(bits);
+	return 63 - __builtin_clzll(bits);
 }
 
 int8_t bits_get_popcount(const uint64_t bits) {

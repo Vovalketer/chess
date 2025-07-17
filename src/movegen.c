@@ -1,195 +1,102 @@
-#include "../include/movegen.h"
-
-// pseudo valid moves, doesnt check for rules
+#include "movegen.h"
 
 #include <assert.h>
-#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
 
+#include "bits.h"
 #include "board.h"
-#define KNIGHT_OFFSET_ROWS 8
-#define DIAG_OFFSET_ROWS 4
-#define CROSS_OFFSET_ROWS 8
-#define MATRIX_COLS 2
+#include "types.h"
+#define NOT_FILE_A	0xFEFEFEFEFEFEFEFEULL  // zeros out file H
+#define NOT_FILE_H	0x7F7F7F7F7F7F7F7FULL  // zeros out file A
+#define NOT_FILE_AB 0xFCFCFCFCFCFCFCFCULL  // zeros out file AB
+#define NOT_FILE_GH 0x3F3F3F3F3F3F3F3FULL  // zeros out file GH
 
-static void _gen_offset_matrix(const Board *board, Piece piece, Position pos, const int *offset_matrix,
-							   int offset_matrix_rows, MoveList *moves);
-static void _gen_pawn(const Board *board, Piece piece, Position pos, MoveList *moves);
-static void _gen_rook(const Board *board, Piece piece, Position pos, MoveList *moves);
-static void _gen_knight(const Board *board, Piece piece, Position pos, MoveList *moves);
-static void _gen_bishop(const Board *board, Piece piece, Position pos, MoveList *moves);
-static void _gen_queen(const Board *board, Piece piece, Position pos, MoveList *moves);
-static void _gen_king(const Board *board, Piece piece, Position pos, MoveList *moves);
+static void init_pawn_attacks(void);
+static void init_knight_attacks(void);
+static void init_king_attacks(void);
 
-const int KNIGHT_MOVES[KNIGHT_OFFSET_ROWS][MATRIX_COLS] = {
-	{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
-const int CROSS_MOVES[CROSS_OFFSET_ROWS][MATRIX_COLS] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-const int DIAG_MOVES[DIAG_OFFSET_ROWS][MATRIX_COLS] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+typedef enum {
+	DIR_N = 8,
+	DIR_S = -8,
+	DIR_W = -1,
+	DIR_E = 1,
 
-bool movegen_generate(const Board *board, Position pos, MoveList *moves) {
-	if (!board_is_within_bounds(pos)) {
-		return false;
+	DIR_NW = 7,
+	DIR_NE = 9,
+	DIR_SW = -9,
+	DIR_SE = -7,
+} Direction;
+
+// move tables for pieces with fixed movements
+uint64_t pawn_attacks[2][64];
+uint64_t pawn_pushes[2][64];
+uint64_t knight_attacks[64];
+uint64_t king_attacks[64];
+
+const int8_t diagonal_offsets[8] = {DIR_NW, DIR_SW, DIR_SE, DIR_NE};
+const int8_t cross_offsets[4]	 = {DIR_N, DIR_S, DIR_E, DIR_W};
+
+void movegen_init(void) {
+	init_pawn_attacks();
+	init_knight_attacks();
+	init_king_attacks();
+}
+
+static void init_pawn_attacks(void) {
+	for (Square sqr = SQ_A1; sqr < SQ_CNT; sqr++) {
+		uint64_t bb = 0ULL;
+		bits_set(&bb, sqr);
+		// white
+		uint64_t bb_w =
+			(bits_shift_copy(bb, DIR_NE) & NOT_FILE_A) | (bits_shift_copy(bb, DIR_NW) & NOT_FILE_H);
+
+		pawn_attacks[PLAYER_W][sqr] = bb_w;
+
+		// black
+		uint64_t bb_b =
+			(bits_shift_copy(bb, DIR_SE) & NOT_FILE_A) | (bits_shift_copy(bb, DIR_SW) & NOT_FILE_H);
+
+		pawn_attacks[PLAYER_B][sqr] = bb_b;
 	}
-
-	Piece piece = board_get_piece(board, pos);
-	switch (piece.type) {
-		case PAWN:
-			_gen_pawn(board, piece, pos, moves);
-			break;
-		case ROOK:
-			_gen_rook(board, piece, pos, moves);
-			break;
-		case KNIGHT:
-			_gen_knight(board, piece, pos, moves);
-			break;
-		case BISHOP:
-			_gen_bishop(board, piece, pos, moves);
-			break;
-		case QUEEN:
-			_gen_queen(board, piece, pos, moves);
-			break;
-		case KING:
-			_gen_king(board, piece, pos, moves);
-			break;
-		default:
-			break;
-	}
-
-	return true;
 }
 
-bool movegen_contains(Board *board, Move move) {
-	assert(board != NULL);
-	MoveList *ml = NULL;
-	move_list_create(&ml);
-	bool gen = movegen_generate(board, move.src, ml);
-	assert(gen);
-	bool contains = move_list_contains(ml, move);
-
-	move_list_destroy(&ml);
-
-	return contains;
-}
-
-static void _gen_rook(const Board *board, Piece piece, Position pos, MoveList *moves) {
-	_gen_offset_matrix(board, piece, pos, *CROSS_MOVES, CROSS_OFFSET_ROWS, moves);
-}
-
-static void _gen_knight(const Board *board, Piece piece, Position pos, MoveList *moves) {
-	for (int row = 0; row < 8; row++) {
-		int dx = KNIGHT_MOVES[row][0];
-		int dy = KNIGHT_MOVES[row][1];
-		int target_col = pos.x + dx;
-		int target_row = pos.y + dy;
-		Position target_pos = {target_col, target_row};
-		if (board_is_within_bounds(target_pos)) {
-			if (board_is_empty(board, target_pos)) {
-				move_list_append(moves, move_create(pos, target_pos));
-			} else if (board_is_enemy(board, piece.player, target_pos)) {
-				move_list_append(moves, move_create(pos, target_pos));
-			}
+static void init_knight_attacks(void) {
+	for (Square sqr = SQ_A1; sqr < SQ_CNT; sqr++) {
+		uint64_t bb = 0ULL;
+		bits_set(&bb, sqr);
+		uint64_t attacks = 0ULL;
+		if (bb & NOT_FILE_A) {
+			attacks |= bits_shift_copy(bb, DIR_NW + DIR_N) | bits_shift_copy(bb, DIR_SW + DIR_S);
 		}
-	}
-}
-
-static void _gen_bishop(const Board *board, Piece piece, Position pos, MoveList *moves) {
-	_gen_offset_matrix(board, piece, pos, *DIAG_MOVES, DIAG_OFFSET_ROWS, moves);
-}
-
-static void _gen_queen(const Board *board, Piece piece, Position pos, MoveList *moves) {
-	_gen_offset_matrix(board, piece, pos, *CROSS_MOVES, CROSS_OFFSET_ROWS, moves);
-	_gen_offset_matrix(board, piece, pos, *DIAG_MOVES, DIAG_OFFSET_ROWS, moves);
-}
-
-static void _gen_king(const Board *board, Piece piece, Position pos, MoveList *moves) {
-	for (int row = -1; row < 2; row++) {
-		for (int col = -1; col < 2; col++) {
-			if (row == pos.y && col == pos.x) {
-				continue;
-			}
-			int target_col = pos.x + col;
-			int target_row = pos.y + row;
-			Position target_pos = {target_col, target_row};
-			if (board_is_within_bounds(target_pos)) {
-				if (board_is_empty(board, target_pos)) {
-					bool added = move_list_append(moves, move_create(pos, target_pos));
-					if (!added) {
-						printf("failed to add move\n");
-					}
-				} else if (board_is_enemy(board, piece.player, target_pos)) {
-					bool added = move_list_append(moves, move_create(pos, target_pos));
-					if (!added) {
-						printf("failed to add move\n");
-					}
-				}
-			}
+		if (bb & NOT_FILE_AB) {
+			attacks |= bits_shift_copy(bb, DIR_NW + DIR_W) | bits_shift_copy(bb, DIR_SW + DIR_W);
 		}
+		if (bb & NOT_FILE_H) {
+			attacks |= bits_shift_copy(bb, DIR_NE + DIR_N) | bits_shift_copy(bb, DIR_SE + DIR_S);
+		}
+		if (bb & NOT_FILE_GH) {
+			attacks |= bits_shift_copy(bb, DIR_NE + DIR_E) | bits_shift_copy(bb, DIR_SE + DIR_E);
+		}
+
+		knight_attacks[sqr] = attacks;
 	}
 }
 
-static void _gen_offset_matrix(const Board *board, Piece piece, Position pos, const int *offset_matrix,
-							   int offset_matrix_rows, MoveList *moves) {
-	for (int row = 0; row < offset_matrix_rows; row++) {
-		int dx = offset_matrix[row * 2];
-		int dy = offset_matrix[row * 2 + 1];
-		int target_col = pos.x + dx;
-		int target_row = pos.y + dy;
-		Position target_pos = {target_col, target_row};
-		while (board_is_within_bounds(target_pos)) {
-			if (board_is_empty(board, target_pos)) {
-				bool added = move_list_append(moves, move_create(pos, target_pos));
-				if (!added) {
-					printf("failed to add move\n");
-				}
-			} else if (board_is_enemy(board, piece.player, target_pos)) {
-				bool added = move_list_append(moves, move_create(pos, target_pos));
-				if (!added) {
-					printf("failed to add move\n");
-				}
-				break;
-			} else {
-				// allied piece
-				break;
-			}
-
-			target_pos.x += dx;
-			target_pos.y += dy;
+static void init_king_attacks(void) {
+	for (Square sqr = SQ_A1; sqr < SQ_CNT; sqr++) {
+		uint64_t bb = 0ULL;
+		bits_set(&bb, sqr);
+		uint64_t attacks = 0ULL;
+		if (bb & NOT_FILE_A) {
+			attacks |= bits_shift_copy(bb, DIR_N) | bits_shift_copy(bb, DIR_NW) | bits_shift_copy(bb, DIR_W) |
+					   bits_shift_copy(bb, DIR_SW) | bits_shift_copy(bb, DIR_S);
 		}
-	}
-}
-
-static void _gen_pawn(const Board *board, Piece piece, Position pos, MoveList *moves) {
-	int starting_row;
-	Position forward;
-	Position forward2;
-	Position forward_left;
-	Position forward_right;
-
-	if (piece.player == WHITE_PLAYER) {
-		starting_row = 6;
-		forward = (Position) {pos.x, pos.y - 1};
-		forward2 = (Position) {pos.x, pos.y - 2};
-		forward_left = (Position) {pos.x - 1, pos.y - 1};
-		forward_right = (Position) {pos.x + 1, pos.y - 1};
-	} else {
-		starting_row = 1;
-		forward = (Position) {pos.x, pos.y + 1};
-		forward2 = (Position) {pos.x, pos.y + 2};
-		forward_left = (Position) {pos.x - 1, pos.y + 1};
-		forward_right = (Position) {pos.x + 1, pos.y + 1};
-	}
-	if (pos.y == starting_row) {
-		if (board_is_empty(board, forward) && board_is_empty(board, forward2)) {
-			move_list_append(moves, move_create(pos, forward2));
+		if (bb & NOT_FILE_H) {
+			attacks |= bits_shift_copy(bb, DIR_N) | bits_shift_copy(bb, DIR_NE) | bits_shift_copy(bb, DIR_E) |
+					   bits_shift_copy(bb, DIR_SE) | bits_shift_copy(bb, DIR_S);
 		}
-	}
-	if (board_is_empty(board, forward)) {
-		move_list_append(moves, move_create(pos, forward));
-	}
-	// check for possible captures
-	if (board_is_enemy(board, piece.player, forward_left)) {
-		move_list_append(moves, move_create(pos, forward_left));
-	}
-	if (board_is_enemy(board, piece.player, forward_right)) {
-		move_list_append(moves, move_create(pos, forward_right));
+
+		king_attacks[sqr] = attacks;
 	}
 }

@@ -23,11 +23,13 @@ typedef enum {
 typedef enum { PLAYER_W = 0, PLAYER_B = 1, PLAYER_NONE = -1 } Player;
 
 typedef enum {
-	CASTLE_ALL	= 15,  // 1111
-	CASTLE_W_KS = 8,
-	CASTLE_W_QS = 4,
-	CASTLE_B_KS = 2,
-	CASTLE_B_QS = 1,
+	CASTLE_BOTH_ALL = 15,  // 1111
+	CASTLE_W_BOTH	= 12,
+	CASTLE_W_KS		= 8,
+	CASTLE_W_QS		= 4,
+	CASTLE_B_BOTH	= 3,
+	CASTLE_B_KS		= 2,
+	CASTLE_B_QS		= 1,
 } CastlingRights;
 
 // used as index
@@ -41,21 +43,22 @@ typedef enum {
 	KING,
 } PieceType;
 
-// typedef enum {
-// 	EMPTY,
-// 	W_PAWN,
-// 	W_ROOK,
-// 	W_KNIGHT,
-// 	W_BISHOP,
-// 	W_QUEEN,
-// 	W_KING,
-// 	B_PAWN,
-// 	B_ROOK,
-// 	B_KNIGHT,
-// 	B_BISHOP,
-// 	B_QUEEN,
-// 	B_KING,
-// } Piece;
+// query results
+typedef enum {
+	PIECE_NONE,
+	W_PAWN,
+	W_ROOK,
+	W_KNIGHT,
+	W_BISHOP,
+	W_QUEEN,
+	W_KING,
+	B_PAWN,
+	B_ROOK,
+	B_KNIGHT,
+	B_BISHOP,
+	B_QUEEN,
+	B_KING,
+} Piece;
 
 typedef enum {
 	MV_QUIET,
@@ -75,14 +78,26 @@ typedef enum {
 } MoveType;
 
 typedef struct {
-	// could be optimized by using a 8 bit int to encode from/to or encode the whole move in a 16 bit int
+	// could be optimized by using a 8 bit int to encode from/to or encode the whole move in a 16
+	// bit int
 	Square	  from;
 	Square	  to;
 	PieceType piece;
-	MoveType  type;
-	uint8_t	  castling_rights;
-	// 3 bytes padding
+	MoveType  mv_type;
 } Move;
+
+typedef struct {
+	Square	  from;
+	Square	  to;
+	PieceType moving;
+	PieceType captured;
+	MoveType  mv_type;
+	Square	  ep_target;
+	uint8_t	  castling_rights;
+	uint8_t	  halfmove_clock;
+	uint16_t  fullmove_counter;
+	// uint64_t zobrist_key;
+} History;
 
 typedef struct Board Board;
 

@@ -142,7 +142,6 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	while (bb) {
 		Square	 sqr	 = bits_pop_lsb(&bb);  // pop and get the index, transform into a square
 		uint64_t attk	 = pawn_attacks[p][sqr] & board->occupancies[board_get_opponent(p)];
-		Piece	 piece	 = board_create_piece(p, pt);
 		bool	 is_prom = sqr > SQ_H6;
 		while (attk) {
 			Square attk_sqr = bits_pop_lsb(&attk);
@@ -151,7 +150,7 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					.from	 = sqr,
 					.to		 = attk_sqr,
 					.mv_type = MV_CAPTURE,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				move_list_append(ml, mv);
 			} else {
@@ -159,25 +158,25 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					.from	 = sqr,
 					.to		 = attk_sqr,
 					.mv_type = MV_Q_PROM_CAPTURE,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				Move prom_r = {
 					.from	 = sqr,
 					.to		 = attk_sqr,
 					.mv_type = MV_R_PROM_CAPTURE,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				Move prom_b = {
 					.from	 = sqr,
 					.to		 = attk_sqr,
 					.mv_type = MV_B_PROM_CAPTURE,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				Move prom_n = {
 					.from	 = sqr,
 					.to		 = attk_sqr,
 					.mv_type = MV_N_PROM_CAPTURE,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				move_list_append(ml, prom_q);
 				move_list_append(ml, prom_r);
@@ -194,7 +193,7 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					.from	 = sqr,
 					.to		 = push_sqr,
 					.mv_type = MV_QUIET,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				move_list_append(ml, mv);
 			} else {
@@ -202,25 +201,25 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					.from	 = sqr,
 					.to		 = push_sqr,
 					.mv_type = MV_Q_PROM,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				Move prom_r = {
 					.from	 = sqr,
 					.to		 = push_sqr,
 					.mv_type = MV_R_PROM,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				Move prom_b = {
 					.from	 = sqr,
 					.to		 = push_sqr,
 					.mv_type = MV_B_PROM,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				Move prom_n = {
 					.from	 = sqr,
 					.to		 = push_sqr,
 					.mv_type = MV_N_PROM,
-					.piece	 = piece,
+					.piece	 = pt,
 				};
 				move_list_append(ml, prom_q);
 				move_list_append(ml, prom_r);
@@ -236,7 +235,6 @@ void movegen_knights(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	uint64_t bb = board->pieces[p][pt];
 	while (bb) {
 		Square	 sqr   = bits_pop_lsb(&bb);
-		Piece	 piece = board_create_piece(p, pt);
 		uint64_t moves = knight_attacks[sqr] & ~board->occupancies[p];
 		MoveType mt	   = board_has_enemy(board, sqr, p) ? MV_CAPTURE : MV_QUIET;
 		while (moves) {
@@ -245,7 +243,7 @@ void movegen_knights(const Board *board, PieceType pt, Player p, MoveList *ml) {
 				  .from	   = sqr,
 				  .to	   = to,
 				  .mv_type = mt,
-				  .piece   = piece,
+				  .piece   = pt,
 			  };
 			move_list_append(ml, mv);
 		}
@@ -256,7 +254,6 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
 	uint64_t bb		  = board->pieces[p][pt];
 	Square	 king_sqr = bits_pop_lsb(&bb);
-	Piece	 piece	  = board_create_piece(p, pt);
 	uint64_t moves	  = king_attacks[king_sqr] & ~board->occupancies[p];
 	while (moves) {
 		Square	 to = bits_pop_lsb(&moves);
@@ -265,7 +262,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 				.from	 = king_sqr,
 				.to		 = to,
 				.mv_type = mt,
-				.piece	 = piece,
+				.piece	 = pt,
 		};
 		move_list_append(ml, mv);
 	}
@@ -277,11 +274,12 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 						~(W_KS_CASTLING_SQUARES)) {
 					// checking for threats is deferred to makemove
-					Move mv = {.from			= king_sqr,
-							   .to				= SQ_G1,
-							   .mv_type			= MV_KS_CASTLE,
-							   .piece			= piece,
-							   };
+					Move mv = {
+						.from	 = king_sqr,
+						.to		 = SQ_G1,
+						.mv_type = MV_KS_CASTLE,
+						.piece	 = pt,
+					};
 					move_list_append(ml, mv);
 				}
 			}
@@ -290,11 +288,12 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 						~(W_QS_CASTLING_SQUARES)) {
 					// checking for threats is deferred to makemove
-					Move mv = {.from			= king_sqr,
-							   .to				= SQ_C1,
-							   .mv_type			= MV_QS_CASTLE,
-							   .piece			= piece,
-							   };
+					Move mv = {
+						.from	 = king_sqr,
+						.to		 = SQ_C1,
+						.mv_type = MV_QS_CASTLE,
+						.piece	 = pt,
+					};
 					move_list_append(ml, mv);
 				}
 			}
@@ -305,11 +304,12 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 						~(B_KS_CASTLING_SQUARES)) {
 					// checking for threats is deferred to makemove
-					Move mv = {.from			= king_sqr,
-							   .to				= SQ_C8,
-							   .mv_type			= MV_KS_CASTLE,
-							   .piece			= piece,
-							   };
+					Move mv = {
+						.from	 = king_sqr,
+						.to		 = SQ_C8,
+						.mv_type = MV_KS_CASTLE,
+						.piece	 = pt,
+					};
 					move_list_append(ml, mv);
 				}
 			}
@@ -318,11 +318,12 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 						~(B_QS_CASTLING_SQUARES)) {
 					// checking for threats is deferred to makemove
-					Move mv = {.from			= king_sqr,
-							   .to				= SQ_D8,
-							   .mv_type			= MV_QS_CASTLE,
-							   .piece			= piece,
-							   };
+					Move mv = {
+						.from	 = king_sqr,
+						.to		 = SQ_D8,
+						.mv_type = MV_QS_CASTLE,
+						.piece	 = pt,
+					};
 					move_list_append(ml, mv);
 				}
 			}
@@ -345,21 +346,23 @@ void movegen_cross(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			Square up_sqr	= file + 8 * r;
 			Player occupant = board_get_occupant(board, up_sqr);
 			if (occupant == PLAYER_NONE) {
-				Move mv = {.from			= sqr,
-						   .to				= up_sqr,
-						   .mv_type			= MV_QUIET,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = up_sqr,
+					.mv_type = MV_QUIET,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 			} else if (occupant == p) {
 				break;
 			} else {
 				// enemy
-				Move mv = {.from			= sqr,
-						   .to				= up_sqr,
-						   .mv_type			= MV_CAPTURE,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = up_sqr,
+					.mv_type = MV_CAPTURE,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 				break;
 			}
@@ -369,21 +372,23 @@ void movegen_cross(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			Square down_sqr = file + 8 * r;
 			Player occupant = board_get_occupant(board, down_sqr);
 			if (occupant == PLAYER_NONE) {
-				Move mv = {.from			= sqr,
-						   .to				= down_sqr,
-						   .mv_type			= MV_QUIET,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = down_sqr,
+					.mv_type = MV_QUIET,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 			} else if (occupant == p) {
 				break;
 			} else {
 				// enemy
-				Move mv = {.from			= sqr,
-						   .to				= down_sqr,
-						   .mv_type			= MV_CAPTURE,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = down_sqr,
+					.mv_type = MV_CAPTURE,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 				break;
 			}
@@ -393,21 +398,23 @@ void movegen_cross(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			Square left_sqr = 8 * rank + f;
 			Player occupant = board_get_occupant(board, left_sqr);
 			if (occupant == PLAYER_NONE) {
-				Move mv = {.from			= sqr,
-						   .to				= left_sqr,
-						   .mv_type			= MV_QUIET,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = left_sqr,
+					.mv_type = MV_QUIET,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 			} else if (occupant == p) {
 				break;
 			} else {
 				// enemy
-				Move mv = {.from			= sqr,
-						   .to				= left_sqr,
-						   .mv_type			= MV_CAPTURE,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = left_sqr,
+					.mv_type = MV_CAPTURE,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 				break;
 			}
@@ -417,21 +424,23 @@ void movegen_cross(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			Square right_sqr = 8 * rank + f;
 			Player occupant	 = board_get_occupant(board, right_sqr);
 			if (occupant == PLAYER_NONE) {
-				Move mv = {.from			= sqr,
-						   .to				= right_sqr,
-						   .mv_type			= MV_QUIET,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = right_sqr,
+					.mv_type = MV_QUIET,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 			} else if (occupant == p) {
 				break;
 			} else {
 				// enemy
-				Move mv = {.from			= sqr,
-						   .to				= right_sqr,
-						   .mv_type			= MV_CAPTURE,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = right_sqr,
+					.mv_type = MV_CAPTURE,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 				break;
 			}
@@ -452,21 +461,23 @@ void movegen_diagonal(const Board *board, PieceType pt, Player p, MoveList *ml) 
 			Square up_right_sqr = r * 8 + f;
 			Player occupant		= board_get_occupant(board, up_right_sqr);
 			if (occupant == PLAYER_NONE) {
-				Move mv = {.from			= sqr,
-						   .to				= up_right_sqr,
-						   .mv_type			= MV_QUIET,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = up_right_sqr,
+					.mv_type = MV_QUIET,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 			} else if (occupant == p) {
 				break;
 			} else {
 				// enemy
-				Move mv = {.from			= sqr,
-						   .to				= up_right_sqr,
-						   .mv_type			= MV_CAPTURE,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = up_right_sqr,
+					.mv_type = MV_CAPTURE,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 				break;
 			}
@@ -476,21 +487,23 @@ void movegen_diagonal(const Board *board, PieceType pt, Player p, MoveList *ml) 
 			Square down_right_sqr = r * 8 + f;
 			Player occupant		  = board_get_occupant(board, down_right_sqr);
 			if (occupant == PLAYER_NONE) {
-				Move mv = {.from			= sqr,
-						   .to				= down_right_sqr,
-						   .mv_type			= MV_QUIET,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = down_right_sqr,
+					.mv_type = MV_QUIET,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 			} else if (occupant == p) {
 				break;
 			} else {
 				// enemy
-				Move mv = {.from			= sqr,
-						   .to				= down_right_sqr,
-						   .mv_type			= MV_CAPTURE,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = down_right_sqr,
+					.mv_type = MV_CAPTURE,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 				break;
 			}
@@ -500,21 +513,23 @@ void movegen_diagonal(const Board *board, PieceType pt, Player p, MoveList *ml) 
 			Square up_left_sqr = r * 8 + file;
 			Player occupant	   = board_get_occupant(board, up_left_sqr);
 			if (occupant == PLAYER_NONE) {
-				Move mv = {.from			= sqr,
-						   .to				= up_left_sqr,
-						   .mv_type			= MV_QUIET,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = up_left_sqr,
+					.mv_type = MV_QUIET,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 			} else if (occupant == p) {
 				break;
 			} else {
 				// enemy
-				Move mv = {.from			= sqr,
-						   .to				= up_left_sqr,
-						   .mv_type			= MV_CAPTURE,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = up_left_sqr,
+					.mv_type = MV_CAPTURE,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 				break;
 			}
@@ -524,20 +539,18 @@ void movegen_diagonal(const Board *board, PieceType pt, Player p, MoveList *ml) 
 			Square down_left_sqr = r * 8 + file;
 			Player occupant		 = board_get_occupant(board, down_left_sqr);
 			if (occupant == PLAYER_NONE) {
-				Move mv = {.from			= sqr,
-						   .to				= down_left_sqr,
-						   .mv_type			= MV_QUIET,
-						   .piece			= board_create_piece(p, pt),
-						   };
+				Move mv = {
+					.from	 = sqr,
+					.to		 = down_left_sqr,
+					.mv_type = MV_QUIET,
+					.piece	 = pt,
+				};
 				move_list_append(ml, mv);
 			} else if (occupant == p) {
 				break;
 			} else {
 				// enemy
-				Move mv = {.from	= sqr,
-						   .to		= down_left_sqr,
-						   .mv_type = MV_CAPTURE,
-						   .piece	= board_create_piece(p, pt)};
+				Move mv = {.from = sqr, .to = down_left_sqr, .mv_type = MV_CAPTURE, .piece = pt};
 				move_list_append(ml, mv);
 				break;
 			}

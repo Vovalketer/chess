@@ -11,9 +11,8 @@
 
 #define TOTAL_PIECE_TYPES 6
 
-static bool		 is_within_bounds(Square sqr);
-static PieceType get_piece_type(const Board *board, Square sqr);
-Player			 board_get_piece_player(PieceType piece);
+static bool is_within_bounds(Square sqr);
+Player		board_get_piece_player(PieceType piece);
 
 static char board_piece_to_char(Piece piece) {
 	switch (piece) {
@@ -46,6 +45,18 @@ static char board_piece_to_char(Piece piece) {
 	}
 }
 
+PieceType get_piece_type_from_piece(Piece piece) {
+	if (piece == PIECE_NONE) {
+		return EMPTY;
+	}
+	// PieceType 0 = PAWN, flatten piece values
+	if (piece > W_KING) {
+		return piece - B_PAWN;
+	} else {
+		return piece - W_PAWN;
+	}
+}
+
 Piece create_piece(Player player, PieceType piece) {
 	switch (player) {
 		case PLAYER_W:
@@ -57,12 +68,12 @@ Piece create_piece(Player player, PieceType piece) {
 	}
 }
 
-static void set_castling_rights(Board *board, CastlingRights cr) {
+void board_set_castling_rights(Board *board, CastlingRights cr) {
 	assert(board != NULL);
 	board->castling_rights |= cr;
 }
 
-static void remove_castling_rights(Board *board, CastlingRights cr) {
+void board_remove_castling_rights(Board *board, CastlingRights cr) {
 	assert(board != NULL);
 	board->castling_rights &= ~cr;
 }
@@ -128,13 +139,15 @@ static bool is_within_bounds(Square sqr) {
 	return sqr > SQ_NONE && sqr < SQ_CNT;
 }
 
-bool board_set_piece(Board *board, Player player, PieceType piece, Square sqr) {
+void board_set_piece(Board *board, Player player, PieceType piece, Square sqr) {
 	assert(board != NULL);
 	assert(is_within_bounds(sqr));
+	if (bits_get(board->occupancies[player], sqr)) {
+		board_remove_piece(board, sqr);
+	}
 
 	bits_set(&board->pieces[player][piece], sqr);
 	bits_set(&board->occupancies[player], sqr);
-	return true;
 }
 
 void board_remove_piece(Board *board, Square sqr) {
@@ -152,7 +165,20 @@ void board_remove_piece(Board *board, Square sqr) {
 	}
 }
 
-static PieceType get_piece_type(const Board *board, Square sqr) {
+void board_move_piece(Board *board, Square from, Square to, PieceType piece) {
+	assert(board != NULL);
+	assert(is_within_bounds(from));
+	assert(is_within_bounds(to));
+	Player p = board_get_occupant(board, from);
+	assert(p != PLAYER_NONE);
+
+	bits_clear(&board->occupancies[p], from);
+	bits_set(&board->occupancies[p], to);
+	bits_clear(&board->pieces[p][piece], from);
+	bits_set(&board->pieces[p][piece], to);
+}
+
+PieceType board_get_piece_type(const Board *board, Square sqr) {
 	assert(board != NULL);
 	assert(is_within_bounds(sqr));
 	Player p = board_get_occupant(board, sqr);
@@ -167,12 +193,12 @@ static PieceType get_piece_type(const Board *board, Square sqr) {
 	return EMPTY;
 }
 
-Piece get_player_piece(const Board *board, Square sqr) {
+static Piece get_player_piece(const Board *board, Square sqr) {
 	Player p = board_get_occupant(board, sqr);
 	if (p == PLAYER_NONE) {
 		return EMPTY;
 	}
-	PieceType piece = get_piece_type(board, sqr);
+	PieceType piece = board_get_piece_type(board, sqr);
 	if (p == PLAYER_W) {
 		return W_PAWN + piece;
 	} else {

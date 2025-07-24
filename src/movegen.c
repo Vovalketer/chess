@@ -270,7 +270,8 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	switch (p) {
 		case PLAYER_W:
 			if (board_has_castling_rights(board, CASTLE_W_KS)) {
-				if (king_sqr == SQ_E1 && board_get_piece(board, SQ_H1) == W_ROOK &&
+				if (king_sqr == SQ_E1 && board_get_piece_type(board, SQ_H1) == ROOK &&
+					bits_get(board->occupancies[PLAYER_W], SQ_H1) &&
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 						~(W_KS_CASTLING_SQUARES)) {
 					// checking for threats is deferred to makemove
@@ -284,7 +285,8 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 				}
 			}
 			if (board_has_castling_rights(board, CASTLE_W_QS)) {
-				if (king_sqr == SQ_E1 && board_get_piece(board, SQ_A1) == W_ROOK &&
+				if (king_sqr == SQ_E1 && board_get_piece_type(board, SQ_A1) == ROOK &&
+					bits_get(board->occupancies[PLAYER_W], SQ_A1) &&
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 						~(W_QS_CASTLING_SQUARES)) {
 					// checking for threats is deferred to makemove
@@ -300,7 +302,8 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			break;
 		case PLAYER_B:
 			if (board_has_castling_rights(board, CASTLE_B_KS)) {
-				if (king_sqr == SQ_E8 && board_get_piece(board, SQ_H8) == W_ROOK &&
+				if (king_sqr == SQ_E8 && board_get_piece_type(board, SQ_H8) == ROOK &&
+					bits_get(board->occupancies[PLAYER_W], SQ_H8) &&
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 						~(B_KS_CASTLING_SQUARES)) {
 					// checking for threats is deferred to makemove
@@ -314,7 +317,8 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 				}
 			}
 			if (board_has_castling_rights(board, CASTLE_B_QS)) {
-				if (king_sqr == SQ_E8 && board_get_piece(board, SQ_A8) == B_ROOK &&
+				if (king_sqr == SQ_E8 && board_get_piece_type(board, SQ_A8) == ROOK &&
+					bits_get(board->occupancies[PLAYER_W], SQ_A8) &&
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 						~(B_QS_CASTLING_SQUARES)) {
 					// checking for threats is deferred to makemove

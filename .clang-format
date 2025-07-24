@@ -2,14 +2,20 @@ BasedOnStyle: Google
 IndentWidth: 4
 TabWidth: 4
 UseTab: Always
-ColumnLimit: 110
+ColumnLimit: 100
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
 AllowAllArgumentsOnNextLine: true
+
+AlignArrayOfStructures: Right
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveMacros: Consecutive
+
 BinPackArguments: false
-BinPackParameters: true
+BinPackParameters: false
 BreakAfterJavaFieldAnnotations: True
 BreakStringLiterals: True
 BreakBeforeBraces: Attach

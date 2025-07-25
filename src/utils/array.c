@@ -107,7 +107,7 @@ bool array_append(Array* list, void* data) {
 	return array_insert(list, list->size, data);
 }
 
-bool array_pop(Array* list, size_t index, void** out_data) {
+bool array_pop(Array* list, size_t index, void* out_data) {
 	assert(list != NULL);
 	if (index >= list->size) {
 		return false;
@@ -115,14 +115,7 @@ bool array_pop(Array* list, size_t index, void** out_data) {
 
 	// base is the start of the array, casted to uint8_t to avoid undefined behavior
 	uint8_t* base = list->data;
-	if (out_data != NULL) {
-		void* out = malloc(list->elem_size);
-		if (out == NULL) {
-			return false;
-		}
-		memcpy(out, base + index * list->elem_size, list->elem_size);
-		*out_data = out;
-	}
+	memcpy(out_data, base + index * list->elem_size, list->elem_size);
 
 	size_t move_size = (list->size - index - 1) * list->elem_size;
 	if (move_size > 0) {
@@ -134,11 +127,11 @@ bool array_pop(Array* list, size_t index, void** out_data) {
 	return true;
 }
 
-bool array_pop_first(Array* list, void** out_data) {
+bool array_pop_first(Array* list, void* out_data) {
 	return array_pop(list, 0, out_data);
 }
 
-bool array_pop_last(Array* list, void** out_data) {
+bool array_pop_last(Array* list, void* out_data) {
 	return array_pop(list, list->size - 1, out_data);
 }
 
@@ -154,7 +147,7 @@ bool array_remove_last(Array* list) {
 	return array_remove(list, list->size - 1);
 }
 
-bool array_get(Array* list, size_t index, void** out_data) {
+bool array_get(Array* list, size_t index, void* out_data) {
 	assert(list != NULL);
 	assert(out_data != NULL);
 	if (index >= list->size) {
@@ -163,16 +156,16 @@ bool array_get(Array* list, size_t index, void** out_data) {
 
 	// base is the start of the array, casted to uint8_t to avoid undefined behavior
 	uint8_t* base = list->data;
-	*out_data = base + index * list->elem_size;
+	out_data = base + index * list->elem_size;
 
 	return true;
 }
 
-bool array_get_first(Array* list, void** out_data) {
+bool array_get_first(Array* list, void* out_data) {
 	return array_get(list, 0, out_data);
 }
 
-bool array_get_last(Array* list, void** out_data) {
+bool array_get_last(Array* list, void* out_data) {
 	return array_get(list, array_size(list) - 1, out_data);
 }
 

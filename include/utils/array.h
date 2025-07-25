@@ -12,17 +12,15 @@ void array_clear(Array* list);
 bool array_insert(Array* list, size_t index, void* data);
 bool array_prepend(Array* list, void* data);
 bool array_append(Array* list, void* data);
-// removes the data from the array and returns it through out_data by reference, allocated on the heap
-bool array_pop(Array* list, size_t index, void** out_data);
-bool array_pop_first(Array* list, void** out_data);
-bool array_pop_last(Array* list, void** out_data);
+bool array_pop(Array* list, size_t index, void* out_data);
+bool array_pop_first(Array* list, void* out_data);
+bool array_pop_last(Array* list, void* out_data);
 bool array_remove(Array* list, size_t index);
 bool array_remove_first(Array* list);
 bool array_remove_last(Array* list);
-// returns a pointer to the data, does not remove it from the array
-bool array_get(Array* list, size_t index, void** out_data);
-bool array_get_first(Array* list, void** out_data);
-bool array_get_last(Array* list, void** out_data);
+bool array_get(Array* list, size_t index, void* out_data);
+bool array_get_first(Array* list, void* out_data);
+bool array_get_last(Array* list, void* out_data);
 size_t array_size(Array* list);
 bool array_clone(Array** dst, const Array* src);
 

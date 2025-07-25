@@ -69,30 +69,18 @@ static inline void _free_wrapper(void* wrapper) {
 	}                                                                                                        \
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_pop(                                              \
-		_ARRAY_NAME(CONTAINER_NAME) * list, size_t index, TYPE** out) {                                      \
-		void* tmp = NULL;                                                                                    \
-		if (!array_pop(list->raw, index, &tmp))                                                              \
-			return false;                                                                                    \
-		*out = (TYPE*) tmp;                                                                                  \
-		return true;                                                                                         \
+		_ARRAY_NAME(CONTAINER_NAME) * list, size_t index, TYPE* out) {                                       \
+			return array_pop(list->raw, index, out);                                                         \
 	}                                                                                                        \
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_pop_first(_ARRAY_NAME(CONTAINER_NAME) * list,     \
-																	 TYPE * *out) {                          \
-		void* tmp = NULL;                                                                                    \
-		if (!array_pop_first(list->raw, &tmp))                                                               \
-			return false;                                                                                    \
-		*out = (TYPE*) tmp;                                                                                  \
-		return true;                                                                                         \
+																	 TYPE  *out) {                           \
+		return array_pop_first(list->raw, out);                                                              \
 	}                                                                                                        \
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_pop_last(_ARRAY_NAME(CONTAINER_NAME) * list,      \
-																	TYPE * *out) {                           \
-		void* tmp = NULL;                                                                                    \
-		if (!array_pop_last(list->raw, &tmp))                                                                \
-			return false;                                                                                    \
-		*out = (TYPE*) tmp;                                                                                  \
-		return true;                                                                                         \
+																	TYPE  *out) {                            \
+		return array_pop_last(list->raw, out);                                                               \
 	}                                                                                                        \
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_remove(_ARRAY_NAME(CONTAINER_NAME) * list,        \
@@ -110,30 +98,18 @@ static inline void _free_wrapper(void* wrapper) {
 	}                                                                                                        \
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_get(                                              \
-		_ARRAY_NAME(CONTAINER_NAME) * list, size_t index, TYPE** out) {                                      \
-		void* tmp = NULL;                                                                                    \
-		if (!array_get(list->raw, index, &tmp))                                                              \
-			return false;                                                                                    \
-		*out = (TYPE*) tmp;                                                                                  \
-		return true;                                                                                         \
+		_ARRAY_NAME(CONTAINER_NAME) * list, size_t index, TYPE* out) {                                       \
+		return array_get(list->raw, index, out);                                                             \
 	}                                                                                                        \
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_get_first(_ARRAY_NAME(CONTAINER_NAME) * list,     \
-																	 TYPE * *out) {                          \
-		void* tmp = NULL;                                                                                    \
-		if (!array_get_first(list->raw, &tmp))                                                               \
-			return false;                                                                                    \
-		*out = (TYPE*) tmp;                                                                                  \
-		return true;                                                                                         \
+																	 TYPE  *out) {                           \
+		return array_get_first(list->raw, out);                                                              \
 	}                                                                                                        \
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_get_last(_ARRAY_NAME(CONTAINER_NAME) * list,      \
-																	TYPE * *out) {                           \
-		void* tmp = NULL;                                                                                    \
-		if (!array_get_last(list->raw, &tmp))                                                                \
-			return false;                                                                                    \
-		*out = (TYPE*) tmp;                                                                                  \
-		return true;                                                                                         \
+																	TYPE  *out) {                            \
+		return array_get_last(list->raw, out);                                                               \
 	}                                                                                                        \
                                                                                                              \
 	__attribute__((unused)) static inline bool FN_PREFIX##_clone(_ARRAY_NAME(CONTAINER_NAME) * *dst,         \

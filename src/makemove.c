@@ -1,58 +1,104 @@
 #include "makemove.h"
 
+#include "bitboards.h"
+#include "bits.h"
 #include "board.h"
+#include "log.h"
 #include "types.h"
 
-// TODO: validate moves, check and castling squares
+static bool is_square_threatened(Board *board, Square sqr, Player player);
+static bool is_check(Board *board, Player player);
+
+static bool is_square_threatened(Board *board, Square sqr, Player player) {
+	Player	 opponent	 = board_get_opponent(player);
+	uint64_t occupancies = board->occupancies[player] | board->occupancies[opponent];
+
+	uint64_t pawn_bb =
+		bitboards_get_pawn_attacks(sqr, player);  // get the attacks for our own pawns to reflect
+												  // the position where the enemy pawns could be
+	uint64_t knight_bb = bitboards_get_knight_attacks(sqr);
+	uint64_t bishop_bb = bitboards_get_bishop_attacks(sqr, occupancies);
+	uint64_t rook_bb   = bitboards_get_rook_attacks(sqr, occupancies);
+	uint64_t queen_bb  = bitboards_get_queen_attacks(sqr, occupancies);
+
+	// check if any of these pieces exist in the bitboards from the opponent
+	// and if so, the king is in check
+	return pawn_bb & board->pieces[opponent][PAWN] || knight_bb & board->pieces[opponent][KNIGHT] ||
+		   bishop_bb & board->pieces[opponent][BISHOP] || rook_bb & board->pieces[opponent][ROOK] ||
+		   queen_bb & board->pieces[opponent][QUEEN];
+}
+
+static bool is_check(Board *board, Player player) {
+	Square king_sqr = bits_get_lsb(board->pieces[player][KING]);
+	return is_square_threatened(board, king_sqr, player);
+}
+
 bool make_move(Board *board, Move move) {
-	PieceType pt_src  = move.piece;
-	History	  history = (History) {.from			 = move.from,
-								   .to				 = move.to,
-								   .moving			 = pt_src,
-								   .captured		 = EMPTY,
-								   .mv_type			 = move.mv_type,
-								   .ep_target		 = board->ep_target,
-								   .castling_rights	 = board->castling_rights,
-								   .halfmove_clock	 = board->halfmove_clock,
-								   .fullmove_counter = board->fullmove_counter};
+	PieceType pt_src = move.piece;
+	History	  hist	 = (History) {.from				= move.from,
+								  .to				= move.to,
+								  .moving			= pt_src,
+								  .captured			= EMPTY,
+								  .mv_type			= move.mv_type,
+								  .ep_target		= board->ep_target,
+								  .side				= board->side,
+								  .castling_rights	= board->castling_rights,
+								  .halfmove_clock	= board->halfmove_clock,
+								  .fullmove_counter = board->fullmove_counter};
 
 	switch (move.mv_type) {
 		case MV_QUIET:
 			board_move_piece(board, move.from, move.to, pt_src);
 			break;
 		case MV_PAWN_DOUBLE:
-			board->ep_target	  = move.to;
-			board->halfmove_clock = 0;
+			board->ep_target = board->side == PLAYER_W ? move.from + DIR_N : move.from + DIR_S;
 			board_move_piece(board, move.from, move.to, pt_src);
 			break;
 		case MV_KS_CASTLE:
-			board_move_piece(board, move.from, move.to, pt_src);
 			if (board->side == PLAYER_W) {
+				if (is_check(board, PLAYER_W) || is_square_threatened(board, SQ_F1, PLAYER_W) ||
+					is_square_threatened(board, SQ_G1, PLAYER_W)) {
+					return false;
+				}
+				board_move_piece(board, move.from, move.to, pt_src);
 				board_move_piece(board, SQ_H1, SQ_F1, ROOK);
 				board_remove_castling_rights(board, CASTLE_W_KS);
 			} else {
+				if (is_check(board, PLAYER_B) || is_square_threatened(board, SQ_F8, PLAYER_B) ||
+					is_square_threatened(board, SQ_G8, PLAYER_B)) {
+					return false;
+				}
+				board_move_piece(board, move.from, move.to, pt_src);
 				board_move_piece(board, SQ_H8, SQ_F8, ROOK);
 				board_remove_castling_rights(board, CASTLE_B_KS);
 			}
 			break;
 		case MV_QS_CASTLE:
-			board_move_piece(board, move.from, move.to, pt_src);
 			if (board->side == PLAYER_W) {
+				if (is_check(board, PLAYER_W) || is_square_threatened(board, SQ_D1, PLAYER_W) ||
+					is_square_threatened(board, SQ_C1, PLAYER_W)) {
+					return false;
+				}
+				board_move_piece(board, move.from, move.to, pt_src);
 				board_move_piece(board, SQ_A1, SQ_D1, ROOK);
 				board_remove_castling_rights(board, CASTLE_W_QS);
 			} else {
+				if (is_check(board, PLAYER_B) || is_square_threatened(board, SQ_D8, PLAYER_B) ||
+					is_square_threatened(board, SQ_C8, PLAYER_B)) {
+					return false;
+				}
+				board_move_piece(board, move.from, move.to, pt_src);
 				board_move_piece(board, SQ_A8, SQ_D8, ROOK);
 				board_remove_castling_rights(board, CASTLE_B_QS);
 			}
 			break;
 		case MV_CAPTURE:
-			board->halfmove_clock = 0;
-			history.captured	  = board_get_piece_type(board, move.to);
+			hist.captured = board_get_piece_type(board, move.to);
 			board_move_piece(board, move.from, move.to, pt_src);
 			break;
 		case MV_EN_PASSANT:
-			board->halfmove_clock = 0;
-			history.captured	  = PAWN;
+			hist.captured = PAWN;
+			board_remove_piece(board, board->ep_target);
 			board_move_piece(board, move.from, move.to, pt_src);
 			break;
 		case MV_N_PROM:
@@ -72,28 +118,33 @@ bool make_move(Board *board, Move move) {
 			board_set_piece(board, board->side, QUEEN, move.to);
 			break;
 		case MV_N_PROM_CAPTURE:
-			history.captured = board_get_piece_type(board, move.to);
+			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
 			board_set_piece(board, board->side, KNIGHT, move.to);
 			break;
 		case MV_B_PROM_CAPTURE:
-			history.captured = board_get_piece_type(board, move.to);
+			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
 			board_set_piece(board, board->side, BISHOP, move.to);
 			break;
 		case MV_R_PROM_CAPTURE:
-			history.captured = board_get_piece_type(board, move.to);
+			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
 			board_set_piece(board, board->side, ROOK, move.to);
 			break;
 		case MV_Q_PROM_CAPTURE:
-			history.captured = board_get_piece_type(board, move.to);
+			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
 			board_set_piece(board, board->side, QUEEN, move.to);
 			break;
 	}
 
-	if (move.piece == PAWN || move.mv_type == MV_CAPTURE) {
+	if (is_check(board, board->side)) {
+		board_apply_history(board, hist);
+		return false;
+	}
+
+	if (move.piece == PAWN || move.mv_type == MV_CAPTURE || move.mv_type == MV_EN_PASSANT) {
 		board->halfmove_clock = 0;
 	} else {
 		board->halfmove_clock++;
@@ -101,7 +152,19 @@ bool make_move(Board *board, Move move) {
 	if (move.mv_type != MV_PAWN_DOUBLE) {
 		board->ep_target = SQ_NONE;
 	}
-
-	history_append(board->history, history);
+	if (board->side == PLAYER_B) {
+		board->fullmove_counter++;
+	}
+	board->side = board_get_opponent(board->side);
+	history_append(board->history, hist);
 	return true;
+}
+
+void unmake_move(Board *board) {
+	History hist = {0};
+	if (!history_pop_last(board->history, &hist)) {
+		log_warning("Could not unmake move, history is empty");
+		return;
+	}
+	board_apply_history(board, hist);
 }

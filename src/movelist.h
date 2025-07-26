@@ -2,7 +2,7 @@
 #define MOVELIST_H
 #include <stddef.h>
 
-#include "./utils/array_tpl.h"
+#include "array_tpl.h"
 #include "types.h"
 ARRAY_DEFINE_TYPE(Move, MoveList, move_list)
 

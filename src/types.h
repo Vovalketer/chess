@@ -96,6 +96,7 @@ typedef struct {
 	uint8_t	  castling_rights;
 	uint8_t	  halfmove_clock;
 	uint16_t  fullmove_counter;
+	Player	  side;
 	// uint64_t zobrist_key;
 } History;
 

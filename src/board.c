@@ -206,6 +206,21 @@ static Piece get_player_piece(const Board *board, Square sqr) {
 	}
 }
 
+void board_apply_history(Board *board, History hist) {
+	board_set_piece(board, hist.side, hist.moving, hist.from);
+	if (hist.captured != EMPTY) {
+		Square target = hist.mv_type == MV_EN_PASSANT ? hist.ep_target : hist.to;
+		board_set_piece(board, board_get_opponent(hist.side), hist.captured, target);
+	} else {
+		board_remove_piece(board, hist.to);
+	}
+	board->side				= hist.side;
+	board->ep_target		= hist.ep_target;
+	board->castling_rights	= hist.castling_rights;
+	board->halfmove_clock	= hist.halfmove_clock;
+	board->fullmove_counter = hist.fullmove_counter;
+}
+
 void board_print(const Board *board) {
 	for (int row = 7; row >= 0; row--) {
 		printf("\n %d ", row + 1);

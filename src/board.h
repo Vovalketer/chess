@@ -36,6 +36,7 @@ bool	  board_is_occupied(const Board *board, Square sqr);
 Player	  board_get_occupant(const Board *board, Square sqr);
 bool	  board_has_castling_rights(const Board *board, CastlingRights cr);
 void	  board_remove_castling_rights(Board *board, CastlingRights cr);
+void	  board_apply_history(Board *board, History hist);
 void	  board_print(const Board *board);
 
 #endif	// BOARD_H

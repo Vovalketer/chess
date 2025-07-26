@@ -16,18 +16,6 @@ static void init_pawn_double_pushes(void);
 static void init_knight_attacks(void);
 static void init_king_attacks(void);
 
-typedef enum {
-	DIR_N = 8,
-	DIR_S = -8,
-	DIR_W = -1,
-	DIR_E = 1,
-
-	DIR_NW = 7,
-	DIR_NE = 9,
-	DIR_SW = -9,
-	DIR_SE = -7,
-} Direction;
-
 // move tables for pieces with fixed movements
 uint64_t pawn_attacks[2][64];
 uint64_t knight_attacks[64];

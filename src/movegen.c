@@ -25,18 +25,6 @@
 #define W_KS_CASTLING_SQUARES 0x60ULL
 #define B_KS_CASTLING_SQUARES 0x6000000000000000ULL
 
-typedef enum {
-	DIR_N = 8,
-	DIR_S = -8,
-	DIR_W = -1,
-	DIR_E = 1,
-
-	DIR_NW = 7,
-	DIR_NE = 9,
-	DIR_SW = -9,
-	DIR_SE = -7,
-} Direction;
-
 void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
 	uint64_t bb			 = board->pieces[p][pt];

@@ -20,6 +20,18 @@ typedef enum {
 	// clang-format on
 } Square;
 
+typedef enum {
+	DIR_N = 8,
+	DIR_S = -8,
+	DIR_W = -1,
+	DIR_E = 1,
+
+	DIR_NW = 7,
+	DIR_NE = 9,
+	DIR_SW = -9,
+	DIR_SE = -7,
+} Direction;
+
 typedef enum { PLAYER_W = 0, PLAYER_B = 1, PLAYER_NONE = -1 } Player;
 
 typedef enum {

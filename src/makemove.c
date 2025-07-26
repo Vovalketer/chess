@@ -139,12 +139,12 @@ bool make_move(Board *board, Move move) {
 			break;
 	}
 
-	if (is_check(board, board->side)) {
+	if (is_check(board, hist.side)) {
 		board_apply_history(board, hist);
 		return false;
 	}
 
-	if (move.piece == PAWN || move.mv_type == MV_CAPTURE || move.mv_type == MV_EN_PASSANT) {
+	if (move.piece == PAWN || hist.captured != EMPTY) {
 		board->halfmove_clock = 0;
 	} else {
 		board->halfmove_clock++;
@@ -152,10 +152,10 @@ bool make_move(Board *board, Move move) {
 	if (move.mv_type != MV_PAWN_DOUBLE) {
 		board->ep_target = SQ_NONE;
 	}
-	if (board->side == PLAYER_B) {
+	if (hist.side == PLAYER_B) {
 		board->fullmove_counter++;
 	}
-	board->side = board_get_opponent(board->side);
+	board->side = board_get_opponent(hist.side);
 	history_append(board->history, hist);
 	return true;
 }

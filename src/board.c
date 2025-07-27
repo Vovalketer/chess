@@ -80,7 +80,7 @@ void board_remove_castling_rights(Board *board, CastlingRights cr) {
 
 bool board_has_castling_rights(const Board *board, CastlingRights cr) {
 	assert(board != NULL);
-	return bits_get(board->castling_rights, cr);
+	return board->castling_rights & cr;
 }
 
 Player board_get_opponent(Player player) {

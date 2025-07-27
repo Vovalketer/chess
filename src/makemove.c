@@ -8,6 +8,7 @@
 
 static bool is_square_threatened(Board *board, Square sqr, Player player);
 static bool is_check(Board *board, Player player);
+static void handle_castling_rights(Board *board, Move move);
 
 static bool is_square_threatened(Board *board, Square sqr, Player player) {
 	Player	 opponent	 = board_get_opponent(player);
@@ -22,10 +23,38 @@ static bool is_square_threatened(Board *board, Square sqr, Player player) {
 	uint64_t queen_bb  = bitboards_get_queen_attacks(sqr, occupancies);
 
 	// check if any of these pieces exist in the bitboards from the opponent
-	// and if so, the king is in check
+	// and if so, the square is threatened
 	return pawn_bb & board->pieces[opponent][PAWN] || knight_bb & board->pieces[opponent][KNIGHT] ||
 		   bishop_bb & board->pieces[opponent][BISHOP] || rook_bb & board->pieces[opponent][ROOK] ||
 		   queen_bb & board->pieces[opponent][QUEEN];
+}
+
+static void handle_castling_rights(Board *board, Move move) {
+	if (board->side == PLAYER_W) {
+		if (!board_has_castling_rights(board, CASTLE_W_BOTH)) {
+			return;
+		}
+		if (move.piece == ROOK && board_has_castling_rights(board, CASTLE_W_KS)) {
+			board_remove_castling_rights(board, CASTLE_W_KS);
+		} else if (move.piece == ROOK && board_has_castling_rights(board, CASTLE_W_QS)) {
+			board_remove_castling_rights(board, CASTLE_W_QS);
+		}
+		if (move.piece == KING && board_has_castling_rights(board, CASTLE_W_BOTH)) {
+			board_remove_castling_rights(board, CASTLE_W_BOTH);
+		}
+	} else {
+		if (!board_has_castling_rights(board, CASTLE_B_BOTH)) {
+			return;
+		}
+		if (move.piece == ROOK && board_has_castling_rights(board, CASTLE_B_KS)) {
+			board_remove_castling_rights(board, CASTLE_B_KS);
+		} else if (move.piece == ROOK && board_has_castling_rights(board, CASTLE_B_QS)) {
+			board_remove_castling_rights(board, CASTLE_B_QS);
+		}
+		if (move.piece == KING && board_has_castling_rights(board, CASTLE_B_BOTH)) {
+			board_remove_castling_rights(board, CASTLE_B_BOTH);
+		}
+	}
 }
 
 static bool is_check(Board *board, Player player) {
@@ -155,6 +184,7 @@ bool make_move(Board *board, Move move) {
 	if (hist.side == PLAYER_B) {
 		board->fullmove_counter++;
 	}
+	handle_castling_rights(board, move);
 	board->side = board_get_opponent(hist.side);
 	history_append(board->history, hist);
 	return true;

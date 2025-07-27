@@ -130,6 +130,17 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			};
 			move_list_append(ml, mv);
 		}
+		uint64_t ep_eval = 0;
+		bits_set(&ep_eval, board->ep_target);
+		if (ep_eval & bitboards_get_pawn_attacks(sqr, p)) {
+			Move mv = {
+				.from	 = sqr,
+				.to		 = board->ep_target,
+				.mv_type = MV_EN_PASSANT,
+				.piece	 = pt,
+			};
+			move_list_append(ml, mv);
+		}
 	}
 }
 

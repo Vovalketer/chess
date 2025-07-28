@@ -137,24 +137,20 @@ PieceType board_get_piece_type(const Board *board, Square sqr) {
 	return EMPTY;
 }
 
-static Piece get_player_piece(const Board *board, Square sqr) {
+static Piece board_get_piece(const Board *board, Square sqr) {
 	Player p = board_get_occupant(board, sqr);
 	if (p == PLAYER_NONE) {
-		return EMPTY;
+		return (Piece) {.type = EMPTY, .player = PLAYER_NONE};
 	}
 	PieceType piece = board_get_piece_type(board, sqr);
-	if (p == PLAYER_W) {
-		return W_PAWN + piece;
-	} else {
-		return B_PAWN + piece;
-	}
+	return (Piece) {.type = piece, .player = p};
 }
 
 void board_apply_history(Board *board, History hist) {
 	board_set_piece(board, hist.side, hist.moving, hist.from);
 	if (hist.captured != EMPTY) {
 		Square target = hist.mv_type == MV_EN_PASSANT ? hist.ep_target : hist.to;
-		board_set_piece(board, board_get_opponent(hist.side), hist.captured, target);
+		board_set_piece(board, utils_get_opponent(hist.side), hist.captured, target);
 	} else {
 		board_remove_piece(board, hist.to);
 	}
@@ -177,8 +173,8 @@ void board_print(const Board *board) {
 	for (int row = 7; row >= 0; row--) {
 		printf("\n %d ", row + 1);
 		for (int col = 0; col < 8; col++) {
-			Piece p = get_player_piece(board, row * 8 + col);
-			printf("%2c", board_piece_to_char(p));
+			Piece p = board_get_piece(board, row * 8 + col);
+			printf("%2c", utils_piece_to_char(p));
 		}
 	}
 	printf("\n    a b c d e f g h \n");

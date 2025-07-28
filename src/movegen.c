@@ -10,6 +10,7 @@
 #include "log.h"
 #include "movelist.h"
 #include "types.h"
+#include "utils.h"
 #define RANK_1				  0x00000000000000FFULL
 #define RANK_2				  0xFF00ULL
 #define RANK_3				  0xFF0000ULL
@@ -28,8 +29,8 @@
 void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
 	uint64_t bb			 = board->pieces[p][pt];
-	Player	 opponent	 = board_get_opponent(p);
-	uint64_t occupancies = board->occupancies[p] | board->occupancies[board_get_opponent(p)];
+	Player	 opponent	 = utils_get_opponent(p);
+	uint64_t occupancies = board->occupancies[p] | board->occupancies[utils_get_opponent(p)];
 	while (bb) {
 		Square	 sqr	 = bits_pop_lsb(&bb);  // pop and get the index, transform into a square
 		uint64_t attk	 = bitboards_get_pawn_attacks(sqr, p) & board->occupancies[opponent];
@@ -254,7 +255,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 void movegen_rooks(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
 	uint64_t bb			 = board->pieces[p][pt];
-	Player	 opponent	 = board_get_opponent(p);
+	Player	 opponent	 = utils_get_opponent(p);
 	uint64_t occupancies = board->occupancies[p] | board->occupancies[opponent];
 	while (bb) {
 		Square	 sqr	  = bits_pop_lsb(&bb);
@@ -287,7 +288,7 @@ void movegen_rooks(const Board *board, PieceType pt, Player p, MoveList *ml) {
 void movegen_bishops(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
 	uint64_t bb			 = board->pieces[p][pt];
-	Player	 opponent	 = board_get_opponent(p);
+	Player	 opponent	 = utils_get_opponent(p);
 	uint64_t occupancies = board->occupancies[p] | board->occupancies[opponent];
 	while (bb) {
 		Square	 sqr	  = bits_pop_lsb(&bb);
@@ -320,7 +321,7 @@ void movegen_bishops(const Board *board, PieceType pt, Player p, MoveList *ml) {
 void movegen_queens(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
 	uint64_t bb			 = board->pieces[p][pt];
-	Player	 opponent	 = board_get_opponent(p);
+	Player	 opponent	 = utils_get_opponent(p);
 	uint64_t occupancies = board->occupancies[p] | board->occupancies[opponent];
 	while (bb) {
 		Square	 sqr	  = bits_pop_lsb(&bb);

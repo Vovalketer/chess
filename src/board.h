@@ -29,7 +29,6 @@ void	  board_remove_piece(Board *board, Square sqr);
 void	  board_move_piece(Board *board, Square from, Square to, PieceType piece);
 PieceType board_get_piece_type(const Board *board, Square sqr);
 Piece	  board_create_piece(Player player, PieceType piece);
-Player	  board_get_opponent(Player player);
 bool	  board_has_enemy(const Board *board, Square sqr, Player player);
 bool	  board_has_ally(const Board *board, Square sqr, Player player);
 bool	  board_is_occupied(const Board *board, Square sqr);

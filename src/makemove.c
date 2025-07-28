@@ -5,13 +5,14 @@
 #include "board.h"
 #include "log.h"
 #include "types.h"
+#include "utils.h"
 
 static bool is_square_threatened(Board *board, Square sqr, Player player);
 static bool is_check(Board *board, Player player);
 static void handle_castling_rights(Board *board, Move move);
 
 static bool is_square_threatened(Board *board, Square sqr, Player player) {
-	Player	 opponent	 = board_get_opponent(player);
+	Player	 opponent	 = utils_get_opponent(player);
 	uint64_t occupancies = board->occupancies[player] | board->occupancies[opponent];
 
 	uint64_t pawn_bb =
@@ -185,7 +186,7 @@ bool make_move(Board *board, Move move) {
 		board->fullmove_counter++;
 	}
 	handle_castling_rights(board, move);
-	board->side = board_get_opponent(hist.side);
+	board->side = utils_get_opponent(hist.side);
 	history_append(board->history, hist);
 	return true;
 }

@@ -8,6 +8,7 @@
 #include "bits.h"
 #include "stdint.h"
 #include "types.h"
+#include "utils.h"
 
 #define TOTAL_PIECE_TYPES 6
 
@@ -83,14 +84,10 @@ bool board_has_castling_rights(const Board *board, CastlingRights cr) {
 	return board->castling_rights & cr;
 }
 
-Player board_get_opponent(Player player) {
-	return player == PLAYER_W ? PLAYER_B : PLAYER_W;
-}
-
 bool board_has_enemy(const Board *board, Square sqr, Player player) {
 	assert(board != NULL);
 	assert(is_within_bounds(sqr));
-	Player p = board_get_opponent(player);
+	Player p = utils_get_opponent(player);
 	return bits_get(board->occupancies[p], sqr);
 }
 

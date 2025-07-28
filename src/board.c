@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "bits.h"
-#include "stdint.h"
 #include "types.h"
 #include "utils.h"
 
@@ -14,60 +13,6 @@
 
 static bool is_within_bounds(Square sqr);
 Player		board_get_piece_player(PieceType piece);
-
-static char board_piece_to_char(Piece piece) {
-	switch (piece) {
-		case W_PAWN:
-			return 'P';
-		case W_ROOK:
-			return 'R';
-		case W_KNIGHT:
-			return 'N';
-		case W_BISHOP:
-			return 'B';
-		case W_QUEEN:
-			return 'Q';
-		case W_KING:
-			return 'K';
-		case B_PAWN:
-			return 'p';
-		case B_ROOK:
-			return 'r';
-		case B_KNIGHT:
-			return 'n';
-		case B_BISHOP:
-			return 'b';
-		case B_QUEEN:
-			return 'q';
-		case B_KING:
-			return 'k';
-		case PIECE_NONE:
-			return '.';
-	}
-}
-
-PieceType get_piece_type_from_piece(Piece piece) {
-	if (piece == PIECE_NONE) {
-		return EMPTY;
-	}
-	// PieceType 0 = PAWN, flatten piece values
-	if (piece > W_KING) {
-		return piece - B_PAWN;
-	} else {
-		return piece - W_PAWN;
-	}
-}
-
-Piece create_piece(Player player, PieceType piece) {
-	switch (player) {
-		case PLAYER_W:
-			return W_PAWN + piece;
-		case PLAYER_B:
-			return B_PAWN + piece;
-		default:
-			return EMPTY;
-	}
-}
 
 void board_set_castling_rights(Board *board, CastlingRights cr) {
 	assert(board != NULL);

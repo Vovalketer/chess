@@ -6,6 +6,8 @@
 #include <string.h>
 
 #include "bits.h"
+#include "fen.h"
+#include "log.h"
 #include "types.h"
 #include "utils.h"
 
@@ -161,6 +163,14 @@ void board_apply_history(Board *board, History hist) {
 	board->castling_rights	= hist.castling_rights;
 	board->halfmove_clock	= hist.halfmove_clock;
 	board->fullmove_counter = hist.fullmove_counter;
+}
+
+bool board_from_fen(Board *board, const char *fen) {
+	if (!fen_parse(fen, board)) {
+		log_error("Error parsing FEN");
+		return false;
+	};
+	return true;
 }
 
 void board_print(const Board *board) {

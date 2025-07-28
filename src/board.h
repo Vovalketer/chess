@@ -23,6 +23,7 @@ struct Board {
 
 Board *board_create(void);
 void   board_destroy(Board **board);
+bool   board_from_fen(Board *board, const char *fen);
 
 void	  board_set_piece(Board *board, Player player, PieceType piece, Square sqr);
 void	  board_remove_piece(Board *board, Square sqr);

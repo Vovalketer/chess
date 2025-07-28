@@ -42,6 +42,7 @@ typedef enum {
 	CASTLE_B_BOTH	= 3,
 	CASTLE_B_KS		= 2,
 	CASTLE_B_QS		= 1,
+	CASTLE_NONE		= 0
 } CastlingRights;
 
 // used as index

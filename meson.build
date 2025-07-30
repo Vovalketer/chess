@@ -10,3 +10,4 @@ inc = include_directories('include')
 inc_utils = include_directories('include/utils')
 
 subdir('src')
+subdir('tests')

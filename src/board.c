@@ -38,12 +38,6 @@ bool board_has_enemy(const Board *board, Square sqr, Player player) {
 	return bits_get(board->occupancies[p], sqr);
 }
 
-bool board_has_ally(const Board *board, Square sqr, Player player) {
-	assert(board != NULL);
-	assert(is_within_bounds(sqr));
-	return bits_get(board->occupancies[player], sqr);
-}
-
 Player board_get_occupant(const Board *board, Square sqr) {
 	assert(board != NULL);
 	assert(is_within_bounds(sqr));
@@ -56,17 +50,15 @@ Player board_get_occupant(const Board *board, Square sqr) {
 	}
 }
 
-bool board_is_occupied(const Board *board, Square sqr) {
-	assert(board != NULL);
-	assert(is_within_bounds(sqr));
-	return board_get_occupant(board, sqr) != PLAYER_NONE;
+Player board_get_player_turn(const Board *board) {
+	return board->side;
 }
 
 Board *board_create(void) {
 	Board *b;
 	b = calloc(1, sizeof(*b));
 	if (!b) {
-		// TODO: logging
+		log_error("Failed to allocate board");
 		return NULL;
 	}
 	return b;
@@ -137,7 +129,7 @@ PieceType board_get_piece_type(const Board *board, Square sqr) {
 	return EMPTY;
 }
 
-static Piece board_get_piece(const Board *board, Square sqr) {
+Piece board_get_piece(const Board *board, Square sqr) {
 	Player p = board_get_occupant(board, sqr);
 	if (p == PLAYER_NONE) {
 		return (Piece) {.type = EMPTY, .player = PLAYER_NONE};

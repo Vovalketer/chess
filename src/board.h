@@ -25,19 +25,21 @@ Board *board_create(void);
 void   board_destroy(Board **board);
 bool   board_from_fen(Board *board, const char *fen);
 
+// piece
 void	  board_set_piece(Board *board, Player player, PieceType piece, Square sqr);
 void	  board_remove_piece(Board *board, Square sqr);
 void	  board_move_piece(Board *board, Square from, Square to, PieceType piece);
 PieceType board_get_piece_type(const Board *board, Square sqr);
-Piece	  board_create_piece(Player player, PieceType piece);
-bool	  board_has_enemy(const Board *board, Square sqr, Player player);
-bool	  board_has_ally(const Board *board, Square sqr, Player player);
-bool	  board_is_occupied(const Board *board, Square sqr);
+Piece	  board_get_piece(const Board *board, Square sqr);
 Player	  board_get_occupant(const Board *board, Square sqr);
-void	  board_set_castling_rights(Board *board, CastlingRights cr);
-bool	  board_has_castling_rights(const Board *board, CastlingRights cr);
-void	  board_remove_castling_rights(Board *board, CastlingRights cr);
-void	  board_apply_history(Board *board, History hist);
-void	  board_print(const Board *board);
+Player	  board_get_player_turn(const Board *board);
+
+// castling rights
+void		   board_set_castling_rights(Board *board, CastlingRights cr);
+CastlingRights board_get_castling_rights(const Board *board, Player player);
+void		   board_remove_castling_rights(Board *board, CastlingRights cr);
+
+void board_apply_history(Board *board, History hist);
+void board_print(const Board *board);
 
 #endif	// BOARD_H

@@ -147,17 +147,29 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 
 void movegen_knights(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
-	uint64_t bb = board->pieces[p][pt];
+	uint64_t bb		  = board->pieces[p][pt];
+	Player	 opponent = utils_get_opponent(p);
 	while (bb) {
 		Square	 sqr   = bits_pop_lsb(&bb);
-		uint64_t moves = bitboards_get_knight_attacks(sqr) & ~board->occupancies[p];
-		MoveType mt	   = board_has_enemy(board, sqr, p) ? MV_CAPTURE : MV_QUIET;
+		uint64_t moves = bitboards_get_knight_attacks(sqr) &
+						 ~(board->occupancies[p] | board->occupancies[opponent]);
 		while (moves) {
 			Square to = bits_pop_lsb(&moves);
 			Move   mv = {
 				  .from	   = sqr,
 				  .to	   = to,
-				  .mv_type = mt,
+				  .mv_type = MV_QUIET,
+				  .piece   = pt,
+			  };
+			move_list_append(ml, mv);
+		}
+		uint64_t attacks = bitboards_get_knight_attacks(sqr) & board->occupancies[opponent];
+		while (attacks) {
+			Square to = bits_pop_lsb(&attacks);
+			Move   mv = {
+				  .from	   = sqr,
+				  .to	   = to,
+				  .mv_type = MV_CAPTURE,
 				  .piece   = pt,
 			  };
 			move_list_append(ml, mv);
@@ -169,16 +181,29 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
 	uint64_t bb		  = board->pieces[p][pt];
 	Square	 king_sqr = bits_pop_lsb(&bb);
-	uint64_t moves	  = bitboards_get_king_attacks(king_sqr) & ~board->occupancies[p];
+	Player	 opponent = utils_get_opponent(p);
+	uint64_t moves	  = bitboards_get_king_attacks(king_sqr) &
+					 ~(board->occupancies[p] | board->occupancies[opponent]);
 	while (moves) {
-		Square	 to = bits_pop_lsb(&moves);
-		MoveType mt = board_has_enemy(board, king_sqr, p) ? MV_CAPTURE : MV_QUIET;
-		Move	 mv = {
-				.from	 = king_sqr,
-				.to		 = to,
-				.mv_type = mt,
-				.piece	 = pt,
-		};
+		Square to = bits_pop_lsb(&moves);
+		Move   mv = {
+			  .from	   = king_sqr,
+			  .to	   = to,
+			  .mv_type = MV_QUIET,
+			  .piece   = pt,
+		  };
+		move_list_append(ml, mv);
+	}
+
+	uint64_t attacks = bitboards_get_king_attacks(king_sqr) & board->occupancies[opponent];
+	while (attacks) {
+		Square to = bits_pop_lsb(&attacks);
+		Move   mv = {
+			  .from	   = king_sqr,
+			  .to	   = to,
+			  .mv_type = MV_CAPTURE,
+			  .piece   = pt,
+		  };
 		move_list_append(ml, mv);
 	}
 

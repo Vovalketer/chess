@@ -31,29 +31,31 @@ static bool is_square_threatened(Board *board, Square sqr, Player player) {
 }
 
 static void handle_castling_rights(Board *board, Move move) {
-	if (board->side == PLAYER_W) {
-		if (!board_has_castling_rights(board, CASTLE_W_BOTH)) {
+	if (move.piece == ROOK) {
+		if (board_get_castling_rights(board, board->side) == CASTLING_NO_RIGHTS) {
 			return;
 		}
-		if (move.piece == ROOK && board_has_castling_rights(board, CASTLE_W_KS)) {
-			board_remove_castling_rights(board, CASTLE_W_KS);
-		} else if (move.piece == ROOK && board_has_castling_rights(board, CASTLE_W_QS)) {
-			board_remove_castling_rights(board, CASTLE_W_QS);
+		if (board->side == PLAYER_W) {
+			if (move.from == SQ_H1 && board_has_castling_rights(board, CASTLING_WHITE_KS)) {
+				board_remove_castling_rights(board, CASTLING_WHITE_KS);
+			} else if (move.from == SQ_A1 && board_has_castling_rights(board, CASTLING_WHITE_QS)) {
+				board_remove_castling_rights(board, CASTLING_WHITE_QS);
+			}
+		} else {
+			if (move.from == SQ_H8 && board_has_castling_rights(board, CASTLING_BLACK_KS)) {
+				board_remove_castling_rights(board, CASTLING_BLACK_KS);
+			} else if (move.from == SQ_A8 && board_has_castling_rights(board, CASTLING_BLACK_QS)) {
+				board_remove_castling_rights(board, CASTLING_BLACK_QS);
+			}
 		}
-		if (move.piece == KING && board_has_castling_rights(board, CASTLE_W_BOTH)) {
-			board_remove_castling_rights(board, CASTLE_W_BOTH);
-		}
-	} else {
-		if (!board_has_castling_rights(board, CASTLE_B_BOTH)) {
+	} else if (move.piece == KING) {
+		if (board_get_castling_rights(board, board->side) == CASTLING_NO_RIGHTS) {
 			return;
 		}
-		if (move.piece == ROOK && board_has_castling_rights(board, CASTLE_B_KS)) {
-			board_remove_castling_rights(board, CASTLE_B_KS);
-		} else if (move.piece == ROOK && board_has_castling_rights(board, CASTLE_B_QS)) {
-			board_remove_castling_rights(board, CASTLE_B_QS);
-		}
-		if (move.piece == KING && board_has_castling_rights(board, CASTLE_B_BOTH)) {
-			board_remove_castling_rights(board, CASTLE_B_BOTH);
+		if (board->side == PLAYER_W) {
+			board_remove_castling_rights(board, CASTLING_WHITE_ALL);
+		} else {
+			board_remove_castling_rights(board, CASTLING_BLACK_ALL);
 		}
 	}
 }

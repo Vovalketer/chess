@@ -14,8 +14,8 @@ int utils_get_rank(Square sqr) {
 	return sqr / 8;
 }
 
-Square utils_rf_to_square(int file, int rank) {
-	return file + rank * 8;
+Square utils_fr_to_square(int file, int rank) {
+	return file + (rank * 8);
 }
 
 bool utils_is_valid_square(Square sqr) {

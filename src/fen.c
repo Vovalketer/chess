@@ -111,7 +111,7 @@ static bool _parse_piece_placement(const char* pieces, Board* board) {
 					*pieces);
 				return false;
 			}
-			board_set_piece(board, p.player, p.type, utils_rf_to_square(row, col));
+			board_set_piece(board, p.player, p.type, utils_fr_to_square(col, row));
 			col++;
 		}
 		pieces++;
@@ -170,17 +170,16 @@ static bool _parse_en_passant_target(const char* en_passant_target, Board* board
 			return false;
 		}
 	} else if (ep_len == 2) {
-		int col = tolower(en_passant_target[0]) - 'a';
-		int row = en_passant_target[1] - '0' - 1;  // range 1-8, substract 1 to make it 0-7
-		if (col < 0 || col > 7 || row < 0 || row > 7) {
+		int file = tolower(en_passant_target[0]) - 'a';
+		int rank = en_passant_target[1] - '1';	// range 1-8, substract 1 to make it 0-7
+		if (file < 0 || file > 7 || rank < 0 || rank > 7) {
 			log_error(
 				"Error parsing en passant target from FEN: invalid en passant target. String: %s",
 				en_passant_target);
 			return false;
 		}
-		log_info("Parsed en passant target from FEN: row: %d, col: %d", row, col);
-		row				 = abs(row - 7);  // invert the rows to match our coord system
-		board->ep_target = row * 8 + col;
+		log_info("Parsed en passant target from FEN: file: %d, rank: %d", file, rank);
+		board->ep_target = utils_fr_to_square(file, rank);
 	} else {
 		log_error("Error parsing en passant target from FEN: invalid en passant target - %s",
 				  en_passant_target);

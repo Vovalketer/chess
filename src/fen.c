@@ -20,7 +20,6 @@ typedef struct {
 } ParsedFEN;
 
 static Piece _char_to_piece(char c);
-
 static bool _parse_to_ptr(const char* fen, ParsedFEN* pf_out);
 static bool _parse_piece_placement(const char* pieces, Board* board);
 static bool _parse_active_player(const char* active_player, Board* board);
@@ -126,7 +125,7 @@ static bool _parse_castling_rights(const char* castling_rights, Board* board) {
 				  castling_rights);
 		return false;
 	}
-	board_remove_castling_rights(board, CASTLE_BOTH_ALL);
+	board_remove_castling_rights(board, CASTLING_ALL_RIGHTS);
 	if (*castling_rights == '-') {
 		return true;
 	}
@@ -135,16 +134,16 @@ static bool _parse_castling_rights(const char* castling_rights, Board* board) {
 	while (*cursor) {
 		switch (*cursor) {
 			case 'K':
-				board_set_castling_rights(board, CASTLE_W_KS);
+				board_set_castling_rights(board, CASTLING_WHITE_KS);
 				break;
 			case 'Q':
-				board_set_castling_rights(board, CASTLE_W_QS);
+				board_set_castling_rights(board, CASTLING_WHITE_QS);
 				break;
 			case 'k':
-				board_set_castling_rights(board, CASTLE_B_KS);
+				board_set_castling_rights(board, CASTLING_BLACK_KS);
 				break;
 			case 'q':
-				board_set_castling_rights(board, CASTLE_B_QS);
+				board_set_castling_rights(board, CASTLING_BLACK_QS);
 				break;
 			case '-':
 				break;

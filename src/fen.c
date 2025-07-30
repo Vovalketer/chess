@@ -19,7 +19,6 @@ typedef struct {
 	char  _buffer[MAX_FEN_LEN];	 // copy of the original fen
 } ParsedFEN;
 
-static Piece _char_to_piece(char c);
 static bool _parse_to_ptr(const char* fen, ParsedFEN* pf_out);
 static bool _parse_piece_placement(const char* pieces, Board* board);
 static bool _parse_active_player(const char* active_player, Board* board);

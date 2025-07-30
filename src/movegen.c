@@ -184,7 +184,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 
 	switch (p) {
 		case PLAYER_W:
-			if (board_has_castling_rights(board, CASTLE_W_KS)) {
+			if (board_has_castling_rights(board, CASTLING_WHITE_KS)) {
 				if (king_sqr == SQ_E1 && board_get_piece_type(board, SQ_H1) == ROOK &&
 					bits_get(board->occupancies[PLAYER_W], SQ_H1) &&
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
@@ -199,7 +199,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					move_list_append(ml, mv);
 				}
 			}
-			if (board_has_castling_rights(board, CASTLE_W_QS)) {
+			if (board_has_castling_rights(board, CASTLING_WHITE_QS)) {
 				if (king_sqr == SQ_E1 && board_get_piece_type(board, SQ_A1) == ROOK &&
 					bits_get(board->occupancies[PLAYER_W], SQ_A1) &&
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
@@ -216,7 +216,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			}
 			break;
 		case PLAYER_B:
-			if (board_has_castling_rights(board, CASTLE_B_KS)) {
+			if (board_has_castling_rights(board, CASTLING_BLACK_KS)) {
 				if (king_sqr == SQ_E8 && board_get_piece_type(board, SQ_H8) == ROOK &&
 					bits_get(board->occupancies[PLAYER_W], SQ_H8) &&
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
@@ -231,7 +231,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					move_list_append(ml, mv);
 				}
 			}
-			if (board_has_castling_rights(board, CASTLE_B_QS)) {
+			if (board_has_castling_rights(board, CASTLING_BLACK_QS)) {
 				if (king_sqr == SQ_E8 && board_get_piece_type(board, SQ_A8) == ROOK &&
 					bits_get(board->occupancies[PLAYER_W], SQ_A8) &&
 					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &

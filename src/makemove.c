@@ -92,7 +92,7 @@ bool make_move(Board *board, Move move) {
 				}
 				board_move_piece(board, move.from, move.to, pt_src);
 				board_move_piece(board, SQ_H1, SQ_F1, ROOK);
-				board_remove_castling_rights(board, CASTLE_W_KS);
+				board_remove_castling_rights(board, CASTLING_WHITE_KS);
 			} else {
 				if (is_check(board, PLAYER_B) || is_square_threatened(board, SQ_F8, PLAYER_B) ||
 					is_square_threatened(board, SQ_G8, PLAYER_B)) {
@@ -100,7 +100,7 @@ bool make_move(Board *board, Move move) {
 				}
 				board_move_piece(board, move.from, move.to, pt_src);
 				board_move_piece(board, SQ_H8, SQ_F8, ROOK);
-				board_remove_castling_rights(board, CASTLE_B_KS);
+				board_remove_castling_rights(board, CASTLING_BLACK_KS);
 			}
 			break;
 		case MV_QS_CASTLE:
@@ -111,7 +111,7 @@ bool make_move(Board *board, Move move) {
 				}
 				board_move_piece(board, move.from, move.to, pt_src);
 				board_move_piece(board, SQ_A1, SQ_D1, ROOK);
-				board_remove_castling_rights(board, CASTLE_W_QS);
+				board_remove_castling_rights(board, CASTLING_WHITE_QS);
 			} else {
 				if (is_check(board, PLAYER_B) || is_square_threatened(board, SQ_D8, PLAYER_B) ||
 					is_square_threatened(board, SQ_C8, PLAYER_B)) {
@@ -119,7 +119,7 @@ bool make_move(Board *board, Move move) {
 				}
 				board_move_piece(board, move.from, move.to, pt_src);
 				board_move_piece(board, SQ_A8, SQ_D8, ROOK);
-				board_remove_castling_rights(board, CASTLE_B_QS);
+				board_remove_castling_rights(board, CASTLING_BLACK_QS);
 			}
 			break;
 		case MV_CAPTURE:

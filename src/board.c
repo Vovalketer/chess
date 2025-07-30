@@ -26,16 +26,17 @@ void board_remove_castling_rights(Board *board, CastlingRights cr) {
 	board->castling_rights &= ~cr;
 }
 
-bool board_has_castling_rights(const Board *board, CastlingRights cr) {
-	assert(board != NULL);
-	return board->castling_rights & cr;
+CastlingRights board_get_castling_rights(const Board *board, Player player) {
+	if (player == PLAYER_W) {
+		return board->castling_rights & CASTLING_WHITE_ALL;
+	} else {
+		return board->castling_rights & CASTLING_BLACK_ALL;
+	}
 }
 
-bool board_has_enemy(const Board *board, Square sqr, Player player) {
+bool board_has_castling_rights(const Board *board, CastlingRights cr) {
 	assert(board != NULL);
-	assert(is_within_bounds(sqr));
-	Player p = utils_get_opponent(player);
-	return bits_get(board->occupancies[p], sqr);
+	return (board->castling_rights & cr) == cr;
 }
 
 Player board_get_occupant(const Board *board, Square sqr) {

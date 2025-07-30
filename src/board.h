@@ -37,6 +37,7 @@ Player	  board_get_player_turn(const Board *board);
 // castling rights
 void		   board_set_castling_rights(Board *board, CastlingRights cr);
 CastlingRights board_get_castling_rights(const Board *board, Player player);
+bool		   board_has_castling_rights(const Board *board, CastlingRights cr);
 void		   board_remove_castling_rights(Board *board, CastlingRights cr);
 
 void board_apply_history(Board *board, History hist);

@@ -1,57 +1,31 @@
 subdir('utils')
-libarray_dep = declare_dependency(link_with: [libarray])
-liblog_dep = declare_dependency(link_with: [liblog])
+libarray_dep = declare_dependency(link_with: [libarray], include_directories: inc_utils)
+liblog_dep = declare_dependency(link_with: [liblog], include_directories: inc_utils)
 
-game_state_sources = [
-    'game_state.c',
-    'board.c',
-    'game_state.c',
-    'move.c',
-    'movelist.c',
-    'turn_moves.c',
-    'position.c',
-]
-
-fen_sources = ['fen.c', game_state_sources]
-libfen = library(
-    'fen',
-    fen_sources,
-    dependencies: [libarray_dep, liblog_dep],
-    include_directories: [inc, inc_utils],
+libboard = library(
+	'board',
+	[
+		'board.c',
+		'bits.c',
+		'fen.c',
+		'utils.c',
+	],
+	dependencies: [liblog_dep],
+	include_directories: [inc, inc_utils],
 )
+libboard_dep = declare_dependency(link_with: [libboard], dependencies: [libarray_dep, liblog_dep])
 
-libfen_dep = declare_dependency(link_with: [libfen], dependencies: [liblog_dep])
-engine_sources = ['engine.c', 'rules.c', 'movegen.c', game_state_sources]
-libengine = library(
-    'engine',
-    engine_sources,
-    dependencies: [libarray_dep, liblog_dep, libfen_dep],
-    include_directories: [inc, inc_utils],
-)
-
-libengine_dep = declare_dependency(
-    link_with: [libengine],
-    dependencies: [libarray_dep, liblog_dep],
+libmakemove = library(
+	'makemove',
+	['makemove.c', 'movegen.c', 'bitboards.c'],
+	dependencies: [libboard_dep],
 )
 
 perft_sources = ['perft.c']
 perft = executable(
-    'perft',
-    perft_sources,
-    dependencies: [libengine_dep],
-    include_directories: [inc, inc_utils],
-)
-
-raylib_dep = dependency('raylib')
-chess_exec = executable(
-    'chess',
-    ['main.c', 'ui.c'],
-    dependencies: [
-        raylib_dep,
-        libarray_dep,
-        liblog_dep,
-        libfen_dep,
-        libengine_dep,
-    ],
-    include_directories: [inc, inc_utils],
+	'perft',
+	perft_sources,
+	dependencies: [libboard_dep],
+	link_with: [libmakemove],
+	include_directories: [inc, inc_utils],
 )

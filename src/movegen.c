@@ -179,7 +179,9 @@ void movegen_knights(const Board *board, PieceType pt, Player p, MoveList *ml) {
 
 void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
-	uint64_t bb		  = board->pieces[p][pt];
+	uint64_t bb = board->pieces[p][pt];
+	if (!bb)
+		return;
 	Square	 king_sqr = bits_pop_lsb(&bb);
 	Player	 opponent = utils_get_opponent(p);
 	uint64_t moves	  = bitboards_get_king_attacks(king_sqr) &

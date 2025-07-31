@@ -76,15 +76,16 @@ static bool is_within_bounds(Square sqr) {
 	return sqr > SQ_NONE && sqr < SQ_CNT;
 }
 
-void board_set_piece(Board *board, Player player, PieceType piece, Square sqr) {
+void board_set_piece(Board *board, Piece piece, Square sqr) {
 	assert(board != NULL);
+	printf("Setting piece %d at %d\n", piece.type, sqr);
 	assert(is_within_bounds(sqr));
-	if (bits_get(board->occupancies[player], sqr)) {
+	if (bits_get(board->occupancies[piece.player], sqr)) {
 		board_remove_piece(board, sqr);
 	}
 
-	bits_set(&board->pieces[player][piece], sqr);
-	bits_set(&board->occupancies[player], sqr);
+	bits_set(&board->pieces[piece.player][piece.type], sqr);
+	bits_set(&board->occupancies[piece.player], sqr);
 }
 
 void board_remove_piece(Board *board, Square sqr) {
@@ -140,10 +141,12 @@ Piece board_get_piece(const Board *board, Square sqr) {
 }
 
 void board_apply_history(Board *board, History hist) {
-	board_set_piece(board, hist.side, hist.moving, hist.from);
+	board_set_piece(board, (Piece) {.player = hist.side, .type = hist.moving}, hist.from);
 	if (hist.captured != EMPTY) {
 		Square target = hist.mv_type == MV_EN_PASSANT ? hist.ep_target : hist.to;
-		board_set_piece(board, utils_get_opponent(hist.side), hist.captured, target);
+		board_set_piece(board,
+						(Piece) {.player = utils_get_opponent(hist.side), .type = hist.captured},
+						target);
 	} else {
 		board_remove_piece(board, hist.to);
 	}

@@ -109,7 +109,8 @@ static bool _parse_piece_placement(const char* pieces, Board* board) {
 					*pieces);
 				return false;
 			}
-			board_set_piece(board, p.player, p.type, utils_fr_to_square(col, row));
+			board_set_piece(
+				board, (Piece) {.player = p.player, .type = p.type}, utils_fr_to_square(col, row));
 			col++;
 		}
 		pieces++;

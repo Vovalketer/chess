@@ -26,7 +26,7 @@ void   board_destroy(Board **board);
 bool   board_from_fen(Board *board, const char *fen);
 
 // piece
-void	  board_set_piece(Board *board, Player player, PieceType piece, Square sqr);
+void	  board_set_piece(Board *board, Piece piece, Square sqr);
 void	  board_remove_piece(Board *board, Square sqr);
 void	  board_move_piece(Board *board, Square from, Square to, PieceType piece);
 PieceType board_get_piece_type(const Board *board, Square sqr);

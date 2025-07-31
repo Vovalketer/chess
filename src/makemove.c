@@ -135,39 +135,39 @@ bool make_move(Board *board, Move move) {
 			break;
 		case MV_N_PROM:
 			board_remove_piece(board, move.from);
-			board_set_piece(board, board->side, KNIGHT, move.to);
+			board_set_piece(board, (Piece) {.player = board->side, .type = KNIGHT}, move.to);
 			break;
 		case MV_B_PROM:
 			board_remove_piece(board, move.from);
-			board_set_piece(board, board->side, BISHOP, move.to);
+			board_set_piece(board, (Piece) {.player = board->side, .type = BISHOP}, move.to);
 			break;
 		case MV_R_PROM:
 			board_remove_piece(board, move.from);
-			board_set_piece(board, board->side, ROOK, move.to);
+			board_set_piece(board, (Piece) {.player = board->side, .type = ROOK}, move.to);
 			break;
 		case MV_Q_PROM:
 			board_remove_piece(board, move.from);
-			board_set_piece(board, board->side, QUEEN, move.to);
+			board_set_piece(board, (Piece) {.player = board->side, .type = QUEEN}, move.to);
 			break;
 		case MV_N_PROM_CAPTURE:
 			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
-			board_set_piece(board, board->side, KNIGHT, move.to);
+			board_set_piece(board, (Piece) {.player = board->side, .type = KNIGHT}, move.to);
 			break;
 		case MV_B_PROM_CAPTURE:
 			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
-			board_set_piece(board, board->side, BISHOP, move.to);
+			board_set_piece(board, (Piece) {.player = board->side, .type = BISHOP}, move.to);
 			break;
 		case MV_R_PROM_CAPTURE:
 			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
-			board_set_piece(board, board->side, ROOK, move.to);
+			board_set_piece(board, (Piece) {.player = board->side, .type = ROOK}, move.to);
 			break;
 		case MV_Q_PROM_CAPTURE:
 			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
-			board_set_piece(board, board->side, QUEEN, move.to);
+			board_set_piece(board, (Piece) {.player = board->side, .type = QUEEN}, move.to);
 			break;
 	}
 

@@ -23,7 +23,7 @@ uint64_t king_attacks[64];
 uint64_t pawn_pushes[2][64];
 uint64_t pawn_double_pushes[2][8];
 
-void attacks_init(void) {
+void bitboards_init(void) {
 	init_pawn_attacks();
 	init_pawn_pushes();
 	init_pawn_double_pushes();

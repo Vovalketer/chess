@@ -88,7 +88,9 @@ bool make_move(Board *board, Move move) {
 			break;
 		case MV_KS_CASTLE:
 			if (board->side == PLAYER_W) {
-				if (is_check(board, PLAYER_W) || is_square_threatened(board, SQ_F1, PLAYER_W) ||
+				if (is_check(board, PLAYER_W) || board_get_occupant(board, SQ_F1) != PLAYER_NONE ||
+					board_get_occupant(board, SQ_G1) != PLAYER_NONE ||
+					is_square_threatened(board, SQ_F1, PLAYER_W) ||
 					is_square_threatened(board, SQ_G1, PLAYER_W)) {
 					return false;
 				}
@@ -96,7 +98,9 @@ bool make_move(Board *board, Move move) {
 				board_move_piece(board, SQ_H1, SQ_F1, ROOK);
 				board_remove_castling_rights(board, CASTLING_WHITE_KS);
 			} else {
-				if (is_check(board, PLAYER_B) || is_square_threatened(board, SQ_F8, PLAYER_B) ||
+				if (is_check(board, PLAYER_B) || board_get_occupant(board, SQ_F8) != PLAYER_NONE ||
+					board_get_occupant(board, SQ_G8) != PLAYER_NONE ||
+					is_square_threatened(board, SQ_F8, PLAYER_B) ||
 					is_square_threatened(board, SQ_G8, PLAYER_B)) {
 					return false;
 				}
@@ -107,7 +111,10 @@ bool make_move(Board *board, Move move) {
 			break;
 		case MV_QS_CASTLE:
 			if (board->side == PLAYER_W) {
-				if (is_check(board, PLAYER_W) || is_square_threatened(board, SQ_D1, PLAYER_W) ||
+				if (is_check(board, PLAYER_W) || board_get_occupant(board, SQ_D1) != PLAYER_NONE ||
+					board_get_occupant(board, SQ_C1) != PLAYER_NONE ||
+					board_get_occupant(board, SQ_B1) != PLAYER_NONE ||
+					is_square_threatened(board, SQ_D1, PLAYER_W) ||
 					is_square_threatened(board, SQ_C1, PLAYER_W)) {
 					return false;
 				}
@@ -115,7 +122,10 @@ bool make_move(Board *board, Move move) {
 				board_move_piece(board, SQ_A1, SQ_D1, ROOK);
 				board_remove_castling_rights(board, CASTLING_WHITE_QS);
 			} else {
-				if (is_check(board, PLAYER_B) || is_square_threatened(board, SQ_D8, PLAYER_B) ||
+				if (is_check(board, PLAYER_B) || board_get_occupant(board, SQ_D8) != PLAYER_NONE ||
+					board_get_occupant(board, SQ_C8) != PLAYER_NONE ||
+					board_get_occupant(board, SQ_B8) != PLAYER_NONE ||
+					is_square_threatened(board, SQ_D8, PLAYER_B) ||
 					is_square_threatened(board, SQ_C8, PLAYER_B)) {
 					return false;
 				}

@@ -1,758 +1,706 @@
-#include "../include/movegen.h"
+#include "../src/movegen.h"
 
-#include "../include/movelist.h"
-#include "board.h"
-#include "criterion/criterion.h"
-#include "criterion/new/assert.h"
+#include <stddef.h>
+#include <stdio.h>
 
-#define KNIGHT_OFFSET_ROWS 8
-#define DIAG_OFFSET_ROWS 4
-#define CROSS_OFFSET_ROWS 8
-#define MATRIX_COLS 2
-const int knight_moves[KNIGHT_OFFSET_ROWS][MATRIX_COLS] = {
-	{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
-const int cross_moves[CROSS_OFFSET_ROWS][MATRIX_COLS] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-const int diag_moves[DIAG_OFFSET_ROWS][MATRIX_COLS] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+#include "../external/unity/unity.h"
+#include "../src/bitboards.h"
+#include "../src/board.h"
+#include "../src/movelist.h"
+#include "../src/utils.h"
+#include "log.h"
+
 Board *board = NULL;
+char   err_msg[128];
 
-void setup(void) {
-	bool created = board_create(&board);
-	cr_assert(created, "board_create failed");
+void setUp(void) {
+	board			 = board_create();
+	board->ep_target = SQ_NONE;
+	bitboards_init();
+	log_set_level(LOG_INFO);
 }
 
-void teardown(void) {
+void tearDown(void) {
 	board_destroy(&board);
-	// movegen_destroy(&moves);
 }
 
-Test(movegen, generate_returns_false_when_out_of_bounds, .init = setup, .fini = teardown) {
-	Position pos = (Position) {-1, -1};
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	bool success = movegen_generate(board, pos, moves);
-	cr_assert_eq(success, false, "movegen should return false when out of bounds");
-	move_list_destroy(&moves);
+void test_white_pawns_have_two_moves_at_starting_row(void) {
+	for (Square sqr = SQ_A2; sqr <= SQ_H2; sqr++) {
+		Piece pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
+		board_set_piece(board, pawn, sqr);
+	}
+
+	MoveList *ml = movegen_generate(board, PLAYER_W);
+	TEST_ASSERT_EQUAL_size_t(16, move_list_size(ml));
+
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_A2, .to = SQ_A3, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_A2, .to = SQ_A4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_B2, .to = SQ_B3, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_B2, .to = SQ_B4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_C2, .to = SQ_C3, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_C2, .to = SQ_C4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_D2, .to = SQ_D3, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_D2, .to = SQ_D4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_E2, .to = SQ_E3, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_E2, .to = SQ_E4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_F2, .to = SQ_F3, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_F2, .to = SQ_F4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_G2, .to = SQ_G3, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_G2, .to = SQ_G4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_H2, .to = SQ_H3, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_H2, .to = SQ_H4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
 }
 
-Test(movegen, white_pawns_have_two_moves_at_starting_row, .init = setup, .fini = teardown) {
-	int white_pawn_starting_row = 6;
-	for (int i = 0; i < 8; i++) {
-		Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-		board_set_piece(board, pawn, (Position) {i, white_pawn_starting_row});
+void test_black_pawns_have_two_moves_at_starting_row(void) {
+	for (Square sqr = SQ_A7; sqr <= SQ_H7; sqr++) {
+		Piece pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
+		board_set_piece(board, pawn, sqr);
 	}
-	for (int i = 0; i < 8; i++) {
-		MoveList *moves = NULL;
-		move_list_create(&moves);
-		movegen_generate(board, (Position) {i, white_pawn_starting_row}, moves);
-		int moves_size = move_list_size(moves);
-		cr_assert(eq(uint, moves_size, 2),
-				  "white pawns should have 2 moves at their starting row, but got %d",
-				  moves_size);
-		move_list_destroy(&moves);
-	}
+
+	MoveList *ml = movegen_generate(board, PLAYER_B);
+	TEST_ASSERT_EQUAL_size_t(16, move_list_size(ml));
+
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_A7, .to = SQ_A6, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_A7, .to = SQ_A5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_B7, .to = SQ_B6, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_B7, .to = SQ_B5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_C7, .to = SQ_C6, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_C7, .to = SQ_C5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_D7, .to = SQ_D6, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_D7, .to = SQ_D5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_E7, .to = SQ_E6, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_E7, .to = SQ_E5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_F7, .to = SQ_F6, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_F7, .to = SQ_F5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_G7, .to = SQ_G6, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_G7, .to = SQ_G5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_H7, .to = SQ_H6, .mv_type = MV_QUIET, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = SQ_H7, .to = SQ_H5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
 }
 
-Test(movegen, black_pawns_have_two_moves_at_starting_row, .init = setup, .fini = teardown) {
-	int black_pawn_starting_row = 1;
-	for (int i = 0; i < 8; i++) {
-		Piece pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-		board_set_piece(board, pawn, (Position) {i, black_pawn_starting_row});
-	}
-	for (int i = 0; i < 8; i++) {
-		MoveList *moves = NULL;
-		move_list_create(&moves);
-		movegen_generate(board, (Position) {i, black_pawn_starting_row}, moves);
-		int moves_size = move_list_size(moves);
-		cr_assert(eq(uint, moves_size, 2),
-				  "black pawns should have 2 moves at their starting row, but got %d",
-				  moves_size);
-		move_list_destroy(&moves);
-	}
-}
-
-Test(movegen, white_pawns_can_only_move_forward_at_non_starting_rows, .init = setup, .fini = teardown) {
-	int white_pawn_starting_row = 6;
-	int white_cant_advance_further_row = 0;
-	// starting from 1 as 0 would lead to check if they can move to y-1
-	for (int row = 0; row < 8; row++) {
-		if (row == white_pawn_starting_row || row == white_cant_advance_further_row) {
+void test_white_pawns_can_only_move_forward_at_non_starting_rows(void) {
+	Piece pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
+	for (Square sqr = SQ_A1; sqr <= SQ_H7; sqr++) {	 // skip the rank 8
+		if (sqr >= SQ_A2 && sqr <= SQ_H2) {			 // skip the starting rows
 			continue;
 		}
-		for (int col = 0; col < 8; col++) {
-			Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-			Position pos = (Position) {col, row};
-			bool set_piece = board_set_piece(board, pawn, pos);
-			cr_assert(set_piece, "failed to set piece at x:%d y:%d", col, row);
+		board_set_piece(board, pawn, sqr);
+		MoveList *ml = movegen_generate(board, PLAYER_W);
+		TEST_ASSERT_EQUAL_size_t(1, move_list_size(ml));
 
-			MoveList *moves = NULL;
-			move_list_create(&moves);
-			movegen_generate(board, pos, moves);
-			size_t moves_size = move_list_size(moves);
-			cr_assert(eq(uint, moves_size, 1),
-					  "white pawns should have 1 move at non starting row, but got %zu when generating moves "
-					  "from x:%d y:%d",
-					  moves_size,
-					  col,
-					  row);
-
-			Move *move = NULL;
-			move_list_get(moves, 0, &move);
-			cr_assert(move->dst.x == col && move->dst.y == row - 1,
-					  "white pawn should be able to move forward, but got x:%d y:%d -> x:%d y:%d",
-					  move->src.x,
-					  move->src.y,
-					  move->dst.x,
-					  move->dst.y);
-
-			// clean up
-			board_remove_piece(board, pos);
-			move_list_destroy(&moves);
-		}
+		Move m;
+		move_list_get(ml, 0, &m);
+		TEST_ASSERT_EQUAL(m.to, m.from + DIR_N);
+		board_remove_piece(board, sqr);
+		move_list_destroy(&ml);
 	}
 }
 
-Test(movegen, black_pawns_can_only_move_forward_at_non_starting_rows, .init = setup, .fini = teardown) {
-	int black_pawn_starting_row = 1;
-	int black_cant_advance_further_row = 7;
-	for (int row = 0; row < 8; row++) {
-		if (row == black_pawn_starting_row || row == black_cant_advance_further_row) {
+void test_black_pawns_can_only_move_forward_at_non_starting_rows(void) {
+	Piece pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
+	for (Square sqr = SQ_A2; sqr <= SQ_H8; sqr++) {	 // skip the rank 1
+		if (sqr >= SQ_A7 && sqr <= SQ_H7) {			 // skip the starting rows
 			continue;
 		}
-		for (int col = 0; col < 8; col++) {
-			Piece pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-			Position pos = (Position) {col, row};
-			bool set_piece = board_set_piece(board, pawn, pos);
-			cr_assert(set_piece, "failed to set piece at x:%d y:%d", col, row);
+		board_set_piece(board, pawn, sqr);
 
-			MoveList *moves = NULL;
-			move_list_create(&moves);
-			movegen_generate(board, pos, moves);
-			size_t moves_size = move_list_size(moves);
-			cr_assert(eq(uint, moves_size, 1),
-					  "black pawns should have 1 move at non starting row, but got %zu when generating moves "
-					  "from x:%d y:%d",
-					  moves_size,
-					  col,
-					  row);
+		MoveList *ml = movegen_generate(board, PLAYER_B);
+		TEST_ASSERT_EQUAL_size_t(1, move_list_size(ml));
 
-			Move *move = NULL;
-			move_list_get(moves, 0, &move);
-			cr_assert(move->dst.x == col && move->dst.y == row + 1,
-					  "black pawn should be able to move forward, but got x:%d y:%d -> x:%d y:%d",
-					  move->src.x,
-					  move->src.y,
-					  move->dst.x,
-					  move->dst.y);
+		Move m;
+		move_list_get(ml, 0, &m);
+		TEST_ASSERT_EQUAL(m.to, m.from + DIR_S);
+		board_remove_piece(board, sqr);
+		move_list_destroy(&ml);
+	}
+}
 
-			// clean up
-			board_remove_piece(board, pos);
-			move_list_destroy(&moves);
+void test_white_pawns_can_capture_enemies_at_ne_and_nw(void) {
+	Piece w_pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
+	Piece b_pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
+	for (Square sqr = SQ_A1; sqr <= SQ_H7; sqr++) {					 // skip the rank 8
+		if (utils_get_file(sqr) == 0 || utils_get_file(sqr) == 7) {	 // skip the edges
+			continue;
 		}
-	}
-}
-
-Test(movegen, white_pawns_can_capture_enemies_at_ne_and_nw, .init = setup, .fini = teardown) {
-	const int w_pawn_x = 4;
-	const int w_pawn_y = 6;
-	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
-	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	board_set_piece(board, w_pawn, w_pawn_pos);
-
-	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	Position b_pawn_ne_pos = (Position) {w_pawn_x - 1, w_pawn_y - 1};
-	Position b_pawn_nw_pos = (Position) {w_pawn_x + 1, w_pawn_y - 1};
-	Position b_pawn_n_pos = (Position) {w_pawn_x, w_pawn_y - 1};
-
-	board_set_piece(board, b_pawn, b_pawn_ne_pos);
-	board_set_piece(board, b_pawn, b_pawn_nw_pos);
-	board_set_piece(board, b_pawn, b_pawn_n_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, w_pawn_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert(eq(uint, moves_size, 2), "white pawn should have 2 moves, but got %d", moves_size);
-
-	move_list_contains(moves, (Move) {w_pawn_pos, b_pawn_ne_pos});
-	move_list_contains(moves, (Move) {w_pawn_pos, b_pawn_nw_pos});
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, white_pawns_cannot_move_ne_and_nw_when_there_are_no_enemies_there, .init = setup,
-	 .fini = teardown) {
-	const int w_pawn_x = 4;
-	const int w_pawn_y = 6;
-	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
-	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	board_set_piece(board, w_pawn, w_pawn_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, w_pawn_pos, moves);
-
-	bool nw = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x - 1, w_pawn_y - 1}});
-	cr_assert_eq(nw, false, "white pawn should not be able to move to the northwest");
-	bool ne = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x + 1, w_pawn_y - 1}});
-	cr_assert_eq(ne, false, "white pawn should not be able to move to the northeast");
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, black_pawns_can_capture_enemies_at_se_and_sw, .init = setup, .fini = teardown) {
-	const int b_pawn_x = 4;
-	const int b_pawn_y = 1;
-	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
-	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	board_set_piece(board, b_pawn, b_pawn_pos);
-
-	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	Position w_pawn_se_pos = (Position) {b_pawn_x - 1, b_pawn_y + 1};
-	Position w_pawn_sw_pos = (Position) {b_pawn_x + 1, b_pawn_y + 1};
-	Position w_pawn_s_pos = (Position) {b_pawn_x, b_pawn_y + 1};
-
-	board_set_piece(board, w_pawn, w_pawn_se_pos);
-	board_set_piece(board, w_pawn, w_pawn_sw_pos);
-	board_set_piece(board, w_pawn, w_pawn_s_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, b_pawn_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert(eq(uint, moves_size, 2), "black pawn should have 2 moves, but got %d", moves_size);
-
-	move_list_contains(moves, (Move) {b_pawn_pos, w_pawn_se_pos});
-	move_list_contains(moves, (Move) {b_pawn_pos, w_pawn_sw_pos});
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, black_pawns_cannot_move_se_and_sw_when_there_are_no_enemies_there, .init = setup,
-	 .fini = teardown) {
-	const int b_pawn_x = 4;
-	const int b_pawn_y = 1;
-	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
-	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	board_set_piece(board, b_pawn, b_pawn_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, b_pawn_pos, moves);
-
-	bool sw = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x - 1, b_pawn_y + 1}});
-	cr_assert_eq(sw, false, "black pawn should not be able to move to the southwest");
-	bool se = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x + 1, b_pawn_y + 1}});
-	cr_assert_eq(se, false, "black pawn should not be able to move to the southeast");
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, white_pawns_cannot_move_to_same_row, .init = setup, .fini = teardown) {
-	const int w_pawn_x = 4;
-	const int w_pawn_y = 6;
-	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
-	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	board_set_piece(board, w_pawn, w_pawn_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, w_pawn_pos, moves);
-
-	bool left = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x - 1, w_pawn_y}});
-	cr_assert_eq(left, false, "white pawn should not be able to move to the west");
-	bool right = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x + 1, w_pawn_y}});
-	cr_assert_eq(right, false, "white pawn should not be able to move to the east");
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, black_pawns_cannot_move_to_same_row, .init = setup, .fini = teardown) {
-	const int b_pawn_x = 4;
-	const int b_pawn_y = 1;
-	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
-	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	board_set_piece(board, b_pawn, b_pawn_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, b_pawn_pos, moves);
-
-	bool left = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x - 1, b_pawn_y}});
-	cr_assert_eq(left, false, "black pawn should not be able to move to the west");
-	bool right = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x + 1, b_pawn_y}});
-	cr_assert_eq(right, false, "black pawn should not be able to move to the east");
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, white_pawns_cannot_move_behind, .init = setup, .fini = teardown) {
-	const int w_pawn_x = 4;
-	const int w_pawn_y = 6;
-	const Position w_pawn_pos = (Position) {w_pawn_x, w_pawn_y};
-	Piece w_pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	board_set_piece(board, w_pawn, w_pawn_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, w_pawn_pos, moves);
-
-	bool south = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x, w_pawn_y + 1}});
-	cr_assert_eq(south, false, "white pawn should not be able to move to the south");
-
-	bool southwest = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x - 1, w_pawn_y + 1}});
-	cr_assert_eq(southwest, false, "white pawn should not be able to move to the southwest");
-
-	bool southeast = move_list_contains(moves, (Move) {w_pawn_pos, (Position) {w_pawn_x + 1, w_pawn_y + 1}});
-	cr_assert_eq(southeast, false, "white pawn should not be able to move to the southeast");
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, black_pawns_cannot_move_behind, .init = setup, .fini = teardown) {
-	const int b_pawn_x = 4;
-	const int b_pawn_y = 1;
-	const Position b_pawn_pos = (Position) {b_pawn_x, b_pawn_y};
-	Piece b_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	board_set_piece(board, b_pawn, b_pawn_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, b_pawn_pos, moves);
-
-	bool south = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x, b_pawn_y - 1}});
-	cr_assert_eq(south, false, "black pawn should not be able to move to the south");
-
-	bool southwest = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x - 1, b_pawn_y - 1}});
-	cr_assert_eq(southwest, false, "black pawn should not be able to move to the southwest");
-
-	bool southeast = move_list_contains(moves, (Move) {b_pawn_pos, (Position) {b_pawn_x + 1, b_pawn_y - 1}});
-	cr_assert_eq(southeast, false, "black pawn should not be able to move to the southeast");
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, rook_can_move_in_cross, .init = setup, .fini = teardown) {
-	Piece rook = (Piece) {.player = WHITE_PLAYER, .type = ROOK};
-	for (int starting_row = 0; starting_row < 8; starting_row++) {
-		for (int starting_col = 0; starting_col < 8; starting_col++) {
-			Position starting_pos = (Position) {starting_col, starting_row};
-			board_set_piece(board, rook, starting_pos);
-
-			MoveList *moves = NULL;
-			move_list_create(&moves);
-			movegen_generate(board, starting_pos, moves);
-
-			size_t moves_size = move_list_size(moves);
-			cr_assert_eq(moves_size,
-						 14,
-						 "rook should have 14 moves,but got %zu at pos x:%d y:%d",
-						 moves_size,
-						 starting_col,
-						 starting_row);
-			for (int row = 0; row < 8; row++) {
-				for (int col = 0; col < 8; col++) {
-					Position pos = {col, row};
-					Move move = (Move) {starting_pos, pos};
-					if (col == starting_col && row == starting_row) {
-						// skip the starting position
-						continue;
-					}
-					if (starting_col == col) {
-						cr_assert_eq(move_list_contains(moves, move),
-									 true,
-									 "rook should be able to move horizontally");
-					} else if (starting_row == row) {
-						cr_assert_eq(
-							move_list_contains(moves, move), true, "rook should be able to move vertically");
-					} else {
-						cr_assert_eq(move_list_contains(moves, move),
-									 false,
-									 "rook should not be able to move in non cross patterns");
-					}
-				}
-			}
-			board_remove_piece(board, starting_pos);
-			move_list_destroy(&moves);
-		}
-	}
-}
-
-Test(movegen, rook_cant_go_over_allies, .init = setup, .fini = teardown) {
-	int rook_x = 4;
-	int rook_y = 3;
-	Piece rook = (Piece) {.player = WHITE_PLAYER, .type = ROOK};
-	Position rook_pos = (Position) {rook_x, rook_y};
-	board_set_piece(board, rook, rook_pos);
-
-	Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	Position pawn_pos = (Position) {rook_x, rook_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {rook_x, rook_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {rook_x + 1, rook_y};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {rook_x - 1, rook_y};
-	board_set_piece(board, pawn, pawn_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, rook_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(moves_size, 0, "rook should have no moves, but got %zu", moves_size);
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, rook_cant_go_over_enemies, .init = setup, .fini = teardown) {
-	int rook_x = 4;
-	int rook_y = 3;
-	Piece rook = (Piece) {.player = WHITE_PLAYER, .type = ROOK};
-	Position rook_pos = (Position) {rook_x, rook_y};
-	board_set_piece(board, rook, rook_pos);
-
-	Piece enemy_pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	// should be able to capture these
-	Position enemy_pawn_pos = (Position) {rook_x, rook_y + 1};
-	board_set_piece(board, enemy_pawn, enemy_pawn_pos);
-	enemy_pawn_pos = (Position) {rook_x, rook_y - 1};
-	board_set_piece(board, enemy_pawn, enemy_pawn_pos);
-	enemy_pawn_pos = (Position) {rook_x + 1, rook_y};
-	board_set_piece(board, enemy_pawn, enemy_pawn_pos);
-	enemy_pawn_pos = (Position) {rook_x - 1, rook_y};
-	board_set_piece(board, enemy_pawn, enemy_pawn_pos);
-
-	// should not be able to capture these
-	Position enemy_pawn_pos2 = (Position) {rook_x, rook_y + 2};
-	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
-	enemy_pawn_pos2 = (Position) {rook_x, rook_y - 2};
-	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
-	enemy_pawn_pos2 = (Position) {rook_x + 2, rook_y};
-	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
-	enemy_pawn_pos2 = (Position) {rook_x - 2, rook_y};
-	board_set_piece(board, enemy_pawn, enemy_pawn_pos2);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, rook_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(moves_size, 4, "rook should have no moves, but got %zu", moves_size);
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, knight_can_move_in_L, .init = setup, .fini = teardown) {
-	int knight_x = 4;
-	int knight_y = 3;
-	Piece knight = (Piece) {.player = WHITE_PLAYER, .type = KNIGHT};
-	Position knight_pos = (Position) {knight_x, knight_y};
-	board_set_piece(board, knight, knight_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, knight_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(moves_size, 8, "knight should have 8 moves, but got %zu", moves_size);
-
-	for (int i = 0; i < 8; i++) {
-		int dx = knight_moves[i][0];
-		int dy = knight_moves[i][1];
-		Position target_pos = (Position) {knight_x + dx, knight_y + dy};
-		Move move = (Move) {knight_pos, target_pos};
-		cr_assert_eq(move_list_contains(moves, move), true, "knight should be able to move in L");
-	}
-
-	move_list_destroy(&moves);
-}
-
-Test(movegen, generate_moves_for_knight_on_board_edge, .init = setup, .fini = teardown) {
-	Position knight_ne = (Position) {0, 0};
-	Position knight_nw = (Position) {7, 0};
-	Position knight_se = (Position) {0, 7};
-	Position knight_sw = (Position) {7, 7};
-	board_set_piece(board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, knight_ne);
-	board_set_piece(
-		board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, (Position) {knight_nw.x, knight_nw.y});
-	board_set_piece(
-		board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, (Position) {knight_se.x, knight_se.y});
-	board_set_piece(
-		board, (Piece) {.player = WHITE_PLAYER, .type = KNIGHT}, (Position) {knight_sw.x, knight_sw.y});
-
-	Position knight_pos_arr[4] = {knight_ne, knight_nw, knight_se, knight_sw};
-	for (int i = 0; i < 4; i++) {
-		MoveList *moves = NULL;
-		move_list_create(&moves);
-
-		movegen_generate(board, knight_pos_arr[i], moves);
-		size_t moves_size = move_list_size(moves);
-		cr_assert_eq(moves_size, 2, "knight should have 2 moves, but got %zu", moves_size);
-
-		int dx = knight_moves[i][0];
-		int dy = knight_moves[i][1];
-		Position knight_pos = knight_pos_arr[i];
-		Position target_pos = (Position) {knight_pos.x + dx, knight_pos.y + dy};
-
-		Move move = (Move) {knight_pos, target_pos};
-		bool contains = move_list_contains(moves, move);
-
-		if (board_is_within_bounds(target_pos)) {
-			cr_assert_eq(contains,
-						 true,
-						 "knight at the corner x:%d y:%d should be able to move to x:%d y:%d",
-						 knight_pos.x,
-						 knight_pos.y,
-						 target_pos.x,
-						 target_pos.y);
-
+		Square nw = sqr + DIR_NW;
+		Square ne = sqr + DIR_NE;
+		board_set_piece(board, w_pawn, sqr);
+		board_set_piece(board, b_pawn, nw);
+		board_set_piece(board, b_pawn, ne);
+		MoveList *ml = movegen_generate(board, PLAYER_W);
+
+		if (utils_get_rank(sqr) == 1) {
+			TEST_ASSERT_EQUAL_size_t(4, move_list_size(ml));
 		} else {
-			cr_assert_eq(contains,
-						 false,
-						 "knight at the corner x:%d y:%d should not be able to move to x:%d y:%d",
-						 knight_pos.x,
-						 knight_pos.y,
-						 target_pos.x,
-						 target_pos.y);
+			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
 		}
-		move_list_destroy(&moves);
+
+		Move capture_nw = (Move) {.from = sqr, .to = nw, .mv_type = MV_CAPTURE, .piece = PAWN};
+		Move capture_ne = (Move) {.from = sqr, .to = ne, .mv_type = MV_CAPTURE, .piece = PAWN};
+		TEST_ASSERT_TRUE(move_list_contains(ml, capture_nw));
+		TEST_ASSERT_TRUE(move_list_contains(ml, capture_ne));
+		board_remove_piece(board, sqr);
+		board_remove_piece(board, nw);
+		board_remove_piece(board, ne);
+		move_list_destroy(&ml);
+	}
+	for (Square sqr = SQ_A1; sqr <= SQ_A7; sqr += DIR_N) {
+		Square ne = sqr + DIR_NE;
+		board_set_piece(board, b_pawn, ne);
+		board_set_piece(board, w_pawn, sqr);
+		MoveList *ml = movegen_generate(board, PLAYER_W);
+
+		if (utils_get_rank(sqr) == 1) {
+			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
+		} else {
+			TEST_ASSERT_EQUAL_size_t(2, move_list_size(ml));
+		}
+		Move capture_ne = (Move) {.from = sqr, .to = ne, .mv_type = MV_CAPTURE, .piece = PAWN};
+		TEST_ASSERT_TRUE(move_list_contains(ml, capture_ne));
+
+		board_remove_piece(board, sqr);
+		board_remove_piece(board, ne);
+		move_list_destroy(&ml);
+	}
+	for (Square sqr = SQ_H1; sqr <= SQ_H7; sqr += DIR_N) {
+		Square nw = sqr + DIR_NW;
+		board_set_piece(board, b_pawn, nw);
+		board_set_piece(board, w_pawn, sqr);
+		MoveList *ml = movegen_generate(board, PLAYER_W);
+
+		if (utils_get_rank(sqr) == 1) {
+			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
+		} else {
+			TEST_ASSERT_EQUAL_size_t(2, move_list_size(ml));
+		}
+		Move capture_nw = (Move) {.from = sqr, .to = nw, .mv_type = MV_CAPTURE, .piece = PAWN};
+		TEST_ASSERT_TRUE(move_list_contains(ml, capture_nw));
+
+		board_remove_piece(board, sqr);
+		board_remove_piece(board, nw);
+		move_list_destroy(&ml);
 	}
 }
 
-Test(movegen, bishop_can_move_in_diagonals, .init = setup, .fini = teardown) {
-	int bishop_x = 3;
-	int bishop_y = 3;
-	Piece bishop = (Piece) {.player = WHITE_PLAYER, .type = BISHOP};
-	Position bishop_pos = (Position) {bishop_x, bishop_y};
-	board_set_piece(board, bishop, bishop_pos);
+void test_black_pawns_can_capture_enemies_at_se_and_sw(void) {
+	Piece w_pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
+	Piece b_pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
+	for (Square sqr = SQ_A2; sqr <= SQ_H8; sqr++) {					 // skip the rank 1
+		if (utils_get_file(sqr) == 0 || utils_get_file(sqr) == 7) {	 // skip the edges
+			continue;
+		}
+		Square sw = sqr + DIR_SW;
+		Square se = sqr + DIR_SE;
+		board_set_piece(board, b_pawn, sqr);
+		board_set_piece(board, w_pawn, sw);
+		board_set_piece(board, w_pawn, se);
+		MoveList *ml = movegen_generate(board, PLAYER_B);
 
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, bishop_pos, moves);
+		if (utils_get_rank(sqr) == 6) {
+			TEST_ASSERT_EQUAL_size_t(4, move_list_size(ml));
+		} else {
+			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
+		}
+		Move capture_se = (Move) {.from = sqr, .to = se, .mv_type = MV_CAPTURE, .piece = PAWN};
+		Move capture_sw = (Move) {.from = sqr, .to = sw, .mv_type = MV_CAPTURE, .piece = PAWN};
+		TEST_ASSERT_TRUE(move_list_contains(ml, capture_se));
+		TEST_ASSERT_TRUE(move_list_contains(ml, capture_sw));
 
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(moves_size, 13, "bishop should have 13 moves, but got %zu", moves_size);
+		board_remove_piece(board, sqr);
+		board_remove_piece(board, sw);
+		board_remove_piece(board, se);
+		move_list_destroy(&ml);
+	}
+	for (Square sqr = SQ_A2; sqr <= SQ_A8; sqr += DIR_S) {
+		Square se = sqr + DIR_SE;
+		board_set_piece(board, w_pawn, se);
+		board_set_piece(board, b_pawn, sqr);
+		MoveList *ml = movegen_generate(board, PLAYER_B);
 
-	for (int row = 0; row < 8; row++) {
-		for (int col = 0; col < 8; col++) {
-			Move move = (Move) {bishop_pos, (Position) {col, row}};
-			if (col == bishop_x && row == bishop_y) {
-				// skip the starting position
-				continue;
+		if (utils_get_rank(sqr) == 6) {
+			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
+		} else {
+			TEST_ASSERT_EQUAL_size_t(2, move_list_size(ml));
+		}
+		Move capture_se = (Move) {.from = sqr, .to = se, .mv_type = MV_CAPTURE, .piece = PAWN};
+		TEST_ASSERT_TRUE(move_list_contains(ml, capture_se));
+
+		board_remove_piece(board, sqr);
+		board_remove_piece(board, se);
+		move_list_destroy(&ml);
+	}
+	for (Square sqr = SQ_H2; sqr <= SQ_H8; sqr += DIR_S) {
+		Square sw = sqr + DIR_SW;
+		board_set_piece(board, b_pawn, sw);
+		board_set_piece(board, w_pawn, sqr);
+		MoveList *ml = movegen_generate(board, PLAYER_B);
+
+		if (utils_get_rank(sqr) == 1) {
+			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
+		} else {
+			TEST_ASSERT_EQUAL_size_t(2, move_list_size(ml));
+		}
+		Move capture_sw = (Move) {.from = sqr, .to = sw, .mv_type = MV_CAPTURE, .piece = PAWN};
+		TEST_ASSERT_TRUE(move_list_contains(ml, capture_sw));
+
+		board_remove_piece(board, sqr);
+		board_remove_piece(board, sw);
+		move_list_destroy(&ml);
+	}
+}
+
+void test_white_pawn_cant_capture_allies(void) {
+	Piece  w_pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
+	Square sqr	  = SQ_C3;
+	board_set_piece(board, w_pawn, sqr);
+	board_set_piece(board, w_pawn, sqr + DIR_NE);
+	board_set_piece(board, w_pawn, sqr + DIR_NW);
+
+	MoveList *ml = movegen_generate(board, PLAYER_W);
+	for (size_t i = 0; i < move_list_size(ml); i++) {
+		Move m;
+		move_list_get(ml, i, &m);
+		TEST_ASSERT_TRUE(m.mv_type != MV_CAPTURE);
+	}
+	move_list_destroy(&ml);
+}
+
+void test_black_pawns_cant_capture_allies(void) {
+	Piece  b_pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
+	Square sqr	  = SQ_C3;
+	board_set_piece(board, b_pawn, sqr);
+	board_set_piece(board, b_pawn, sqr + DIR_SE);
+	board_set_piece(board, b_pawn, sqr + DIR_SW);
+
+	MoveList *ml = movegen_generate(board, PLAYER_B);
+	for (size_t i = 0; i < move_list_size(ml); i++) {
+		Move m;
+		move_list_get(ml, i, &m);
+		TEST_ASSERT_TRUE(m.mv_type != MV_CAPTURE);
+	}
+	move_list_destroy(&ml);
+}
+
+void test_rook_can_move_in_cross(void) {
+	Piece rook = (Piece) {.player = PLAYER_W, .type = ROOK};
+	for (Square sqr = SQ_A1; sqr <= SQ_H8; sqr++) {
+		board_set_piece(board, rook, sqr);
+		MoveList *ml = movegen_generate(board, rook.player);
+		TEST_ASSERT_EQUAL_size_t(14, move_list_size(ml));
+
+		int file = utils_get_file(sqr);
+		int rank = utils_get_rank(sqr);
+
+		int n_moves_cnt = 7 - rank;
+		int s_moves_cnt = rank;
+		int e_moves_cnt = 7 - file;
+		int w_moves_cnt = file;
+
+		for (int i = 1; i <= n_moves_cnt; i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_N * i, .mv_type = MV_QUIET, .piece = rook.type};
+			sprintf(err_msg,
+					"rook should be able to move N to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1; i <= s_moves_cnt; i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_S * i, .mv_type = MV_QUIET, .piece = rook.type};
+			sprintf(err_msg,
+					"rook should be able to move S to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1; i <= e_moves_cnt; i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_E * i, .mv_type = MV_QUIET, .piece = rook.type};
+			sprintf(err_msg,
+					"rook should be able to move E to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+
+		for (int i = 1; i <= w_moves_cnt; i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_W * i, .mv_type = MV_QUIET, .piece = rook.type};
+			sprintf(err_msg,
+					"rook should be able to move W to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		board_remove_piece(board, sqr);
+		move_list_destroy(&ml);
+	}
+}
+
+void test_rook_cant_go_over_allies(void) {
+	Piece  rook = (Piece) {.player = PLAYER_W, .type = ROOK};
+	Piece  pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
+	Square sqr	= SQ_D4;
+	board_set_piece(board, rook, sqr);
+	board_set_piece(board, pawn, sqr + DIR_N);
+	board_set_piece(board, pawn, sqr + DIR_S);
+	board_set_piece(board, pawn, sqr + DIR_E);
+	board_set_piece(board, pawn, sqr + DIR_W);
+	MoveList *ml = movegen_generate(board, rook.player);
+	// movegen will include the pawns so we'll just check if there is any moves that start at the
+	// rook sqr
+	for (size_t i = 0; i < move_list_size(ml); i++) {
+		Move m;
+		move_list_get(ml, i, &m);
+		TEST_ASSERT_TRUE(m.from != sqr);
+	}
+}
+
+void test_rook_cant_go_over_enemies(void) {
+	Piece  rook = (Piece) {.player = PLAYER_W, .type = ROOK};
+	Piece  pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
+	Square sqr	= SQ_D4;
+	board_set_piece(board, rook, sqr);
+	board_set_piece(board, pawn, sqr + DIR_N);
+	board_set_piece(board, pawn, sqr + DIR_S);
+	board_set_piece(board, pawn, sqr + DIR_E);
+	board_set_piece(board, pawn, sqr + DIR_W);
+	MoveList *ml = movegen_generate(board, rook.player);
+	TEST_ASSERT_EQUAL(4, move_list_size(ml));
+}
+
+void test_knight_can_move_in_L(void) {
+	Piece knight = (Piece) {.player = PLAYER_W, .type = KNIGHT};
+	for (Square sqr = SQ_A1; sqr <= SQ_H8; sqr++) {
+		board_set_piece(board, knight, sqr);
+		int		  file = utils_get_file(sqr);
+		MoveList *ml   = movegen_generate(board, knight.player);
+
+		Move nwn = (Move) {
+			.from = sqr, .to = sqr + DIR_NW + DIR_N, .mv_type = MV_QUIET, .piece = knight.type};
+		Move nww = (Move) {
+			.from = sqr, .to = sqr + DIR_NW + DIR_W, .mv_type = MV_QUIET, .piece = knight.type};
+		Move nen = (Move) {
+			.from = sqr, .to = sqr + DIR_NE + DIR_N, .mv_type = MV_QUIET, .piece = knight.type};
+		Move nee = (Move) {
+			.from = sqr, .to = sqr + DIR_NE + DIR_E, .mv_type = MV_QUIET, .piece = knight.type};
+
+		Move sws = (Move) {
+			.from = sqr, .to = sqr + DIR_SW + DIR_S, .mv_type = MV_QUIET, .piece = knight.type};
+		Move sww = (Move) {
+			.from = sqr, .to = sqr + DIR_SW + DIR_W, .mv_type = MV_QUIET, .piece = knight.type};
+		Move ses = (Move) {
+			.from = sqr, .to = sqr + DIR_SE + DIR_S, .mv_type = MV_QUIET, .piece = knight.type};
+		Move see = (Move) {
+			.from = sqr, .to = sqr + DIR_SE + DIR_E, .mv_type = MV_QUIET, .piece = knight.type};
+
+		if (file != 0) {
+			if (nwn.to > SQ_NONE && nwn.to < SQ_CNT) {
+				sprintf(err_msg, "knight at %d should be able to move NWN to %d", nwn.from, nwn.to);
+				TEST_ASSERT_TRUE(move_list_contains(ml, nwn));
 			}
-			bool contains = move_list_contains(moves, move);
-			if (col == row || col + row == 6) {
-				cr_assert_eq(contains,
-							 true,
-							 "bishop at x:%d y:%d should be able to move to position x:%d y:%d",
-							 bishop_x,
-							 bishop_y,
-							 col,
-							 row);
-			} else {
-				cr_assert_eq(contains,
-							 false,
-							 "bishop at x:%d y:%d should not be able to move to position x:%d y:%d",
-							 bishop_x,
-							 bishop_y,
-							 col,
-							 row);
+			if (sws.to > SQ_NONE && sws.to < SQ_CNT) {
+				sprintf(err_msg, "knight at %d should be able to move SWS to %d", sws.from, sws.to);
+				TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, sws), err_msg);
 			}
 		}
+		if (file != 0 && file != 1) {
+			if (nww.to > SQ_NONE && nww.to < SQ_CNT) {
+				TEST_ASSERT_TRUE(move_list_contains(ml, nww));
+			}
+			if (sww.to > SQ_NONE && sww.to < SQ_CNT) {
+				sprintf(err_msg, "knight at %d should be able to move SWW to %d", sww.from, sww.to);
+				TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, sww), err_msg);
+			}
+		}
+
+		if (file != 7) {
+			if (nen.to > SQ_NONE && nen.to < SQ_CNT) {
+				sprintf(err_msg, "knight at %d should be able to move NEN to %d", nen.from, nen.to);
+				TEST_ASSERT_TRUE(move_list_contains(ml, nen));
+			}
+			if (ses.to > SQ_NONE && ses.to < SQ_CNT) {
+				sprintf(err_msg, "knight at %d should be able to move SES to %d", ses.from, ses.to);
+				TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, ses), err_msg);
+			}
+		}
+		if (file != 7 && file != 6) {
+			if (nen.to > SQ_NONE && nee.to < SQ_CNT) {
+				sprintf(err_msg, "knight at %d should be able to move NEE to %d", nee.from, nee.to);
+				TEST_ASSERT_TRUE(move_list_contains(ml, nee));
+			}
+			if (see.to > SQ_NONE && see.to < SQ_CNT) {
+				sprintf(err_msg, "knight at %d should be able to move SEE to %d", see.from, see.to);
+				TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, see), err_msg);
+			}
+		}
+		board_remove_piece(board, sqr);
+		move_list_destroy(&ml);
 	}
-
-	move_list_destroy(&moves);
 }
 
-Test(movegen, bishop_cant_skip_allies, .init = setup, .fini = teardown) {
-	int bishop_x = 3;
-	int bishop_y = 3;
-	Piece bishop = (Piece) {.player = WHITE_PLAYER, .type = BISHOP};
-	Position bishop_pos = (Position) {bishop_x, bishop_y};
-	board_set_piece(board, bishop, bishop_pos);
+void test_bishop_can_move_in_diagonals(void) {
+	Piece bishop = (Piece) {.player = PLAYER_W, .type = BISHOP};
+	for (Square sqr = SQ_A1; sqr <= SQ_H8; sqr++) {
+		board_set_piece(board, bishop, sqr);
+		MoveList *ml = movegen_generate(board, bishop.player);
 
-	Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	Position pawn_pos = (Position) {bishop_x + 1, bishop_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {bishop_x - 1, bishop_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {bishop_x - 1, bishop_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {bishop_x + 1, bishop_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
+		int file = utils_get_file(sqr);
+		int rank = utils_get_rank(sqr);
+		for (int i = 1, f = file + 1, r = rank + 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
+			 f++, r++, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_NE * i, .mv_type = MV_QUIET, .piece = bishop.type};
+			sprintf(err_msg,
+					"bishop should be able to move NE to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file + 1, r = rank - 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
+			 f++, r--, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_SE * i, .mv_type = MV_QUIET, .piece = bishop.type};
+			sprintf(err_msg,
+					"bishop should be able to move SE to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file - 1, r = rank - 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
+			 f--, r--, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_SW * i, .mv_type = MV_QUIET, .piece = bishop.type};
+			sprintf(err_msg,
+					"bishop should be able to move SW to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file - 1, r = rank + 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
+			 f--, r++, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_NW * i, .mv_type = MV_QUIET, .piece = bishop.type};
+			sprintf(err_msg,
+					"bishop should be able to move NW to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
 
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, bishop_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(moves_size, 0, "bishop should have no moves, but got %zu", moves_size);
-
-	move_list_destroy(&moves);
+		board_remove_piece(board, sqr);
+		move_list_destroy(&ml);
+	}
 }
 
-Test(movegen, bishop_cant_skip_enemies, .init = setup, .fini = teardown) {
-	int bishop_x = 3;
-	int bishop_y = 3;
-	Piece bishop = (Piece) {.player = WHITE_PLAYER, .type = BISHOP};
-	Position bishop_pos = (Position) {bishop_x, bishop_y};
-	board_set_piece(board, bishop, bishop_pos);
-
-	Piece pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	// should be able to capture these
-	Position pawn_pos = (Position) {bishop_x + 1, bishop_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {bishop_x - 1, bishop_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {bishop_x - 1, bishop_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {bishop_x + 1, bishop_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-
-	// should not be able to capture these
-	Position pawn_pos2 = (Position) {bishop_x + 2, bishop_y + 2};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {bishop_x - 2, bishop_y - 2};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {bishop_x - 2, bishop_y + 2};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {bishop_x + 2, bishop_y - 2};
-	board_set_piece(board, pawn, pawn_pos2);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, bishop_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(moves_size, 4, "bishop should have 4 moves, but got %zu", moves_size);
-
-	move_list_destroy(&moves);
+void test_bishop_cant_skip_allies(void) {
+	Piece  bishop = (Piece) {.player = PLAYER_W, .type = BISHOP};
+	Square sqr	  = SQ_C3;
+	board_set_piece(board, bishop, sqr);
+	board_set_piece(board, bishop, sqr + DIR_NE);
+	board_set_piece(board, bishop, sqr + DIR_SE);
+	board_set_piece(board, bishop, sqr + DIR_NW);
+	board_set_piece(board, bishop, sqr + DIR_SW);
+	MoveList *ml = movegen_generate(board, bishop.player);
+	for (size_t i = 0; i < move_list_size(ml); i++) {
+		Move m;
+		move_list_get(ml, i, &m);
+		TEST_ASSERT_TRUE(m.from != sqr);
+	}
+	move_list_destroy(&ml);
 }
 
-Test(movegen, queen_can_move_in_cross_and_diag, .init = setup, .fini = teardown) {
-	int queen_x = 3;
-	int queen_y = 3;
-	Piece queen = (Piece) {.player = WHITE_PLAYER, .type = QUEEN};
-	Position queen_pos = (Position) {queen_x, queen_y};
-	board_set_piece(board, queen, queen_pos);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, queen_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(
-		moves_size, 27, "queen should have 27 moves at x:%d y:%d, but got %zu", queen_x, queen_y, moves_size);
-
-	move_list_destroy(&moves);
+void test_bishop_cant_skip_enemies(void) {
+	Piece  bishop = (Piece) {.player = PLAYER_W, .type = BISHOP};
+	Piece  pawn	  = (Piece) {.player = PLAYER_B, .type = PAWN};
+	Square sqr	  = SQ_C3;
+	board_set_piece(board, bishop, sqr);
+	board_set_piece(board, pawn, sqr + DIR_NE);
+	board_set_piece(board, pawn, sqr + DIR_SE);
+	board_set_piece(board, pawn, sqr + DIR_NW);
+	board_set_piece(board, pawn, sqr + DIR_SW);
+	MoveList *ml = movegen_generate(board, bishop.player);
+	TEST_ASSERT_EQUAL(4, move_list_size(ml));
+	move_list_destroy(&ml);
 }
 
-Test(movegen, queen_cant_skip_allies, .init = setup, .fini = teardown) {
-	int queen_x = 3;
-	int queen_y = 3;
-	Piece queen = (Piece) {.player = WHITE_PLAYER, .type = QUEEN};
-	Position queen_pos = (Position) {queen_x, queen_y};
-	board_set_piece(board, queen, queen_pos);
-
-	Piece pawn = (Piece) {.player = WHITE_PLAYER, .type = PAWN};
-	Position pawn_pos = (Position) {queen_x + 1, queen_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x - 1, queen_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x - 1, queen_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x + 1, queen_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-
-	Position pawn_pos2 = (Position) {queen_x, queen_y + 1};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x, queen_y - 1};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x + 1, queen_y};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x - 1, queen_y};
-	board_set_piece(board, pawn, pawn_pos2);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, queen_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(moves_size, 0, "queen should have no moves, but got %zu", moves_size);
-
-	move_list_destroy(&moves);
+void test_queen_can_move_in_cross_and_diag(void) {
+	Piece queen = (Piece) {.player = PLAYER_W, .type = QUEEN};
+	for (Square sqr = SQ_A1; sqr <= SQ_H8; sqr++) {
+		board_set_piece(board, queen, sqr);
+		MoveList *ml   = movegen_generate(board, queen.player);
+		int		  file = utils_get_file(sqr);
+		int		  rank = utils_get_rank(sqr);
+		for (int i = 1, r = rank + 1; r >= 0 && r <= 7; r++, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_N * i, .mv_type = MV_QUIET, .piece = queen.type};
+			sprintf(err_msg,
+					"queen should be able to move N to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, r = rank - 1; r >= 0 && r <= 7; r--, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_S * i, .mv_type = MV_QUIET, .piece = queen.type};
+			sprintf(err_msg,
+					"queen should be able to move S to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file + 1; f >= 0 && f <= 7; f++, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_E * i, .mv_type = MV_QUIET, .piece = queen.type};
+			sprintf(err_msg,
+					"queen should be able to move E to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file - 1; f >= 0 && f <= 7; f--, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_W * i, .mv_type = MV_QUIET, .piece = queen.type};
+			sprintf(err_msg,
+					"queen should be able to move W to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file + 1, r = rank + 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
+			 f++, r++, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_NE * i, .mv_type = MV_QUIET, .piece = queen.type};
+			sprintf(err_msg,
+					"queen should be able to move NE to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file + 1, r = rank - 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
+			 f++, r--, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_SE * i, .mv_type = MV_QUIET, .piece = queen.type};
+			sprintf(err_msg,
+					"queen should be able to move SE to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file - 1, r = rank - 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
+			 f--, r--, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_SW * i, .mv_type = MV_QUIET, .piece = queen.type};
+			sprintf(err_msg,
+					"queen should be able to move SW to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		for (int i = 1, f = file - 1, r = rank + 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
+			 f--, r++, i++) {
+			Move m = (Move) {
+				.from = sqr, .to = sqr + DIR_NW * i, .mv_type = MV_QUIET, .piece = queen.type};
+			sprintf(err_msg,
+					"queen should be able to move NW to square:%d from square: %d",
+					m.to,
+					m.from);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
+		}
+		board_remove_piece(board, sqr);
+		move_list_destroy(&ml);
+	}
 }
 
-Test(movegen, queen_cant_skip_enemies, .init = setup, .fini = teardown) {
-	int queen_x = 3;
-	int queen_y = 3;
-	Piece queen = (Piece) {.player = WHITE_PLAYER, .type = QUEEN};
-	Position queen_pos = (Position) {queen_x, queen_y};
-	board_set_piece(board, queen, queen_pos);
-
-	Piece pawn = (Piece) {.player = BLACK_PLAYER, .type = PAWN};
-	// should be able to capture these
-	Position pawn_pos = (Position) {queen_x + 1, queen_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x - 1, queen_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x - 1, queen_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x + 1, queen_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x, queen_y + 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x, queen_y - 1};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x + 1, queen_y};
-	board_set_piece(board, pawn, pawn_pos);
-	pawn_pos = (Position) {queen_x - 1, queen_y};
-	board_set_piece(board, pawn, pawn_pos);
-
-	// should not be able to capture these
-	Position pawn_pos2 = (Position) {queen_x + 2, queen_y + 2};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x - 2, queen_y - 2};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x - 2, queen_y + 2};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x + 2, queen_y - 2};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x + 2, queen_y};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x - 2, queen_y};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x, queen_y + 2};
-	board_set_piece(board, pawn, pawn_pos2);
-	pawn_pos2 = (Position) {queen_x, queen_y + 2};
-	board_set_piece(board, pawn, pawn_pos2);
-
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, queen_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(moves_size, 8, "queen should have 8 moves, but got %zu", moves_size);
-
-	move_list_destroy(&moves);
+void test_queen_cant_skip_allies(void) {
+	Piece  queen = (Piece) {.player = PLAYER_W, .type = QUEEN};
+	Piece  pawn	 = (Piece) {.player = PLAYER_W, .type = PAWN};
+	Square sqr	 = SQ_C3;
+	board_set_piece(board, queen, sqr);
+	board_set_piece(board, pawn, sqr + DIR_N);
+	board_set_piece(board, pawn, sqr + DIR_S);
+	board_set_piece(board, pawn, sqr + DIR_E);
+	board_set_piece(board, pawn, sqr + DIR_W);
+	board_set_piece(board, pawn, sqr + DIR_NE);
+	board_set_piece(board, pawn, sqr + DIR_SE);
+	board_set_piece(board, pawn, sqr + DIR_NW);
+	board_set_piece(board, pawn, sqr + DIR_SW);
+	MoveList *ml = movegen_generate(board, queen.player);
+	for (size_t i = 0; i < move_list_size(ml); i++) {
+		Move m;
+		move_list_get(ml, i, &m);
+		TEST_ASSERT_TRUE(m.from != sqr);
+	}
+	move_list_destroy(&ml);
 }
 
-Test(movegen, king_can_move_in_cross_and_diag, .init = setup, .fini = teardown) {
-	int king_x = 3;
-	int king_y = 3;
-	Piece king = (Piece) {.player = WHITE_PLAYER, .type = KING};
-	Position king_pos = (Position) {king_x, king_y};
-	board_set_piece(board, king, king_pos);
+void test_queen_cant_skip_enemies(void) {
+	Piece  queen = (Piece) {.player = PLAYER_W, .type = QUEEN};
+	Piece  pawn	 = (Piece) {.player = PLAYER_B, .type = PAWN};
+	Square sqr	 = SQ_C3;
+	board_set_piece(board, queen, sqr);
+	board_set_piece(board, pawn, sqr + DIR_N);
+	board_set_piece(board, pawn, sqr + DIR_S);
+	board_set_piece(board, pawn, sqr + DIR_E);
+	board_set_piece(board, pawn, sqr + DIR_W);
+	board_set_piece(board, pawn, sqr + DIR_NE);
+	board_set_piece(board, pawn, sqr + DIR_SE);
+	board_set_piece(board, pawn, sqr + DIR_NW);
+	board_set_piece(board, pawn, sqr + DIR_SW);
+	MoveList *ml = movegen_generate(board, queen.player);
+	TEST_ASSERT_EQUAL(8, move_list_size(ml));
+	move_list_destroy(&ml);
+}
 
-	MoveList *moves = NULL;
-	move_list_create(&moves);
-	movegen_generate(board, king_pos, moves);
-
-	size_t moves_size = move_list_size(moves);
-	cr_assert_eq(
-		moves_size, 8, "king should have 8 moves at x:%d y:%d, but got %zu", king_x, king_y, moves_size);
-
-	move_list_destroy(&moves);
+int main(void) {
+	UNITY_BEGIN();
+	RUN_TEST(test_white_pawns_have_two_moves_at_starting_row);
+	RUN_TEST(test_black_pawns_have_two_moves_at_starting_row);
+	RUN_TEST(test_white_pawns_can_only_move_forward_at_non_starting_rows);
+	RUN_TEST(test_black_pawns_can_only_move_forward_at_non_starting_rows);
+	RUN_TEST(test_white_pawns_can_capture_enemies_at_ne_and_nw);
+	RUN_TEST(test_rook_can_move_in_cross);
+	RUN_TEST(test_rook_cant_go_over_allies);
+	RUN_TEST(test_rook_cant_go_over_enemies);
+	RUN_TEST(test_knight_can_move_in_L);
+	RUN_TEST(test_bishop_can_move_in_diagonals);
+	RUN_TEST(test_bishop_cant_skip_allies);
+	RUN_TEST(test_bishop_cant_skip_enemies);
+	RUN_TEST(test_queen_can_move_in_cross_and_diag);
+	RUN_TEST(test_queen_cant_skip_allies);
+	RUN_TEST(test_queen_cant_skip_enemies);
+	return UNITY_END();
 }

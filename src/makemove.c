@@ -9,7 +9,7 @@
 
 static bool is_square_threatened(Board *board, Square sqr, Player player);
 static bool is_check(Board *board, Player player);
-static void handle_castling_rights(Board *board, Move move);
+static void handle_castling_rights(Board *board, Move move, PieceType captured);
 
 static bool is_square_threatened(Board *board, Square sqr, Player player) {
 	Player	 opponent	 = utils_get_opponent(player);
@@ -30,7 +30,7 @@ static bool is_square_threatened(Board *board, Square sqr, Player player) {
 		   queen_bb & board->pieces[opponent][QUEEN];
 }
 
-static void handle_castling_rights(Board *board, Move move) {
+static void handle_castling_rights(Board *board, Move move, PieceType captured) {
 	if (move.piece == ROOK) {
 		if (board_get_castling_rights(board, board->side) == CASTLING_NO_RIGHTS) {
 			return;
@@ -56,6 +56,26 @@ static void handle_castling_rights(Board *board, Move move) {
 			board_remove_castling_rights(board, CASTLING_WHITE_ALL);
 		} else {
 			board_remove_castling_rights(board, CASTLING_BLACK_ALL);
+		}
+	}
+
+	if (captured == ROOK) {
+		Player opponent = utils_get_opponent(board->side);
+		if (board_get_castling_rights(board, opponent) == CASTLING_NO_RIGHTS) {
+			return;
+		}
+		if (opponent == PLAYER_W) {
+			if (move.to == SQ_H1) {
+				board_remove_castling_rights(board, CASTLING_WHITE_KS);
+			} else if (move.to == SQ_A1) {
+				board_remove_castling_rights(board, CASTLING_WHITE_QS);
+			}
+		} else {
+			if (move.to == SQ_H8) {
+				board_remove_castling_rights(board, CASTLING_BLACK_KS);
+			} else if (move.to == SQ_A8) {
+				board_remove_castling_rights(board, CASTLING_BLACK_QS);
+			}
 		}
 	}
 }
@@ -197,7 +217,7 @@ bool make_move(Board *board, Move move) {
 	if (hist.side == PLAYER_B) {
 		board->fullmove_counter++;
 	}
-	handle_castling_rights(board, move);
+	handle_castling_rights(board, move, hist.captured);
 	board->side = utils_get_opponent(hist.side);
 	history_append(board->history, hist);
 	return true;

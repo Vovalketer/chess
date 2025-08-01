@@ -8,17 +8,20 @@
 #include <string.h>
 
 #define DEFAULT_ARRAY_INITIAL_CAPACITY 16
-#define DEFAULT_ARRAY_GROWTH_FACTOR 2
+#define DEFAULT_ARRAY_GROWTH_FACTOR	   2
 
 struct Array {
-	size_t size;
-	size_t capacity;
-	size_t elem_size;
-	double growth_factor;
+	size_t	 size;
+	size_t	 capacity;
+	size_t	 elem_size;
+	double	 growth_factor;
 	uint8_t* data;
 };
 
-bool array_create_with_config(Array** list, size_t elem_size, size_t capacity, double growth_factor) {
+bool array_create_with_config(Array** list,
+							  size_t  elem_size,
+							  size_t  capacity,
+							  double  growth_factor) {
 	assert(list != NULL);
 	assert(capacity > 0);
 	assert(growth_factor > 1);
@@ -33,10 +36,10 @@ bool array_create_with_config(Array** list, size_t elem_size, size_t capacity, d
 		return false;
 	}
 
-	arr->data = l;
-	arr->size = 0;
-	arr->capacity = capacity;
-	arr->elem_size = elem_size;
+	arr->data		   = l;
+	arr->size		   = 0;
+	arr->capacity	   = capacity;
+	arr->elem_size	   = elem_size;
 	arr->growth_factor = growth_factor;
 
 	*list = arr;
@@ -80,15 +83,15 @@ bool array_insert(Array* list, size_t index, void* data) {
 			return false;
 		}
 		list->capacity = new_cap;
-		list->data = r;
+		list->data	   = r;
 	}
 	// shift data to the right
 	// size * element_size = total size of the array
 	// size - index = number of elements to move
 
 	// base is the start of the array, casted to uint8_t to avoid undefined behavior
-	uint8_t* base = list->data;
-	size_t move_size = (list->size - index) * list->elem_size;
+	uint8_t* base	   = list->data;
+	size_t	 move_size = (list->size - index) * list->elem_size;
 	if (move_size > 0) {
 		uint8_t* src = base + index * list->elem_size;
 		uint8_t* dst = base + (index + 1) * list->elem_size;
@@ -177,15 +180,15 @@ bool array_clone(Array** dst, const Array* src) {
 	assert(dst != NULL);
 	assert(src != NULL);
 	Array* b;
-	bool result = array_create(&b, src->elem_size);
+	bool   result = array_create(&b, src->elem_size);
 	if (!result) {
 		return false;
 	}
 	memcpy(b->data, src->data, src->elem_size * src->size);
-	b->size = src->size;
-	b->capacity = src->capacity;
-	b->elem_size = src->elem_size;
+	b->size			 = src->size;
+	b->capacity		 = src->capacity;
+	b->elem_size	 = src->elem_size;
 	b->growth_factor = src->growth_factor;
-	*dst = b;
+	*dst			 = b;
 	return true;
 }

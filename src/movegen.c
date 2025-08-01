@@ -119,17 +119,19 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			}
 		}
 
-		uint64_t double_pushes =
-			bitboards_get_pawn_pushes(sqr, p) & ~occupancies & ~(p == PLAYER_W ? RANK_3 : RANK_6);
-		while (double_pushes) {
-			Square push_sqr = bits_pop_lsb(&double_pushes);
-			Move   mv		= {
-						.from	 = sqr,
-						.to		 = push_sqr,
-						.mv_type = MV_PAWN_DOUBLE,
-						.piece	 = pt,
-			};
-			move_list_append(ml, mv);
+		pushes				   = bitboards_get_pawn_pushes(sqr, p) & ~occupancies;
+		uint64_t double_pushes = bitboards_get_pawn_double_pushes(sqr, p) & ~occupancies;
+		if (double_pushes && pushes) {
+			while (double_pushes) {
+				Square push_sqr = bits_pop_lsb(&double_pushes);
+				Move   mv		= {
+							.from	 = sqr,
+							.to		 = push_sqr,
+							.mv_type = MV_PAWN_DOUBLE,
+							.piece	 = pt,
+				};
+				move_list_append(ml, mv);
+			}
 		}
 		if (board->ep_target != SQ_NONE) {
 			uint64_t ep_eval = 0;

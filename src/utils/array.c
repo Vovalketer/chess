@@ -156,7 +156,7 @@ bool array_get(Array* list, size_t index, void* out_data) {
 
 	// base is the start of the array, casted to uint8_t to avoid undefined behavior
 	uint8_t* base = list->data;
-	out_data = base + index * list->elem_size;
+	memcpy(out_data, base + index * list->elem_size, list->elem_size);
 
 	return true;
 }

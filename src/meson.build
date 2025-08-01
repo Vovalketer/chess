@@ -10,7 +10,7 @@ libboard = library(
 		'fen.c',
 		'utils.c',
 	],
-	dependencies: [liblog_dep],
+	dependencies: [liblog_dep, libarray_dep],
 	include_directories: [inc, inc_utils],
 )
 libboard_dep = declare_dependency(link_with: [libboard], dependencies: [libarray_dep, liblog_dep])

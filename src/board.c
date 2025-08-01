@@ -62,6 +62,14 @@ Board *board_create(void) {
 		log_error("Failed to allocate board");
 		return NULL;
 	}
+	board_set_castling_rights(b, CASTLING_ALL_RIGHTS);
+	b->side		 = PLAYER_W;
+	b->ep_target = SQ_NONE;
+	if (!history_create(&b->history)) {
+		log_error("Failed to allocate history");
+		free(b);
+		return NULL;
+	}
 	return b;
 }
 

@@ -15,12 +15,18 @@ void bits_clear(uint64_t *bits, int offset) {
 }
 
 int8_t bits_pop_lsb(uint64_t *bits) {
+	if (!*bits) {
+		return -1;
+	}
 	uint64_t bit = bits_get_lsb(*bits);
 	*bits &= (*bits - 1);
 	return bit;
 }
 
 int8_t bits_pop_msb(uint64_t *bits) {
+	if (!*bits) {
+		return -1;
+	}
 	uint64_t bit = bits_get_msb(*bits);
 	bits_clear(bits, bit);
 	return bit;

@@ -81,11 +81,11 @@ static bool _parse_to_ptr(const char* fen, ParsedFEN* pf_out) {
 }
 
 static bool _parse_piece_placement(const char* pieces, Board* board) {
-	int rank = 0;
+	int rank = 7;
 	int file = 0;
 	while (*pieces) {
 		if (*pieces == '/') {
-			rank++;
+			rank--;
 			file = 0;
 			if (rank > 7) {
 				log_error("Error parsing pieces from FEN: invalid row - row: %d", rank);

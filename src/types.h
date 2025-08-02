@@ -69,6 +69,7 @@ typedef enum {
 	MV_B_PROM_CAPTURE,
 	MV_R_PROM_CAPTURE,
 	MV_Q_PROM_CAPTURE,
+	MOVE_TYPE_CNT
 } MoveType;
 
 typedef struct {

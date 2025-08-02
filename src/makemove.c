@@ -199,6 +199,9 @@ bool make_move(Board *board, Move move) {
 			board_remove_piece(board, move.from);
 			board_set_piece(board, (Piece) {.player = board->side, .type = QUEEN}, move.to);
 			break;
+		default:
+			log_error("Invalid move type");
+			break;
 	}
 
 	if (is_check(board, hist.side)) {

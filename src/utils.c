@@ -1,7 +1,9 @@
 #include "utils.h"
 
 #include <ctype.h>
+#include <stdio.h>
 
+#include "board.h"
 #include "types.h"
 
 // string representation of the squares
@@ -11,6 +13,20 @@ const char* square_name[SQ_CNT] = {
 	"a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
 	"a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"};
 const char* piece_type_name[PIECE_TYPE_CNT] = {"pawn", "rook", "knight", "bishop", "queen", "king"};
+const char* move_type_name[MOVE_TYPE_CNT]	= {"quiet",
+											   "pawn double",
+											   "ks castle",
+											   "qs castle",
+											   "capture",
+											   "en passant",
+											   "n prom",
+											   "b prom",
+											   "r prom",
+											   "q prom",
+											   "n prom capture",
+											   "b prom capture",
+											   "r prom capture",
+											   "q prom capture"};
 
 Player utils_get_opponent(Player player) {
 	return (player == PLAYER_W) ? PLAYER_B : PLAYER_W;
@@ -100,9 +116,34 @@ Piece utils_char_to_piece(char c) {
 }
 
 const char* utils_square_to_str(Square sqr) {
+	if (sqr == SQ_NONE) {
+		return "no sq";
+	}
 	return square_name[sqr];
 }
 
 const char* utils_piece_type_to_str(PieceType type) {
+	if (type == EMPTY) {
+		return "-";
+	}
 	return piece_type_name[type];
+}
+
+const char* utils_move_type_to_str(MoveType type) {
+	return move_type_name[type];
+}
+
+FixedStr utils_move_description(Board* board, Move move) {
+	FixedStr str;
+	Piece	 piece_from = board_get_piece(board, move.from);
+	snprintf(str.str,
+			 sizeof(str.str),
+			 "Move from: %s To: %s | Type: %s | Player: %d | Piece: %s | Captured: %s",
+			 utils_square_to_str(move.from),
+			 utils_square_to_str(move.to),
+			 utils_move_type_to_str(move.mv_type),
+			 piece_from.player,
+			 utils_piece_type_to_str(piece_from.type),
+			 utils_piece_type_to_str(board_get_piece_type(board, move.to)));
+	return str;
 }

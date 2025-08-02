@@ -34,7 +34,8 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	while (bb) {
 		Square	 sqr	 = bits_pop_lsb(&bb);  // pop and get the index, transform into a square
 		uint64_t attk	 = bitboards_get_pawn_attacks(sqr, p) & board->occupancies[opponent];
-		bool	 is_prom = (p == PLAYER_W && sqr > SQ_H7) || (p == PLAYER_B && sqr < SQ_A2);
+		bool	 is_prom = (p == PLAYER_W && (sqr >= SQ_A7 && sqr <= SQ_H7)) ||
+					   (p == PLAYER_B && (sqr >= SQ_A2 && sqr <= SQ_H2));
 		while (attk) {
 			Square attk_sqr = bits_pop_lsb(&attk);
 			if (!is_prom) {

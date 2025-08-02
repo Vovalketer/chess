@@ -81,9 +81,9 @@ char utils_piece_to_char(Piece piece) {
 Piece utils_char_to_piece(char c) {
 	Piece piece;
 	if (isupper(c)) {
-		piece.player = PLAYER_B;
-	} else {
 		piece.player = PLAYER_W;
+	} else {
+		piece.player = PLAYER_B;
 	}
 	char cl = tolower(c);
 	switch (cl) {

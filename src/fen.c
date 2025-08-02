@@ -81,21 +81,21 @@ static bool _parse_to_ptr(const char* fen, ParsedFEN* pf_out) {
 }
 
 static bool _parse_piece_placement(const char* pieces, Board* board) {
-	int row = 0;
-	int col = 0;
+	int rank = 0;
+	int file = 0;
 	while (*pieces) {
 		if (*pieces == '/') {
-			row++;
-			col = 0;
-			if (row > 7) {
-				log_error("Error parsing pieces from FEN: invalid row - row: %d", row);
+			rank++;
+			file = 0;
+			if (rank > 7) {
+				log_error("Error parsing pieces from FEN: invalid row - row: %d", rank);
 				return false;
 			}
 		} else if (*pieces >= '0' && *pieces <= '8') {
-			col += *pieces - '0';
-			if (col > 8) {
+			file += *pieces - '0';
+			if (file > 8) {
 				log_error(
-					"Error parsing pieces from FEN: invalid column - row: %d, col: %d", row, col);
+					"Error parsing pieces from FEN: invalid column - row: %d, col: %d", rank, file);
 				return false;
 			}
 		} else {
@@ -104,14 +104,15 @@ static bool _parse_piece_placement(const char* pieces, Board* board) {
 				log_error(
 					"Error parsing pieces from FEN: invalid piece - row: %d, col: %d, piece "
 					"char:%c",
-					row,
-					col,
+					rank,
+					file,
 					*pieces);
 				return false;
 			}
-			board_set_piece(
-				board, (Piece) {.player = p.player, .type = p.type}, utils_fr_to_square(col, row));
-			col++;
+			board_set_piece(board,
+							(Piece) {.player = p.player, .type = p.type},
+							utils_fr_to_square(file, rank));
+			file++;
 		}
 		pieces++;
 	}

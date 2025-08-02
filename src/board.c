@@ -86,7 +86,6 @@ static bool is_within_bounds(Square sqr) {
 
 void board_set_piece(Board *board, Piece piece, Square sqr) {
 	assert(board != NULL);
-	printf("Setting piece %d at %d\n", piece.type, sqr);
 	assert(is_within_bounds(sqr));
 	if (bits_get(board->occupancies[piece.player], sqr)) {
 		board_remove_piece(board, sqr);
@@ -158,6 +157,18 @@ void board_apply_history(Board *board, History hist) {
 	} else {
 		board_remove_piece(board, hist.to);
 	}
+	if (hist.mv_type == MV_KS_CASTLE) {
+		board_remove_piece(board, hist.side == PLAYER_W ? SQ_F1 : SQ_F8);
+		board_set_piece(board,
+						(Piece) {.player = hist.side, .type = ROOK},
+						hist.side == PLAYER_W ? SQ_H1 : SQ_H8);
+	}
+	if (hist.mv_type == MV_QS_CASTLE) {
+		board_remove_piece(board, hist.side == PLAYER_W ? SQ_D1 : SQ_D8);
+		board_set_piece(board,
+						(Piece) {.player = hist.side, .type = ROOK},
+						hist.side == PLAYER_W ? SQ_A1 : SQ_A8);
+	}
 	board->side				= hist.side;
 	board->ep_target		= hist.ep_target;
 	board->castling_rights	= hist.castling_rights;
@@ -170,6 +181,7 @@ bool board_from_fen(Board *board, const char *fen) {
 		log_error("Error parsing FEN");
 		return false;
 	};
+	board_print(board);
 	return true;
 }
 

@@ -87,10 +87,11 @@ static bool is_within_bounds(Square sqr) {
 void board_set_piece(Board *board, Piece piece, Square sqr) {
 	assert(board != NULL);
 	assert(is_within_bounds(sqr));
-	if (bits_get(board->occupancies[piece.player], sqr)) {
+	if (bits_get(
+			board->occupancies[piece.player] | board->occupancies[utils_get_opponent(piece.player)],
+			sqr)) {
 		board_remove_piece(board, sqr);
 	}
-
 	bits_set(&board->pieces[piece.player][piece.type], sqr);
 	bits_set(&board->occupancies[piece.player], sqr);
 }
@@ -98,15 +99,12 @@ void board_set_piece(Board *board, Piece piece, Square sqr) {
 void board_remove_piece(Board *board, Square sqr) {
 	assert(board != NULL);
 	assert(is_within_bounds(sqr));
-	Player p = board_get_occupant(board, sqr);
-	if (p == PLAYER_NONE) {
-		return;
-	};
 
-	bits_clear(&board->occupancies[p], sqr);
-	// bulldoze over the arrays to reduce the branching
+	bits_clear(&board->occupancies[PLAYER_W], sqr);
+	bits_clear(&board->occupancies[PLAYER_B], sqr);
 	for (int i = 0; i < TOTAL_PIECE_TYPES; i++) {
-		bits_clear(&board->pieces[p][i], sqr);
+		bits_clear(&board->pieces[PLAYER_W][i], sqr);
+		bits_clear(&board->pieces[PLAYER_B][i], sqr);
 	}
 }
 

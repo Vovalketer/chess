@@ -46,15 +46,7 @@ typedef enum {
 } CastlingRights;
 
 // used as index
-typedef enum {
-	EMPTY = -1,
-	PAWN,
-	ROOK,
-	KNIGHT,
-	BISHOP,
-	QUEEN,
-	KING,
-} PieceType;
+typedef enum { EMPTY = -1, PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, PIECE_TYPE_CNT } PieceType;
 
 // query results
 typedef struct {

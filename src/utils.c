@@ -2,6 +2,16 @@
 
 #include <ctype.h>
 
+#include "types.h"
+
+// string representation of the squares
+const char* square_name[SQ_CNT] = {
+	"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+	"a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+	"a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+	"a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"};
+const char* piece_type_name[PIECE_TYPE_CNT] = {"pawn", "rook", "knight", "bishop", "queen", "king"};
+
 Player utils_get_opponent(Player player) {
 	return (player == PLAYER_W) ? PLAYER_B : PLAYER_W;
 }
@@ -43,7 +53,7 @@ char utils_piece_to_char(Piece piece) {
 		case KING:
 			c = 'K';
 			break;
-		case EMPTY:
+		default:
 			return '.';
 	}
 	if (piece.player == PLAYER_B) {
@@ -87,4 +97,12 @@ Piece utils_char_to_piece(char c) {
 			break;
 	}
 	return piece;
+}
+
+const char* utils_square_to_str(Square sqr) {
+	return square_name[sqr];
+}
+
+const char* utils_piece_type_to_str(PieceType type) {
+	return piece_type_name[type];
 }

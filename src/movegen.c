@@ -216,10 +216,10 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	switch (p) {
 		case PLAYER_W:
 			if (board_has_castling_rights(board, CASTLING_WHITE_KS)) {
-				if (king_sqr == SQ_E1 && board_get_piece_type(board, SQ_H1) == ROOK &&
-					bits_get(board->occupancies[PLAYER_W], SQ_H1) &&
-					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
-						~(W_KS_CASTLING_SQUARES)) {
+				Piece rook = board_get_piece(board, SQ_H1);
+				if (king_sqr == SQ_E1 && rook.type == ROOK && rook.player == PLAYER_W &&
+					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
+					 (W_KS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
 					Move mv = {
 						.from	 = king_sqr,
@@ -231,10 +231,10 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 				}
 			}
 			if (board_has_castling_rights(board, CASTLING_WHITE_QS)) {
-				if (king_sqr == SQ_E1 && board_get_piece_type(board, SQ_A1) == ROOK &&
-					bits_get(board->occupancies[PLAYER_W], SQ_A1) &&
-					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
-						~(W_QS_CASTLING_SQUARES)) {
+				Piece rook = board_get_piece(board, SQ_A1);
+				if (king_sqr == SQ_E1 && rook.type == ROOK && rook.player == PLAYER_W &&
+					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
+					 (W_QS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
 					Move mv = {
 						.from	 = king_sqr,
@@ -248,14 +248,14 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			break;
 		case PLAYER_B:
 			if (board_has_castling_rights(board, CASTLING_BLACK_KS)) {
-				if (king_sqr == SQ_E8 && board_get_piece_type(board, SQ_H8) == ROOK &&
-					bits_get(board->occupancies[PLAYER_W], SQ_H8) &&
-					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
-						~(B_KS_CASTLING_SQUARES)) {
+				Piece rook = board_get_piece(board, SQ_H8);
+				if (king_sqr == SQ_E8 && rook.type == ROOK && rook.player == PLAYER_B &&
+					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
+					 (B_KS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
 					Move mv = {
 						.from	 = king_sqr,
-						.to		 = SQ_C8,
+						.to		 = SQ_G8,
 						.mv_type = MV_KS_CASTLE,
 						.piece	 = pt,
 					};
@@ -263,14 +263,14 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 				}
 			}
 			if (board_has_castling_rights(board, CASTLING_BLACK_QS)) {
-				if (king_sqr == SQ_E8 && board_get_piece_type(board, SQ_A8) == ROOK &&
-					bits_get(board->occupancies[PLAYER_W], SQ_A8) &&
-					(board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
-						~(B_QS_CASTLING_SQUARES)) {
+				Piece rook = board_get_piece(board, SQ_A8);
+				if (king_sqr == SQ_E8 && rook.type == ROOK && rook.player == PLAYER_B &&
+					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
+					 (B_QS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
 					Move mv = {
 						.from	 = king_sqr,
-						.to		 = SQ_D8,
+						.to		 = SQ_C8,
 						.mv_type = MV_QS_CASTLE,
 						.piece	 = pt,
 					};

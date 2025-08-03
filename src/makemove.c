@@ -86,25 +86,24 @@ static bool is_check(Board *board, Player player) {
 }
 
 bool make_move(Board *board, Move move) {
-	PieceType pt_src = move.piece;
-	History	  hist	 = (History) {.from				= move.from,
-								  .to				= move.to,
-								  .moving			= pt_src,
-								  .captured			= EMPTY,
-								  .mv_type			= move.mv_type,
-								  .ep_target		= board->ep_target,
-								  .side				= board->side,
-								  .castling_rights	= board->castling_rights,
-								  .halfmove_clock	= board->halfmove_clock,
-								  .fullmove_counter = board->fullmove_counter};
+	History hist = (History) {.from				= move.from,
+							  .to				= move.to,
+							  .moving			= move.piece,
+							  .captured			= EMPTY,
+							  .mv_type			= move.mv_type,
+							  .ep_target		= board->ep_target,
+							  .side				= board->side,
+							  .castling_rights	= board->castling_rights,
+							  .halfmove_clock	= board->halfmove_clock,
+							  .fullmove_counter = board->fullmove_counter};
 
 	switch (move.mv_type) {
 		case MV_QUIET:
-			board_move_piece(board, move.from, move.to, pt_src);
+			board_move_piece(board, move.from, move.to, move.piece);
 			break;
 		case MV_PAWN_DOUBLE:
 			board->ep_target = board->side == PLAYER_W ? move.from + DIR_N : move.from + DIR_S;
-			board_move_piece(board, move.from, move.to, pt_src);
+			board_move_piece(board, move.from, move.to, move.piece);
 			break;
 		case MV_KS_CASTLE:
 			if (board->side == PLAYER_W) {
@@ -156,12 +155,12 @@ bool make_move(Board *board, Move move) {
 			break;
 		case MV_CAPTURE:
 			hist.captured = board_get_piece_type(board, move.to);
-			board_move_piece(board, move.from, move.to, pt_src);
+			board_move_piece(board, move.from, move.to, move.piece);
 			break;
 		case MV_EN_PASSANT:
 			hist.captured = PAWN;
 			board_remove_piece(board, board->ep_target);
-			board_move_piece(board, move.from, move.to, pt_src);
+			board_move_piece(board, move.from, move.to, move.piece);
 			break;
 		case MV_N_PROM:
 			board_remove_piece(board, move.from);

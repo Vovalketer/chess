@@ -110,6 +110,36 @@ void test_black_pawns_have_two_moves_at_starting_row(void) {
 		ml, (Move) {.from = SQ_H7, .to = SQ_H5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
 }
 
+void test_white_pawns_double_push_cant_skip_allies(void) {
+	Piece pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
+	for (Square sqr = SQ_A2; sqr <= SQ_H2; sqr++) {
+		board_set_piece(board, pawn, sqr);
+		board_set_piece(board, pawn, sqr + DIR_N);
+		MoveList *ml = movegen_generate(board, PLAYER_W);
+		for (size_t i = 0; i < move_list_size(ml); i++) {
+			Move m;
+			move_list_get(ml, i, &m);
+			TEST_ASSERT_TRUE(m.from != sqr);
+		}
+		move_list_destroy(&ml);
+	}
+}
+
+void test_black_pawns_double_push_cant_skip_allies(void) {
+	Piece pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
+	for (Square sqr = SQ_A7; sqr <= SQ_H7; sqr++) {
+		board_set_piece(board, pawn, sqr);
+		board_set_piece(board, pawn, sqr + DIR_S);
+		MoveList *ml = movegen_generate(board, PLAYER_B);
+		for (size_t i = 0; i < move_list_size(ml); i++) {
+			Move m;
+			move_list_get(ml, i, &m);
+			TEST_ASSERT_TRUE(m.from != sqr);
+		}
+		move_list_destroy(&ml);
+	}
+}
+
 void test_white_pawns_can_only_move_forward_at_non_starting_rows(void) {
 	Piece pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
 	for (Square sqr = SQ_A1; sqr <= SQ_H7; sqr++) {	 // skip the rank 8
@@ -118,7 +148,6 @@ void test_white_pawns_can_only_move_forward_at_non_starting_rows(void) {
 		}
 		board_set_piece(board, pawn, sqr);
 		MoveList *ml = movegen_generate(board, PLAYER_W);
-		TEST_ASSERT_EQUAL_size_t(1, move_list_size(ml));
 
 		Move m;
 		move_list_get(ml, 0, &m);
@@ -137,7 +166,6 @@ void test_black_pawns_can_only_move_forward_at_non_starting_rows(void) {
 		board_set_piece(board, pawn, sqr);
 
 		MoveList *ml = movegen_generate(board, PLAYER_B);
-		TEST_ASSERT_EQUAL_size_t(1, move_list_size(ml));
 
 		Move m;
 		move_list_get(ml, 0, &m);
@@ -150,10 +178,8 @@ void test_black_pawns_can_only_move_forward_at_non_starting_rows(void) {
 void test_white_pawns_can_capture_enemies_at_ne_and_nw(void) {
 	Piece w_pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
 	Piece b_pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
-	for (Square sqr = SQ_A1; sqr <= SQ_H7; sqr++) {					 // skip the rank 8
-		if (utils_get_file(sqr) == 0 || utils_get_file(sqr) == 7) {	 // skip the edges
-			continue;
-		}
+	// skip the rank 7 and 8 (7->8 turns into promotions)
+	for (Square sqr = SQ_A1; sqr <= SQ_H6; sqr++) {
 		Square nw = sqr + DIR_NW;
 		Square ne = sqr + DIR_NE;
 		board_set_piece(board, w_pawn, sqr);
@@ -161,55 +187,20 @@ void test_white_pawns_can_capture_enemies_at_ne_and_nw(void) {
 		board_set_piece(board, b_pawn, ne);
 		MoveList *ml = movegen_generate(board, PLAYER_W);
 
-		if (utils_get_rank(sqr) == 1) {
-			TEST_ASSERT_EQUAL_size_t(4, move_list_size(ml));
-		} else {
-			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
+		if (utils_get_file(sqr) != 0) {
+			Move m = (Move) {.from = sqr, .to = nw, .mv_type = MV_CAPTURE, .piece = PAWN};
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
+									 utils_move_description(board, m).str);
+		}
+		if (utils_get_file(sqr) != 7) {
+			Move m = (Move) {.from = sqr, .to = ne, .mv_type = MV_CAPTURE, .piece = PAWN};
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
+									 utils_move_description(board, m).str);
 		}
 
-		Move capture_nw = (Move) {.from = sqr, .to = nw, .mv_type = MV_CAPTURE, .piece = PAWN};
-		Move capture_ne = (Move) {.from = sqr, .to = ne, .mv_type = MV_CAPTURE, .piece = PAWN};
-		TEST_ASSERT_TRUE(move_list_contains(ml, capture_nw));
-		TEST_ASSERT_TRUE(move_list_contains(ml, capture_ne));
 		board_remove_piece(board, sqr);
 		board_remove_piece(board, nw);
 		board_remove_piece(board, ne);
-		move_list_destroy(&ml);
-	}
-	for (Square sqr = SQ_A1; sqr <= SQ_A7; sqr += DIR_N) {
-		Square ne = sqr + DIR_NE;
-		board_set_piece(board, b_pawn, ne);
-		board_set_piece(board, w_pawn, sqr);
-		MoveList *ml = movegen_generate(board, PLAYER_W);
-
-		if (utils_get_rank(sqr) == 1) {
-			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
-		} else {
-			TEST_ASSERT_EQUAL_size_t(2, move_list_size(ml));
-		}
-		Move capture_ne = (Move) {.from = sqr, .to = ne, .mv_type = MV_CAPTURE, .piece = PAWN};
-		TEST_ASSERT_TRUE(move_list_contains(ml, capture_ne));
-
-		board_remove_piece(board, sqr);
-		board_remove_piece(board, ne);
-		move_list_destroy(&ml);
-	}
-	for (Square sqr = SQ_H1; sqr <= SQ_H7; sqr += DIR_N) {
-		Square nw = sqr + DIR_NW;
-		board_set_piece(board, b_pawn, nw);
-		board_set_piece(board, w_pawn, sqr);
-		MoveList *ml = movegen_generate(board, PLAYER_W);
-
-		if (utils_get_rank(sqr) == 1) {
-			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
-		} else {
-			TEST_ASSERT_EQUAL_size_t(2, move_list_size(ml));
-		}
-		Move capture_nw = (Move) {.from = sqr, .to = nw, .mv_type = MV_CAPTURE, .piece = PAWN};
-		TEST_ASSERT_TRUE(move_list_contains(ml, capture_nw));
-
-		board_remove_piece(board, sqr);
-		board_remove_piece(board, nw);
 		move_list_destroy(&ml);
 	}
 }
@@ -217,10 +208,8 @@ void test_white_pawns_can_capture_enemies_at_ne_and_nw(void) {
 void test_black_pawns_can_capture_enemies_at_se_and_sw(void) {
 	Piece w_pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
 	Piece b_pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
-	for (Square sqr = SQ_A2; sqr <= SQ_H8; sqr++) {					 // skip the rank 1
-		if (utils_get_file(sqr) == 0 || utils_get_file(sqr) == 7) {	 // skip the edges
-			continue;
-		}
+	// skip the rank 1 and 2 (2->1 turns into promotions)
+	for (Square sqr = SQ_A3; sqr <= SQ_H8; sqr++) {
 		Square sw = sqr + DIR_SW;
 		Square se = sqr + DIR_SE;
 		board_set_piece(board, b_pawn, sqr);
@@ -228,55 +217,20 @@ void test_black_pawns_can_capture_enemies_at_se_and_sw(void) {
 		board_set_piece(board, w_pawn, se);
 		MoveList *ml = movegen_generate(board, PLAYER_B);
 
-		if (utils_get_rank(sqr) == 6) {
-			TEST_ASSERT_EQUAL_size_t(4, move_list_size(ml));
-		} else {
-			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
+		if (utils_get_file(sqr) != 0) {
+			Move m = (Move) {.from = sqr, .to = sw, .mv_type = MV_CAPTURE, .piece = PAWN};
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
+									 utils_move_description(board, m).str);
 		}
-		Move capture_se = (Move) {.from = sqr, .to = se, .mv_type = MV_CAPTURE, .piece = PAWN};
-		Move capture_sw = (Move) {.from = sqr, .to = sw, .mv_type = MV_CAPTURE, .piece = PAWN};
-		TEST_ASSERT_TRUE(move_list_contains(ml, capture_se));
-		TEST_ASSERT_TRUE(move_list_contains(ml, capture_sw));
+		if (utils_get_file(sqr) != 7) {
+			Move m = (Move) {.from = sqr, .to = se, .mv_type = MV_CAPTURE, .piece = PAWN};
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
+									 utils_move_description(board, m).str);
+		}
 
 		board_remove_piece(board, sqr);
 		board_remove_piece(board, sw);
 		board_remove_piece(board, se);
-		move_list_destroy(&ml);
-	}
-	for (Square sqr = SQ_A2; sqr <= SQ_A8; sqr += DIR_S) {
-		Square se = sqr + DIR_SE;
-		board_set_piece(board, w_pawn, se);
-		board_set_piece(board, b_pawn, sqr);
-		MoveList *ml = movegen_generate(board, PLAYER_B);
-
-		if (utils_get_rank(sqr) == 6) {
-			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
-		} else {
-			TEST_ASSERT_EQUAL_size_t(2, move_list_size(ml));
-		}
-		Move capture_se = (Move) {.from = sqr, .to = se, .mv_type = MV_CAPTURE, .piece = PAWN};
-		TEST_ASSERT_TRUE(move_list_contains(ml, capture_se));
-
-		board_remove_piece(board, sqr);
-		board_remove_piece(board, se);
-		move_list_destroy(&ml);
-	}
-	for (Square sqr = SQ_H2; sqr <= SQ_H8; sqr += DIR_S) {
-		Square sw = sqr + DIR_SW;
-		board_set_piece(board, b_pawn, sw);
-		board_set_piece(board, w_pawn, sqr);
-		MoveList *ml = movegen_generate(board, PLAYER_B);
-
-		if (utils_get_rank(sqr) == 1) {
-			TEST_ASSERT_EQUAL_size_t(3, move_list_size(ml));
-		} else {
-			TEST_ASSERT_EQUAL_size_t(2, move_list_size(ml));
-		}
-		Move capture_sw = (Move) {.from = sqr, .to = sw, .mv_type = MV_CAPTURE, .piece = PAWN};
-		TEST_ASSERT_TRUE(move_list_contains(ml, capture_sw));
-
-		board_remove_piece(board, sqr);
-		board_remove_piece(board, sw);
 		move_list_destroy(&ml);
 	}
 }
@@ -685,13 +639,257 @@ void test_queen_cant_skip_enemies(void) {
 	move_list_destroy(&ml);
 }
 
+void test_king_can_move_one_square_in_any_direction(void) {
+	Piece king = (Piece) {.player = PLAYER_W, .type = KING};
+	for (Square sqr = SQ_A1; sqr <= SQ_H8; sqr++) {
+		board_set_piece(board, king, sqr);
+		MoveList *ml = movegen_generate(board, king.player);
+
+		int expected_moves = 0;
+		if (utils_get_rank(sqr) != 0) {
+			TEST_ASSERT_TRUE(move_list_contains(
+				ml, (Move) {.from = sqr, .to = sqr + DIR_S, .mv_type = MV_QUIET, .piece = KING}));
+			expected_moves++;
+		}
+		if (utils_get_rank(sqr) != 7) {
+			TEST_ASSERT_TRUE(move_list_contains(
+				ml, (Move) {.from = sqr, .to = sqr + DIR_N, .mv_type = MV_QUIET, .piece = KING}));
+			expected_moves++;
+		}
+		if (utils_get_file(sqr) != 0) {
+			TEST_ASSERT_TRUE(move_list_contains(
+				ml, (Move) {.from = sqr, .to = sqr + DIR_W, .mv_type = MV_QUIET, .piece = KING}));
+			expected_moves++;
+		}
+		if (utils_get_file(sqr) != 7) {
+			TEST_ASSERT_TRUE(move_list_contains(
+				ml, (Move) {.from = sqr, .to = sqr + DIR_E, .mv_type = MV_QUIET, .piece = KING}));
+			expected_moves++;
+		}
+		if (utils_get_rank(sqr) != 0 && utils_get_file(sqr) != 0) {
+			TEST_ASSERT_TRUE(move_list_contains(
+				ml, (Move) {.from = sqr, .to = sqr + DIR_SW, .mv_type = MV_QUIET, .piece = KING}));
+			expected_moves++;
+		}
+		if (utils_get_rank(sqr) != 0 && utils_get_file(sqr) != 7) {
+			TEST_ASSERT_TRUE(move_list_contains(
+				ml, (Move) {.from = sqr, .to = sqr + DIR_SE, .mv_type = MV_QUIET, .piece = KING}));
+			expected_moves++;
+		}
+		if (utils_get_rank(sqr) != 7 && utils_get_file(sqr) != 0) {
+			TEST_ASSERT_TRUE(move_list_contains(
+				ml, (Move) {.from = sqr, .to = sqr + DIR_NW, .mv_type = MV_QUIET, .piece = KING}));
+			expected_moves++;
+		}
+		if (utils_get_rank(sqr) != 7 && utils_get_file(sqr) != 7) {
+			TEST_ASSERT_TRUE(move_list_contains(
+				ml, (Move) {.from = sqr, .to = sqr + DIR_NE, .mv_type = MV_QUIET, .piece = KING}));
+			expected_moves++;
+		}
+		TEST_ASSERT_EQUAL(expected_moves, move_list_size(ml));
+
+		board_remove_piece(board, sqr);
+		move_list_destroy(&ml);
+	}
+}
+
+void test_gen_white_ks_castling_move(void) {
+	board_set_castling_rights(board, CASTLING_WHITE_ALL);
+	Piece  w_king	 = (Piece) {.player = PLAYER_W, .type = KING};
+	Piece  w_rook	 = (Piece) {.player = PLAYER_W, .type = ROOK};
+	Square w_king_sq = SQ_E1;
+	Square w_rook_sq = SQ_H1;
+	board_set_piece(board, w_king, w_king_sq);
+	board_set_piece(board, w_rook, w_rook_sq);
+	MoveList *ml = movegen_generate(board, w_king.player);
+
+	Move m = (Move) {.from = w_king_sq, .to = SQ_G1, .mv_type = MV_KS_CASTLE, .piece = KING};
+	TEST_ASSERT_TRUE(move_list_contains(ml, m));
+
+	move_list_destroy(&ml);
+}
+
+void test_gen_white_qs_castling_move(void) {
+	board_set_castling_rights(board, CASTLING_WHITE_ALL);
+	Piece  w_king	 = (Piece) {.player = PLAYER_W, .type = KING};
+	Piece  w_rook	 = (Piece) {.player = PLAYER_W, .type = ROOK};
+	Square w_king_sq = SQ_E1;
+	Square w_rook_sq = SQ_A1;
+	board_set_piece(board, w_king, w_king_sq);
+	board_set_piece(board, w_rook, w_rook_sq);
+	MoveList *ml = movegen_generate(board, w_king.player);
+
+	Move m = (Move) {.from = w_king_sq, .to = SQ_C1, .mv_type = MV_QS_CASTLE, .piece = KING};
+	TEST_ASSERT_TRUE(move_list_contains(ml, m));
+
+	move_list_destroy(&ml);
+}
+
+void test_gen_black_ks_castling_move(void) {
+	board_set_castling_rights(board, CASTLING_BLACK_ALL);
+	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_BLACK_KS));
+	board->side		 = PLAYER_B;
+	Piece  b_king	 = (Piece) {.player = PLAYER_B, .type = KING};
+	Piece  b_rook	 = (Piece) {.player = PLAYER_B, .type = ROOK};
+	Square b_king_sq = SQ_E8;
+	Square b_rook_sq = SQ_H8;
+	board_set_piece(board, b_king, b_king_sq);
+	board_set_piece(board, b_rook, b_rook_sq);
+	MoveList *ml = movegen_generate(board, b_king.player);
+
+	Move m = (Move) {.from = b_king_sq, .to = SQ_G8, .mv_type = MV_KS_CASTLE, .piece = KING};
+	TEST_ASSERT_TRUE(move_list_contains(ml, m));
+
+	move_list_destroy(&ml);
+}
+
+void test_gen_black_qs_castling_move(void) {
+	board_set_castling_rights(board, CASTLING_BLACK_ALL);
+	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_BLACK_QS));
+	board->side		 = PLAYER_B;
+	Piece  b_king	 = (Piece) {.player = PLAYER_B, .type = KING};
+	Piece  b_rook	 = (Piece) {.player = PLAYER_B, .type = ROOK};
+	Square b_king_sq = SQ_E8;
+	Square b_rook_sq = SQ_A8;
+	board_set_piece(board, b_king, b_king_sq);
+	board_set_piece(board, b_rook, b_rook_sq);
+	MoveList *ml = movegen_generate(board, b_king.player);
+
+	Move m = (Move) {.from = b_king_sq, .to = SQ_C8, .mv_type = MV_QS_CASTLE, .piece = KING};
+	TEST_ASSERT_TRUE(move_list_contains(ml, m));
+
+	move_list_destroy(&ml);
+}
+
+void test_white_ks_castling_move_is_prevented_when_blocked(void) {
+	board_set_castling_rights(board, CASTLING_WHITE_ALL);
+	Piece  w_king	 = (Piece) {.player = PLAYER_W, .type = KING};
+	Piece  w_rook	 = (Piece) {.player = PLAYER_W, .type = ROOK};
+	Piece  w_pawn	 = (Piece) {.player = PLAYER_W, .type = PAWN};
+	Square w_king_sq = SQ_E1;
+	Square w_rook_sq = SQ_H1;
+	Square w_pawn_sq = SQ_F1;
+	board_set_piece(board, w_king, w_king_sq);
+	board_set_piece(board, w_rook, w_rook_sq);
+	board_set_piece(board, w_pawn, w_pawn_sq);
+
+	MoveList *ml = movegen_generate(board, w_king.player);
+
+	Move m = (Move) {.from = w_king_sq, .to = SQ_G1, .mv_type = MV_KS_CASTLE, .piece = KING};
+	TEST_ASSERT_FALSE(move_list_contains(ml, m));
+
+	move_list_destroy(&ml);
+}
+
+void test_white_qs_castling_move_is_prevented_when_blocked(void) {
+	board_set_castling_rights(board, CASTLING_WHITE_ALL);
+	Piece  w_king	 = (Piece) {.player = PLAYER_W, .type = KING};
+	Piece  w_rook	 = (Piece) {.player = PLAYER_W, .type = ROOK};
+	Piece  w_pawn	 = (Piece) {.player = PLAYER_W, .type = PAWN};
+	Square w_king_sq = SQ_E1;
+	Square w_rook_sq = SQ_A1;
+	Square w_pawn_sq = SQ_B1;
+	board_set_piece(board, w_king, w_king_sq);
+	board_set_piece(board, w_rook, w_rook_sq);
+	board_set_piece(board, w_pawn, w_pawn_sq);
+
+	MoveList *ml = movegen_generate(board, w_king.player);
+
+	Move m = (Move) {.from = w_king_sq, .to = SQ_C1, .mv_type = MV_KS_CASTLE, .piece = KING};
+	TEST_ASSERT_FALSE(move_list_contains(ml, m));
+
+	move_list_destroy(&ml);
+}
+
+void test_black_ks_castling_move_is_prevented_when_blocked(void) {
+	board_set_castling_rights(board, CASTLING_BLACK_ALL);
+	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_BLACK_KS));
+	board->side		 = PLAYER_B;
+	Piece  b_king	 = (Piece) {.player = PLAYER_B, .type = KING};
+	Piece  b_rook	 = (Piece) {.player = PLAYER_B, .type = ROOK};
+	Piece  b_pawn	 = (Piece) {.player = PLAYER_B, .type = PAWN};
+	Square b_king_sq = SQ_E8;
+	Square b_rook_sq = SQ_H8;
+	Square b_pawn_sq = SQ_F8;
+	board_set_piece(board, b_king, b_king_sq);
+	board_set_piece(board, b_rook, b_rook_sq);
+	board_set_piece(board, b_pawn, b_pawn_sq);
+
+	MoveList *ml = movegen_generate(board, b_king.player);
+
+	Move m = (Move) {.from = b_king_sq, .to = SQ_G8, .mv_type = MV_KS_CASTLE, .piece = KING};
+	TEST_ASSERT_FALSE(move_list_contains(ml, m));
+
+	move_list_destroy(&ml);
+}
+
+void test_black_qs_castling_move_is_prevented_when_blocked(void) {
+	board_set_castling_rights(board, CASTLING_BLACK_ALL);
+	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_BLACK_QS));
+	board->side		 = PLAYER_B;
+	Piece  b_king	 = (Piece) {.player = PLAYER_B, .type = KING};
+	Piece  b_rook	 = (Piece) {.player = PLAYER_B, .type = ROOK};
+	Piece  b_pawn	 = (Piece) {.player = PLAYER_B, .type = PAWN};
+	Square b_king_sq = SQ_E8;
+	Square b_rook_sq = SQ_A8;
+	Square b_pawn_sq = SQ_B8;
+	board_set_piece(board, b_king, b_king_sq);
+	board_set_piece(board, b_rook, b_rook_sq);
+	board_set_piece(board, b_pawn, b_pawn_sq);
+
+	MoveList *ml = movegen_generate(board, b_king.player);
+
+	Move m = (Move) {.from = b_king_sq, .to = SQ_C8, .mv_type = MV_QS_CASTLE, .piece = KING};
+	TEST_ASSERT_FALSE(move_list_contains(ml, m));
+
+	move_list_destroy(&ml);
+}
+
+void test_w_pawn_generates_prom_moves_when_advancing_to_rank_8(void) {
+	Piece  pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
+	Square from = SQ_B7;
+	board_set_piece(board, pawn, from);
+	MoveList *ml = movegen_generate(board, pawn.player);
+	TEST_ASSERT_EQUAL(4, move_list_size(ml));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = from, .to = SQ_B8, .mv_type = MV_Q_PROM, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = from, .to = SQ_B8, .mv_type = MV_R_PROM, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = from, .to = SQ_B8, .mv_type = MV_B_PROM, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = from, .to = SQ_B8, .mv_type = MV_N_PROM, .piece = PAWN}));
+	move_list_destroy(&ml);
+}
+
+void test_b_pawn_generates_prom_moves_when_advancing_to_rank_1(void) {
+	Piece  pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
+	Square from = SQ_B2;
+	Square to	= SQ_B1;
+	board_set_piece(board, pawn, from);
+	MoveList *ml = movegen_generate(board, pawn.player);
+	TEST_ASSERT_EQUAL(4, move_list_size(ml));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = from, .to = to, .mv_type = MV_Q_PROM, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = from, .to = to, .mv_type = MV_R_PROM, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = from, .to = to, .mv_type = MV_B_PROM, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(
+		ml, (Move) {.from = from, .to = to, .mv_type = MV_N_PROM, .piece = PAWN}));
+	move_list_destroy(&ml);
+}
+
 int main(void) {
 	UNITY_BEGIN();
 	RUN_TEST(test_white_pawns_have_two_moves_at_starting_row);
 	RUN_TEST(test_black_pawns_have_two_moves_at_starting_row);
+	RUN_TEST(test_white_pawns_double_push_cant_skip_allies);
+	RUN_TEST(test_black_pawns_double_push_cant_skip_allies);
 	RUN_TEST(test_white_pawns_can_only_move_forward_at_non_starting_rows);
 	RUN_TEST(test_black_pawns_can_only_move_forward_at_non_starting_rows);
 	RUN_TEST(test_white_pawns_can_capture_enemies_at_ne_and_nw);
+	RUN_TEST(test_black_pawns_can_capture_enemies_at_se_and_sw);
 	RUN_TEST(test_rook_can_move_in_cross);
 	RUN_TEST(test_rook_cant_go_over_allies);
 	RUN_TEST(test_rook_cant_go_over_enemies);
@@ -702,5 +900,17 @@ int main(void) {
 	RUN_TEST(test_queen_can_move_in_cross_and_diag);
 	RUN_TEST(test_queen_cant_skip_allies);
 	RUN_TEST(test_queen_cant_skip_enemies);
+	RUN_TEST(test_king_can_move_one_square_in_any_direction);
+	RUN_TEST(test_gen_white_ks_castling_move);
+	RUN_TEST(test_gen_white_qs_castling_move);
+	RUN_TEST(test_gen_black_ks_castling_move);
+	RUN_TEST(test_gen_black_qs_castling_move);
+	RUN_TEST(test_white_ks_castling_move_is_prevented_when_blocked);
+	RUN_TEST(test_white_qs_castling_move_is_prevented_when_blocked);
+	RUN_TEST(test_black_ks_castling_move_is_prevented_when_blocked);
+	RUN_TEST(test_black_qs_castling_move_is_prevented_when_blocked);
+	RUN_TEST(test_w_pawn_generates_prom_moves_when_advancing_to_rank_8);
+	RUN_TEST(test_b_pawn_generates_prom_moves_when_advancing_to_rank_1);
+
 	return UNITY_END();
 }

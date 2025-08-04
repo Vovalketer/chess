@@ -29,3 +29,16 @@ movegen_test = executable(
 	dependencies: [libboard_dep, unity_dep],
 )
 test('movegen_test', movegen_test)
+
+makemove_files = [
+	src_path + 'makemove.c',
+	src_path + 'bitboards.c',
+]
+makemove_test = executable(
+	'makemove_test',
+	'makemove_test.c',
+	makemove_files,
+	include_directories: [inc, inc_utils],
+	dependencies: [libboard_dep, unity_dep],
+)
+test('makemove_test', makemove_test)

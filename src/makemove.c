@@ -106,54 +106,40 @@ bool make_move(Board *board, Move move) {
 			board->ep_target = board->side == PLAYER_W ? move.from + DIR_N : move.from + DIR_S;
 			board_move_piece(board, move.from, move.to, move.piece);
 			break;
-		case MV_KS_CASTLE:
-			if (board->side == PLAYER_W) {
-				if (is_check(board, PLAYER_W) || board_get_occupant(board, SQ_F1) != PLAYER_NONE ||
-					board_get_occupant(board, SQ_G1) != PLAYER_NONE ||
-					is_square_threatened(board, SQ_F1, PLAYER_W) ||
-					is_square_threatened(board, SQ_G1, PLAYER_W)) {
-					return false;
-				}
-				board_move_piece(board, move.from, move.to, pt_src);
-				board_move_piece(board, SQ_H1, SQ_F1, ROOK);
-				board_remove_castling_rights(board, CASTLING_WHITE_KS);
-			} else {
-				if (is_check(board, PLAYER_B) || board_get_occupant(board, SQ_F8) != PLAYER_NONE ||
-					board_get_occupant(board, SQ_G8) != PLAYER_NONE ||
-					is_square_threatened(board, SQ_F8, PLAYER_B) ||
-					is_square_threatened(board, SQ_G8, PLAYER_B)) {
-					return false;
-				}
-				board_move_piece(board, move.from, move.to, pt_src);
-				board_move_piece(board, SQ_H8, SQ_F8, ROOK);
-				board_remove_castling_rights(board, CASTLING_BLACK_KS);
+		case MV_KS_CASTLE: {
+			Player p = board->side;
+			Square f = p == PLAYER_W ? SQ_F1 : SQ_F8;
+			Square g = p == PLAYER_W ? SQ_G1 : SQ_G8;
+			Square h = p == PLAYER_W ? SQ_H1 : SQ_H8;
+			if (is_check(board, p) || board_get_occupant(board, f) != PLAYER_NONE ||
+				board_get_occupant(board, g) != PLAYER_NONE || is_square_threatened(board, f, p) ||
+				is_square_threatened(board, g, p)) {
+				return false;
 			}
+			board_move_piece(board, move.from, move.to, move.piece);
+			board_move_piece(board, h, f, ROOK);
+			board_remove_castling_rights(board,
+										 p == PLAYER_W ? CASTLING_WHITE_KS : CASTLING_BLACK_KS);
 			break;
-		case MV_QS_CASTLE:
-			if (board->side == PLAYER_W) {
-				if (is_check(board, PLAYER_W) || board_get_occupant(board, SQ_D1) != PLAYER_NONE ||
-					board_get_occupant(board, SQ_C1) != PLAYER_NONE ||
-					board_get_occupant(board, SQ_B1) != PLAYER_NONE ||
-					is_square_threatened(board, SQ_D1, PLAYER_W) ||
-					is_square_threatened(board, SQ_C1, PLAYER_W)) {
-					return false;
-				}
-				board_move_piece(board, move.from, move.to, pt_src);
-				board_move_piece(board, SQ_A1, SQ_D1, ROOK);
-				board_remove_castling_rights(board, CASTLING_WHITE_QS);
-			} else {
-				if (is_check(board, PLAYER_B) || board_get_occupant(board, SQ_D8) != PLAYER_NONE ||
-					board_get_occupant(board, SQ_C8) != PLAYER_NONE ||
-					board_get_occupant(board, SQ_B8) != PLAYER_NONE ||
-					is_square_threatened(board, SQ_D8, PLAYER_B) ||
-					is_square_threatened(board, SQ_C8, PLAYER_B)) {
-					return false;
-				}
-				board_move_piece(board, move.from, move.to, pt_src);
-				board_move_piece(board, SQ_A8, SQ_D8, ROOK);
-				board_remove_castling_rights(board, CASTLING_BLACK_QS);
+		}
+		case MV_QS_CASTLE: {
+			Player p = board->side;
+			Square a = p == PLAYER_W ? SQ_A1 : SQ_A8;
+			Square b = p == PLAYER_W ? SQ_B1 : SQ_B8;
+			Square c = p == PLAYER_W ? SQ_C1 : SQ_C8;
+			Square d = p == PLAYER_W ? SQ_D1 : SQ_D8;
+			if (is_check(board, p) || board_get_occupant(board, d) != PLAYER_NONE ||
+				board_get_occupant(board, c) != PLAYER_NONE ||
+				board_get_occupant(board, b) != PLAYER_NONE || is_square_threatened(board, d, p) ||
+				is_square_threatened(board, c, p)) {
+				return false;
 			}
+			board_move_piece(board, move.from, move.to, move.piece);
+			board_move_piece(board, a, d, ROOK);
+			board_remove_castling_rights(board,
+										 p == PLAYER_W ? CASTLING_WHITE_QS : CASTLING_BLACK_QS);
 			break;
+		}
 		case MV_CAPTURE:
 			hist.captured = board_get_piece_type(board, move.to);
 			board_move_piece(board, move.from, move.to, move.piece);

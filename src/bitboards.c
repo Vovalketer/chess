@@ -103,16 +103,14 @@ static void init_king_attacks(void) {
 		uint64_t bb = 0ULL;
 		bits_set(&bb, sqr);
 		uint64_t attacks = 0ULL;
-		if (bb & NOT_FILE_A) {
-			attacks |= bits_shift_copy(bb, DIR_N) | bits_shift_copy(bb, DIR_NW) |
-					   bits_shift_copy(bb, DIR_W) | bits_shift_copy(bb, DIR_SW) |
-					   bits_shift_copy(bb, DIR_S);
-		}
-		if (bb & NOT_FILE_H) {
-			attacks |= bits_shift_copy(bb, DIR_N) | bits_shift_copy(bb, DIR_NE) |
-					   bits_shift_copy(bb, DIR_E) | bits_shift_copy(bb, DIR_SE) |
-					   bits_shift_copy(bb, DIR_S);
-		}
+		attacks |= bits_shift_copy(bb, DIR_N);
+		attacks |= bits_shift_copy(bb, DIR_S);
+		attacks |= bits_shift_copy(bb, DIR_E) & NOT_FILE_A;
+		attacks |= bits_shift_copy(bb, DIR_W) & NOT_FILE_H;
+		attacks |= bits_shift_copy(bb, DIR_NW) & NOT_FILE_H;
+		attacks |= bits_shift_copy(bb, DIR_SW) & NOT_FILE_H;
+		attacks |= bits_shift_copy(bb, DIR_NE) & NOT_FILE_A;
+		attacks |= bits_shift_copy(bb, DIR_SE) & NOT_FILE_A;
 
 		king_attacks[sqr] = attacks;
 	}

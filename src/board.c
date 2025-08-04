@@ -114,11 +114,8 @@ void board_move_piece(Board *board, Square from, Square to, PieceType piece) {
 	assert(is_within_bounds(to));
 	Player p = board_get_occupant(board, from);
 	assert(p != PLAYER_NONE);
-
-	bits_clear(&board->occupancies[p], from);
-	bits_set(&board->occupancies[p], to);
-	bits_clear(&board->pieces[p][piece], from);
-	bits_set(&board->pieces[p][piece], to);
+	board_remove_piece(board, from);
+	board_set_piece(board, (Piece) {.player = p, .type = piece}, to);
 }
 
 PieceType board_get_piece_type(const Board *board, Square sqr) {

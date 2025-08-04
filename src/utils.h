@@ -16,6 +16,7 @@ bool		utils_is_valid_square(Square sqr);
 const char* utils_square_to_str(Square sqr);
 const char* utils_piece_type_to_str(PieceType type);
 const char* utils_move_type_to_str(MoveType type);
+const char* utils_piece_to_unicode_str(Piece piece);
 // returns a char[256] string with the move description as a string, for debugging
 FixedStr utils_move_description(Board* board, Move move);
 

@@ -27,6 +27,8 @@ const char* move_type_name[MOVE_TYPE_CNT]	= {"quiet",
 											   "b prom capture",
 											   "r prom capture",
 											   "q prom capture"};
+const char* piece_type_white_unicode[PIECE_TYPE_CNT] = {"♙", "♖", "♘", "♗", "♕", "♔"};
+const char* piece_type_black_unicode[PIECE_TYPE_CNT] = {"♟", "♜", "♞", "♝", "♛", "♚"};
 
 Player utils_get_opponent(Player player) {
 	return (player == PLAYER_W) ? PLAYER_B : PLAYER_W;
@@ -76,6 +78,17 @@ char utils_piece_to_char(Piece piece) {
 		c = tolower(c);
 	}
 	return c;
+}
+
+const char* utils_piece_to_unicode_str(Piece piece) {
+	if (piece.type == EMPTY) {
+		return ".";
+	}
+	if (piece.player == PLAYER_W) {
+		return piece_type_white_unicode[piece.type];
+	} else {
+		return piece_type_black_unicode[piece.type];
+	}
 }
 
 Piece utils_char_to_piece(char c) {

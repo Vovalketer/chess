@@ -188,7 +188,7 @@ void board_print(const Board *board) {
 		printf("\n %d ", row + 1);
 		for (int col = 0; col < 8; col++) {
 			Piece p = board_get_piece(board, row * 8 + col);
-			printf("%2c", utils_piece_to_char(p));
+			printf(" %s", utils_piece_to_unicode_str(p));
 		}
 	}
 	printf("\n    a b c d e f g h \n");

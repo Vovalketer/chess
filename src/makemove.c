@@ -22,12 +22,13 @@ static bool is_square_threatened(Board *board, Square sqr, Player player) {
 	uint64_t bishop_bb = bitboards_get_bishop_attacks(sqr, occupancies);
 	uint64_t rook_bb   = bitboards_get_rook_attacks(sqr, occupancies);
 	uint64_t queen_bb  = bitboards_get_queen_attacks(sqr, occupancies);
+	uint64_t king_bb   = bitboards_get_king_attacks(sqr);
 
 	// check if any of these pieces exist in the bitboards from the opponent
 	// and if so, the square is threatened
 	return pawn_bb & board->pieces[opponent][PAWN] || knight_bb & board->pieces[opponent][KNIGHT] ||
 		   bishop_bb & board->pieces[opponent][BISHOP] || rook_bb & board->pieces[opponent][ROOK] ||
-		   queen_bb & board->pieces[opponent][QUEEN];
+		   queen_bb & board->pieces[opponent][QUEEN] || king_bb & board->pieces[opponent][KING];
 }
 
 static void handle_castling_rights(Board *board, Move move, PieceType captured) {

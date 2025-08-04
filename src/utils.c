@@ -156,12 +156,24 @@ FixedStr utils_move_description(Board* board, Move move) {
 	Piece	 piece_from = board_get_piece(board, move.from);
 	snprintf(str.str,
 			 sizeof(str.str),
-			 "Move from: %s To: %s | Type: %s | Player: %d | Piece: %s | Captured: %s",
+			 "Move: %s -> %s | Type: %s | Player: %d | Piece: %s | Captured: %s",
 			 utils_square_to_str(move.from),
 			 utils_square_to_str(move.to),
 			 utils_move_type_to_str(move.mv_type),
 			 piece_from.player,
 			 utils_piece_type_to_str(piece_from.type),
 			 utils_piece_type_to_str(board_get_piece_type(board, move.to)));
+	return str;
+}
+
+FixedStr utils_square_contents(Board* board, Square sqr) {
+	FixedStr str;
+	Piece	 piece = board_get_piece(board, sqr);
+	snprintf(str.str,
+			 sizeof(str.str),
+			 "Square: %s | Player: %d | Piece: %s",
+			 utils_square_to_str(sqr),
+			 piece.player,
+			 utils_piece_type_to_str(piece.type));
 	return str;
 }

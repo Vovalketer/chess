@@ -46,6 +46,11 @@ Square utils_fr_to_square(int file, int rank) {
 	return file + (rank * 8);
 }
 
+Square utils_ep_capture_pos(Square sqr, Player p) {
+	Direction dir = p == PLAYER_W ? DIR_N : DIR_S;
+	return sqr - dir;
+}
+
 bool utils_is_valid_square(Square sqr) {
 	return sqr >= 0 && sqr < 64;
 }

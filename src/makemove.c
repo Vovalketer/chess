@@ -159,7 +159,7 @@ bool make_move(Board *board, Move move) {
 			break;
 		case MV_EN_PASSANT:
 			hist.captured = PAWN;
-			board_remove_piece(board, board->ep_target);
+			board_remove_piece(board, utils_ep_capture_pos(board->ep_target, board->side));
 			board_move_piece(board, move.from, move.to, move.piece);
 			break;
 		case MV_N_PROM:

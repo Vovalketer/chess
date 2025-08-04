@@ -1,100 +1,87 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
-#include "engine.h"
+#include "bitboards.h"
+#include "board.h"
+#include "log.h"
+#include "makemove.h"
+#include "movegen.h"
+#include "types.h"
+#include "utils.h"
 
-uint64_t perft(GameState *state, int depth);
 
-int captures = 0;
-int castling = 0;
-int ep = 0;
+uint64_t perft(Board *board, int depth);
+
+int captures   = 0;
+int castling   = 0;
+int ep		   = 0;
+int promotions = 0;
+int checks	   = 0;
+int checkmates = 0;
 
 int main(int argc, char *argv[]) {
 	if (argc < 3) {
-		printf("Usage: %s \"<fen>\" <depth>\n", argv[0]);
+		printf("Usage: %s \"<fen>\" <depth> <divide>(optional)\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
-	GameState *state = NULL;
-	bool created = engine_create_match_from_fen(&state, argv[1]);
-	if (!created) {
-		printf("Error creating game\n");
+	Board *board = board_create();
+	bitboards_init();
+	if (!board_from_fen(board, argv[1])) {
+		printf("Error parsing FEN\n");
 		exit(EXIT_FAILURE);
 	}
 
-	uint64_t nodes = perft(state, atoi(argv[2]));
+	if (strcmp(argv[3], "divide") == 0) {
+		printf("\t---perft divide---\n");
+	}
+
+	uint64_t nodes = perft(board, atoi(argv[2]));
 	printf("\n");
 	printf("Nodes: %lu\n", nodes);
 	printf("Captures: %d\n", captures);
 	printf("Castling: %d\n", castling);
 	printf("En passant: %d\n", ep);
-	engine_destroy_match(&state);
+	printf("Promotions: %d\n", promotions);
+	printf("Checks: %d\n", checks);
+	printf("Checkmates: %d\n", checkmates);
+	board_destroy(&board);
 	return EXIT_SUCCESS;
 }
 
-uint64_t perft(GameState *state, int depth) {
+uint64_t perft(Board *board, int depth) {
 	if (depth == 0) {
 		return 1;
 	}
-	uint64_t nodes = 0;
-	const TurnMoves *tm = engine_get_legal_moves(state);
-
-	for (size_t i = 0; i < turn_moves_size(tm); i++) {
-		TurnPieceMoves *tpm = NULL;
-		turn_moves_get(tm, i, &tpm);
-
-		for (size_t j = 0; j < move_list_size(tpm->moves); j++) {
-			Move *m = NULL;
-			move_list_get(tpm->moves, j, &m);
-
-			if (engine_move_piece(state, m->src, m->dst)) {
-				const TurnRecord *tr = engine_get_last_turn_record(state);
-				if (tr->move_type == MOVE_CASTLING) {
-					castling++;
-				}
-				if (tr->captured_piece.type != EMPTY) {
-					// gstate_debug_print_state(state);
-					captures++;
-				}
-				if (tr->move_type == MOVE_EN_PASSANT) {
-					ep++;
-				}
-				if (tr->move_type == MOVE_PROMOTION) {
-				}
-				nodes += perft(state, depth - 1);
-				engine_undo_move(state);
+	uint64_t  nodes = 0;
+	MoveList *ml	= movegen_generate(board, board_get_player_turn(board));
+	for (size_t i = 0; i < move_list_size(ml); i++) {
+		Move m;
+		move_list_get(ml, i, &m);
+		if (make_move(board, m)) {
+			if (m.mv_type == MV_CAPTURE || m.mv_type == MV_Q_PROM_CAPTURE ||
+				m.mv_type == MV_R_PROM_CAPTURE || m.mv_type == MV_B_PROM_CAPTURE ||
+				m.mv_type == MV_N_PROM_CAPTURE) {
+				captures++;
 			}
+			if (m.mv_type == MV_Q_PROM || m.mv_type == MV_R_PROM || m.mv_type == MV_N_PROM ||
+				m.mv_type == MV_B_PROM || m.mv_type == MV_Q_PROM_CAPTURE ||
+				m.mv_type == MV_R_PROM_CAPTURE || m.mv_type == MV_B_PROM_CAPTURE ||
+				m.mv_type == MV_N_PROM_CAPTURE) {
+				promotions++;
+			}
+			if (m.mv_type == MV_KS_CASTLE || m.mv_type == MV_QS_CASTLE) {
+				castling++;
+			}
+			if (m.mv_type == MV_EN_PASSANT) {
+				ep++;
+			}
+			nodes += perft(board, depth - 1);
+			unmake_move(board);
 		}
 	}
+	move_list_destroy(&ml);
 	return nodes;
 }
 
-void _print_piece_type(PieceType type) {
-	printf("Piece: ");
-	switch (type) {
-		case PAWN:
-			printf("Pawn");
-			break;
-		case ROOK:
-			printf("Rook");
-			break;
-		case KNIGHT:
-			printf("Knight");
-			break;
-		case BISHOP:
-			printf("Bishop");
-			break;
-		case QUEEN:
-			printf("Queen");
-			break;
-		case KING:
-			printf("King");
-			break;
-		case EMPTY:
-			printf("Empty");
-			break;
-		default:
-			printf("Invalid piece type");
-			break;
-	}
-	printf("\n");
 }

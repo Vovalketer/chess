@@ -22,6 +22,7 @@ struct Board {
 };
 
 Board *board_create(void);
+Board *board_clone(const Board *board);
 void   board_destroy(Board **board);
 bool   board_from_fen(Board *board, const char *fen);
 

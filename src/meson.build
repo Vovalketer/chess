@@ -22,10 +22,11 @@ libmakemove = library(
 )
 
 perft_sources = ['perft.c']
+threads_dep = dependency('threads')
 perft = executable(
 	'perft',
 	perft_sources,
-	dependencies: [libboard_dep],
+	dependencies: [libboard_dep, threads_dep],
 	link_with: [libmakemove],
 	include_directories: [inc, inc_utils],
 )

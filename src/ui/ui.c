@@ -83,7 +83,7 @@ static char _get_rank(int row) {
 	return 8 - row + '0';
 }
 
-static void _draw_board(GameState* state, int width, int height) {
+static void _draw_board(Board* state, int width, int height) {
 	DRAWN_TILE_W_SIZE = width / 8;
 	DRAWN_TILE_H_SIZE = height / 8;
 	for (int row = 0; row < 8; row++) {
@@ -102,22 +102,22 @@ static void _draw_board(GameState* state, int width, int height) {
 			Texture2D piece_tex;
 			switch (piece.type) {
 				case PAWN:
-					piece_tex = piece.player == WHITE_PLAYER ? pawn_w : pawn_b;
+					piece_tex = piece.player == PLAYER_W ? pawn_w : pawn_b;
 					break;
 				case ROOK:
-					piece_tex = piece.player == WHITE_PLAYER ? rook_w : rook_b;
+					piece_tex = piece.player == PLAYER_W ? rook_w : rook_b;
 					break;
 				case KNIGHT:
-					piece_tex = piece.player == WHITE_PLAYER ? knight_w : knight_b;
+					piece_tex = piece.player == PLAYER_W ? knight_w : knight_b;
 					break;
 				case BISHOP:
-					piece_tex = piece.player == WHITE_PLAYER ? bishop_w : bishop_b;
+					piece_tex = piece.player == PLAYER_W ? bishop_w : bishop_b;
 					break;
 				case QUEEN:
-					piece_tex = piece.player == WHITE_PLAYER ? queen_w : queen_b;
+					piece_tex = piece.player == PLAYER_W ? queen_w : queen_b;
 					break;
 				case KING:
-					piece_tex = piece.player == WHITE_PLAYER ? king_w : king_b;
+					piece_tex = piece.player == PLAYER_W ? king_w : king_b;
 					break;
 				default:
 					// dont draw if there's no piece
@@ -148,7 +148,7 @@ static void _draw_valid_moves(MoveMask mm) {
 	}
 }
 
-void game_loop(GameState* state) {
+void game_loop(Board* state) {
 	int		 tile_w_size	= CURRENT_WINDOW_WIDTH / 8;
 	int		 tile_h_size	= CURRENT_WINDOW_HEIGHT / 8;
 	Vector2	 mouse_position = {0, 0};
@@ -179,7 +179,7 @@ void game_loop(GameState* state) {
 						selected	 = false;
 						selected_pos = (Position) {-1, -1};
 					}
-				} else if (!selected && piece.player != NONE) {
+				} else if (!selected && piece.player != PLAYER_NONE) {
 					selected_pos = pos;
 					mm			 = engine_get_valid_moves(state, selected_pos);
 					selected	 = true;
@@ -189,6 +189,10 @@ void game_loop(GameState* state) {
 
 		if (IsKeyPressed(KEY_U)) {
 			engine_undo_move(state);
+		}
+
+		if (IsKeyPressed(KEY_A)) {
+			engine_autoplay_move(state);
 		}
 
 		EndDrawing();
@@ -209,4 +213,14 @@ void stop_rendering(void) {
 	UnloadTexture(king_w);
 	UnloadTexture(king_b);
 	CloseWindow();
+}
+
+int main(void) {
+	Board* board = NULL;
+	engine_create_standard_match(&board);
+	init_rendering(800, 600);
+	game_loop(board);
+	stop_rendering();
+	engine_destroy_match(&board);
+	return EXIT_SUCCESS;
 }

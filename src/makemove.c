@@ -1,35 +1,11 @@
 #include "makemove.h"
 
-#include "bitboards.h"
-#include "bits.h"
 #include "board.h"
 #include "log.h"
 #include "types.h"
 #include "utils.h"
 
-static bool is_square_threatened(Board *board, Square sqr, Player player);
-static bool is_check(Board *board, Player player);
 static void handle_castling_rights(Board *board, Move move, PieceType captured);
-
-static bool is_square_threatened(Board *board, Square sqr, Player player) {
-	Player	 opponent	 = utils_get_opponent(player);
-	uint64_t occupancies = board->occupancies[player] | board->occupancies[opponent];
-
-	uint64_t pawn_bb =
-		bitboards_get_pawn_attacks(sqr, player);  // get the attacks for our own pawns to reflect
-												  // the position where the enemy pawns could be
-	uint64_t knight_bb = bitboards_get_knight_attacks(sqr);
-	uint64_t bishop_bb = bitboards_get_bishop_attacks(sqr, occupancies);
-	uint64_t rook_bb   = bitboards_get_rook_attacks(sqr, occupancies);
-	uint64_t queen_bb  = bitboards_get_queen_attacks(sqr, occupancies);
-	uint64_t king_bb   = bitboards_get_king_attacks(sqr);
-
-	// check if any of these pieces exist in the bitboards from the opponent
-	// and if so, the square is threatened
-	return pawn_bb & board->pieces[opponent][PAWN] || knight_bb & board->pieces[opponent][KNIGHT] ||
-		   bishop_bb & board->pieces[opponent][BISHOP] || rook_bb & board->pieces[opponent][ROOK] ||
-		   queen_bb & board->pieces[opponent][QUEEN] || king_bb & board->pieces[opponent][KING];
-}
 
 static void handle_castling_rights(Board *board, Move move, PieceType captured) {
 	if (move.piece == ROOK) {
@@ -81,11 +57,6 @@ static void handle_castling_rights(Board *board, Move move, PieceType captured) 
 	}
 }
 
-static bool is_check(Board *board, Player player) {
-	Square king_sqr = bits_get_lsb(board->pieces[player][KING]);
-	return is_square_threatened(board, king_sqr, player);
-}
-
 bool make_move(Board *board, Move move) {
 	History hist = (History) {.from				= move.from,
 							  .to				= move.to,
@@ -111,9 +82,10 @@ bool make_move(Board *board, Move move) {
 			Square f = p == PLAYER_W ? SQ_F1 : SQ_F8;
 			Square g = p == PLAYER_W ? SQ_G1 : SQ_G8;
 			Square h = p == PLAYER_W ? SQ_H1 : SQ_H8;
-			if (is_check(board, p) || board_get_occupant(board, f) != PLAYER_NONE ||
-				board_get_occupant(board, g) != PLAYER_NONE || is_square_threatened(board, f, p) ||
-				is_square_threatened(board, g, p)) {
+			if (board_is_check(board, p) || board_get_occupant(board, f) != PLAYER_NONE ||
+				board_get_occupant(board, g) != PLAYER_NONE ||
+				board_is_square_threatened(board, f, p) ||
+				board_is_square_threatened(board, g, p)) {
 				return false;
 			}
 			board_move_piece(board, move.from, move.to, move.piece);
@@ -128,10 +100,11 @@ bool make_move(Board *board, Move move) {
 			Square b = p == PLAYER_W ? SQ_B1 : SQ_B8;
 			Square c = p == PLAYER_W ? SQ_C1 : SQ_C8;
 			Square d = p == PLAYER_W ? SQ_D1 : SQ_D8;
-			if (is_check(board, p) || board_get_occupant(board, d) != PLAYER_NONE ||
+			if (board_is_check(board, p) || board_get_occupant(board, d) != PLAYER_NONE ||
 				board_get_occupant(board, c) != PLAYER_NONE ||
-				board_get_occupant(board, b) != PLAYER_NONE || is_square_threatened(board, d, p) ||
-				is_square_threatened(board, c, p)) {
+				board_get_occupant(board, b) != PLAYER_NONE ||
+				board_is_square_threatened(board, d, p) ||
+				board_is_square_threatened(board, c, p)) {
 				return false;
 			}
 			board_move_piece(board, move.from, move.to, move.piece);
@@ -190,7 +163,7 @@ bool make_move(Board *board, Move move) {
 			break;
 	}
 
-	if (is_check(board, hist.side)) {
+	if (board_is_check(board, hist.side)) {
 		board_apply_history(board, hist);
 		return false;
 	}

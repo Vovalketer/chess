@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bitboards.h"
 #include "bits.h"
 #include "fen.h"
 #include "log.h"
@@ -203,4 +204,29 @@ void board_print(const Board *board) {
 		}
 	}
 	printf("\n    a b c d e f g h \n");
+}
+
+bool board_is_square_threatened(const Board *board, Square sqr, Player player) {
+	Player	 opponent	 = utils_get_opponent(player);
+	uint64_t occupancies = board->occupancies[player] | board->occupancies[opponent];
+
+	uint64_t pawn_bb =
+		bitboards_get_pawn_attacks(sqr, player);  // get the attacks for our own pawns to reflect
+												  // the position where the enemy pawns could be
+	uint64_t knight_bb = bitboards_get_knight_attacks(sqr);
+	uint64_t bishop_bb = bitboards_get_bishop_attacks(sqr, occupancies);
+	uint64_t rook_bb   = bitboards_get_rook_attacks(sqr, occupancies);
+	uint64_t queen_bb  = bitboards_get_queen_attacks(sqr, occupancies);
+	uint64_t king_bb   = bitboards_get_king_attacks(sqr);
+
+	// check if any of these pieces exist in the bitboards from the opponent
+	// and if so, the square is threatened
+	return pawn_bb & board->pieces[opponent][PAWN] || knight_bb & board->pieces[opponent][KNIGHT] ||
+		   bishop_bb & board->pieces[opponent][BISHOP] || rook_bb & board->pieces[opponent][ROOK] ||
+		   queen_bb & board->pieces[opponent][QUEEN] || king_bb & board->pieces[opponent][KING];
+}
+
+bool board_is_check(const Board *board, Player player) {
+	Square king_sqr = bits_get_lsb(board->pieces[player][KING]);
+	return board_is_square_threatened(board, king_sqr, player);
 }

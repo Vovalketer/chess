@@ -35,6 +35,9 @@ Piece	  board_get_piece(const Board *board, Square sqr);
 Player	  board_get_occupant(const Board *board, Square sqr);
 Player	  board_get_player_turn(const Board *board);
 
+bool board_is_square_threatened(const Board *board, Square sqr, Player player);
+bool board_is_check(const Board *board, Player player);
+
 // castling rights
 void		   board_set_castling_rights(Board *board, CastlingRights cr);
 CastlingRights board_get_castling_rights(const Board *board, Player player);

@@ -18,6 +18,15 @@ libmakemove = library(
 	dependencies: [libboard_dep],
 )
 
+libmakemove_dep = declare_dependency(link_with: [libmakemove], dependencies: [libboard_dep])
+
+libengine = library(
+	'engine',
+	['engine.c', 'search.c', 'eval.c'],
+	dependencies: [libmakemove_dep],
+	include_directories: [common_inc],
+)
+
 perft_sources = ['perft.c']
 threads_dep = dependency('threads')
 perft = executable(

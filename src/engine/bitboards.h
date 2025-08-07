@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "types.h"
+#include "../include/types.h"
 
 void bitboards_init(void);
 

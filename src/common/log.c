@@ -8,8 +8,8 @@
 
 // TODO: thread safety: lock the log level and output file
 
-int log_level = LOG_INFO;
-FILE *log_file = NULL;
+int	  log_level = LOG_INFO;
+FILE *log_file	= NULL;
 
 void log_set_level(int level) {
 	log_level = level;
@@ -41,9 +41,9 @@ static char *log_get_log_type(int level) {
 }
 
 void log_write(int level, const char *file, int line, const char *fmt, ...) {
-	time_t now = time(NULL);
+	time_t	   now	   = time(NULL);
 	struct tm *tm_info = localtime(&now);
-	char timebuf[MAX_TIME_SIZE];
+	char	   timebuf[MAX_TIME_SIZE];
 	strftime(timebuf, MAX_TIME_SIZE, "%Y-%m-%d %H:%M:%S", tm_info);
 
 	FILE *out = log_file ? log_file : stderr;
@@ -59,4 +59,13 @@ void log_write(int level, const char *file, int line, const char *fmt, ...) {
 
 	fprintf(out, "\n");
 	fflush(out);
+}
+
+LogMessage log_create_message(const char *fmt, ...) {
+	LogMessage msg;
+	va_list	   args;
+	va_start(args, fmt);
+	vsnprintf(msg.msg, sizeof(msg.msg), fmt, args);
+	va_end(args);
+	return msg;
 }

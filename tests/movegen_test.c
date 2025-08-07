@@ -1,14 +1,14 @@
-#include "../src/movegen.h"
+#include "../src/engine/movegen.h"
 
 #include <stddef.h>
 #include <stdio.h>
 
 #include "../external/unity/unity.h"
-#include "../src/bitboards.h"
-#include "../src/board.h"
-#include "../src/movelist.h"
-#include "../src/utils.h"
-#include "log.h"
+#include "../src/common/log.h"
+#include "../src/engine/bitboards.h"
+#include "../src/engine/board.h"
+#include "../src/engine/movelist.h"
+#include "../src/engine/utils.h"
 
 Board *board = NULL;
 char   err_msg[128];

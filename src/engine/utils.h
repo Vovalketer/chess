@@ -1,6 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
-#include "types.h"
+#include "../include/types.h"
 
 typedef struct {
 	char str[256];

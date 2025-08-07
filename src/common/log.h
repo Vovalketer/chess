@@ -6,15 +6,20 @@
 
 #define LOG_TRACE 0
 #define LOG_DEBUG 1
-#define LOG_INFO 2
-#define LOG_WARN 3
+#define LOG_INFO  2
+#define LOG_WARN  3
 #define LOG_ERROR 4
-#define LOG_NONE 10
+#define LOG_NONE  10
 
-void log_set_level(int level);
-int log_get_level(void);
-void log_set_output(FILE *file);
-void log_write(int level, const char *file, int line, const char *fmt, ...);
+typedef struct {
+	char msg[128];
+} LogMessage;
+
+void	   log_set_level(int level);
+int		   log_get_level(void);
+void	   log_set_output(FILE *file);
+void	   log_write(int level, const char *file, int line, const char *fmt, ...);
+LogMessage log_create_message(const char *fmt, ...);
 
 #define log_trace(...)                                             \
 	do {                                                           \

@@ -1,8 +1,8 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "array_tpl.h"
-#include "types.h"
+#include "../common/array_tpl.h"
+#include "../include/types.h"
 ARRAY_DEFINE_TYPE(History, HistoryList, history)
 
 // TODO: add zobrist key

@@ -1,8 +1,8 @@
-#include "../src/makemove.h"
+#include "../src/engine/makemove.h"
 
 #include "../external/unity/unity.h"
-#include "../src/board.h"
-#include "../src/utils.h"
+#include "../src/engine/board.h"
+#include "../src/engine/utils.h"
 
 Board *board = NULL;
 

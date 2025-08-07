@@ -1,8 +1,8 @@
 #ifndef MOVEGEN_H
 #define MOVEGEN_H
 
+#include "../include/types.h"
 #include "movelist.h"
-#include "types.h"
 
 #define MOVEGEN_MAX_DEPTH 10
 

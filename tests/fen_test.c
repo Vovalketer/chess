@@ -1,11 +1,11 @@
-#include "../src/fen.h"
+#include "../src/engine/fen.h"
 
 #include <stdint.h>
 
 #include "../external/unity/unity.h"
-#include "../src/board.h"
-#include "../src/utils.h"
-#include "log.h"
+#include "../src/common/log.h"
+#include "../src/engine/board.h"
+#include "../src/engine/utils.h"
 
 Board* board = NULL;
 int	   prev_log_level;

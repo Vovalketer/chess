@@ -1,7 +1,10 @@
 src_path = '../src/'
+engine_path = src_path + 'engine/'
 unity_path = '../external/unity/'
 unity_files = [unity_path + 'unity.c', unity_path + 'unity.h']
 unity_c_args = ['-DUNITY_OUTPUT_COLOR', '-DUNITY_OUTPUT_FOR_ECLIPSE']
+
+engine_inc = include_directories(engine_path)
 
 unity_dep = declare_dependency(
 	sources: unity_files,
@@ -11,34 +14,34 @@ unity_dep = declare_dependency(
 fen_test = executable(
 	'fen_test',
 	'fen_test.c',
-	include_directories: [inc, inc_utils],
+	include_directories: [common_inc, engine_inc],
 	dependencies: [libboard_dep, unity_dep],
 )
 test('fen_test', fen_test)
 
 movegen_files = [
-	src_path + 'movegen.c',
-	src_path + 'bitboards.c',
-	src_path + 'movelist.c',
+	engine_path + 'movegen.c',
+	engine_path + 'bitboards.c',
+	engine_path + 'movelist.c',
 ]
 movegen_test = executable(
 	'movegen_test',
 	'movegen_test.c',
 	movegen_files,
-	include_directories: [inc, inc_utils],
+	include_directories: [common_inc, engine_inc],
 	dependencies: [libboard_dep, unity_dep],
 )
 test('movegen_test', movegen_test)
 
 makemove_files = [
-	src_path + 'makemove.c',
-	src_path + 'bitboards.c',
+	engine_path + 'makemove.c',
+	engine_path + 'bitboards.c',
 ]
 makemove_test = executable(
 	'makemove_test',
 	'makemove_test.c',
 	makemove_files,
-	include_directories: [inc, inc_utils],
+	include_directories: [common_inc, engine_inc],
 	dependencies: [libboard_dep, unity_dep],
 )
 test('makemove_test', makemove_test)

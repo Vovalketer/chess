@@ -86,8 +86,14 @@ bool engine_move_piece(Board *board, Position from, Position to) {
 	return make_move(board, mv);
 }
 
+bool engine_autoplay_move(Board *board) {
+	Move best_move = search_best_move(board, 5);
+	log_info("Best move: %s", utils_move_description(board, best_move).str);
+	bool success = make_move(board, best_move);
+	if (!success) {
+		log_error("Failed to make AI move");
 	}
-	gstate_set_next_promotion_type(state, player, type);
+	return success;
 }
 
 void engine_undo_move(Board *board) {

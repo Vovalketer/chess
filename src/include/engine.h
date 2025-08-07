@@ -18,5 +18,6 @@ void	 engine_destroy_match(Board **board);
 Piece	 engine_get_piece(Board *board, Position pos);
 MoveMask engine_get_valid_moves(Board *board, Position pos);
 bool	 engine_move_piece(Board *board, Position from, Position to);
+bool	 engine_autoplay_move(Board *board);
 void	 engine_undo_move(Board *board);
 #endif	// ENGINE_H

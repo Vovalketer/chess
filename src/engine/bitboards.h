@@ -7,6 +7,7 @@
 #include "../include/types.h"
 
 void bitboards_init(void);
+bool bitboards_is_init(void);
 
 uint64_t bitboards_get_pawn_attacks(Square sqr, Player player);
 uint64_t bitboards_get_pawn_pushes(Square sqr, Player player);

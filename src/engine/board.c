@@ -71,6 +71,10 @@ Board *board_create(void) {
 		free(b);
 		return NULL;
 	}
+
+	if (!bitboards_is_init()) {
+		bitboards_init();
+	}
 	return b;
 }
 

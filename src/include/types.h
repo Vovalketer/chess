@@ -59,12 +59,12 @@ typedef enum {
 	MV_PAWN_DOUBLE,
 	MV_KS_CASTLE,
 	MV_QS_CASTLE,
-	MV_CAPTURE,
-	MV_EN_PASSANT,
 	MV_N_PROM,
 	MV_B_PROM,
 	MV_R_PROM,
 	MV_Q_PROM,
+	MV_CAPTURE,
+	MV_EN_PASSANT,
 	MV_N_PROM_CAPTURE,
 	MV_B_PROM_CAPTURE,
 	MV_R_PROM_CAPTURE,
@@ -78,6 +78,7 @@ typedef struct {
 	Square	  from;
 	Square	  to;
 	PieceType piece;
+	PieceType captured;
 	MoveType  mv_type;
 } Move;
 

@@ -26,34 +26,50 @@
 #define W_KS_CASTLING_SQUARES 0x60ULL
 #define B_KS_CASTLING_SQUARES 0x6000000000000000ULL
 
+static Move move_create(
+	const Board *board, Player p, Square from, Square to, PieceType pt, MoveType mv_type) {
+	Player	  opponent = utils_get_opponent(p);
+	PieceType captured = EMPTY;
+	if (mv_type >= MV_CAPTURE) {
+		for (PieceType cap = PAWN; cap <= KING; cap++) {
+			if (bits_get(board->pieces[opponent][cap], to)) {
+				captured = cap;
+				break;
+			}
+		}
+	}
+	Move mv = {
+		.from	  = from,
+		.to		  = to,
+		.mv_type  = mv_type,
+		.captured = captured,
+		.piece	  = pt,
+	};
+	return mv;
+}
+
 static void gen_moves_from_mask(Square		   from,
 								const uint64_t bb_moves,
 								PieceType	   pt,
-								const uint64_t occupancies[2],
+								const Board	  *board,
 								Player		   p,
 								MoveList	  *ml) {
 	Player	 opponent = utils_get_opponent(p);
-	uint64_t moves	  = bb_moves & ~(occupancies[p] | occupancies[opponent]);
+	uint64_t moves	  = bb_moves & ~(board->occupancies[p] | board->occupancies[opponent]);
 	while (moves) {
 		Square to = bits_pop_lsb(&moves);
-
-		Move mv = {
-			.from	 = from,
-			.to		 = to,
-			.mv_type = MV_QUIET,
-			.piece	 = pt,
-		};
+		Move   mv = move_create(board, p, from, to, pt, MV_QUIET);
 		move_list_append(ml, mv);
 	}
-	uint64_t captures = bb_moves & occupancies[opponent];
+}
+
+static void gen_attacks_from_mask(
+	Square from, const uint64_t bb, PieceType pt, const Board *board, Player p, MoveList *ml) {
+	Player	 opponent = utils_get_opponent(p);
+	uint64_t captures = bb & board->occupancies[opponent];
 	while (captures) {
 		Square to = bits_pop_lsb(&captures);
-		Move   mv = {
-			  .from	   = from,
-			  .to	   = to,
-			  .mv_type = MV_CAPTURE,
-			  .piece   = pt,
-		  };
+		Move   mv = move_create(board, p, from, to, pt, MV_CAPTURE);
 		move_list_append(ml, mv);
 	}
 }
@@ -64,87 +80,36 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	Player	 opponent	 = utils_get_opponent(p);
 	uint64_t occupancies = board->occupancies[p] | board->occupancies[utils_get_opponent(p)];
 	while (bb) {
-		Square	 sqr	 = bits_pop_lsb(&bb);  // pop and get the index, transform into a square
-		uint64_t attk	 = bitboards_get_pawn_attacks(sqr, p) & board->occupancies[opponent];
-		bool	 is_prom = (p == PLAYER_W && (sqr >= SQ_A7 && sqr <= SQ_H7)) ||
-					   (p == PLAYER_B && (sqr >= SQ_A2 && sqr <= SQ_H2));
-		while (attk) {
-			Square attk_sqr = bits_pop_lsb(&attk);
-			if (!is_prom) {
-				Move mv = {
-					.from	 = sqr,
-					.to		 = attk_sqr,
-					.mv_type = MV_CAPTURE,
-					.piece	 = pt,
-				};
-				move_list_append(ml, mv);
-			} else {
-				Move prom_q = {
-					.from	 = sqr,
-					.to		 = attk_sqr,
-					.mv_type = MV_Q_PROM_CAPTURE,
-					.piece	 = pt,
-				};
-				Move prom_r = {
-					.from	 = sqr,
-					.to		 = attk_sqr,
-					.mv_type = MV_R_PROM_CAPTURE,
-					.piece	 = pt,
-				};
-				Move prom_b = {
-					.from	 = sqr,
-					.to		 = attk_sqr,
-					.mv_type = MV_B_PROM_CAPTURE,
-					.piece	 = pt,
-				};
-				Move prom_n = {
-					.from	 = sqr,
-					.to		 = attk_sqr,
-					.mv_type = MV_N_PROM_CAPTURE,
-					.piece	 = pt,
-				};
+		Square	 from	 = bits_pop_lsb(&bb);  // pop and get the index, transform into a square
+		uint64_t attk	 = bitboards_get_pawn_attacks(from, p) & board->occupancies[opponent];
+		bool	 is_prom = (p == PLAYER_W && (from >= SQ_A7 && from <= SQ_H7)) ||
+					   (p == PLAYER_B && (from >= SQ_A2 && from <= SQ_H2));
+		if (!is_prom) {
+			gen_attacks_from_mask(from, attk, pt, board, p, ml);
+		} else {
+			while (attk) {
+				Square to	  = bits_pop_lsb(&attk);
+				Move   prom_q = move_create(board, p, from, to, pt, MV_Q_PROM_CAPTURE);
+				Move   prom_r = move_create(board, p, from, to, pt, MV_R_PROM_CAPTURE);
+				Move   prom_b = move_create(board, p, from, to, pt, MV_B_PROM_CAPTURE);
+				Move   prom_n = move_create(board, p, from, to, pt, MV_N_PROM_CAPTURE);
 				move_list_append(ml, prom_q);
 				move_list_append(ml, prom_r);
 				move_list_append(ml, prom_b);
 				move_list_append(ml, prom_n);
 			}
 		}
-		uint64_t pushes = bitboards_get_pawn_pushes(sqr, p) & ~occupancies;
+		uint64_t pushes = bitboards_get_pawn_pushes(from, p) & ~occupancies;
 		while (pushes) {
 			Square push_sqr = bits_pop_lsb(&pushes);
 			if (!is_prom) {
-				Move mv = {
-					.from	 = sqr,
-					.to		 = push_sqr,
-					.mv_type = MV_QUIET,
-					.piece	 = pt,
-				};
+				Move mv = move_create(board, p, from, push_sqr, pt, MV_QUIET);
 				move_list_append(ml, mv);
 			} else {
-				Move prom_q = {
-					.from	 = sqr,
-					.to		 = push_sqr,
-					.mv_type = MV_Q_PROM,
-					.piece	 = pt,
-				};
-				Move prom_r = {
-					.from	 = sqr,
-					.to		 = push_sqr,
-					.mv_type = MV_R_PROM,
-					.piece	 = pt,
-				};
-				Move prom_b = {
-					.from	 = sqr,
-					.to		 = push_sqr,
-					.mv_type = MV_B_PROM,
-					.piece	 = pt,
-				};
-				Move prom_n = {
-					.from	 = sqr,
-					.to		 = push_sqr,
-					.mv_type = MV_N_PROM,
-					.piece	 = pt,
-				};
+				Move prom_q = move_create(board, p, from, push_sqr, pt, MV_Q_PROM);
+				Move prom_r = move_create(board, p, from, push_sqr, pt, MV_R_PROM);
+				Move prom_b = move_create(board, p, from, push_sqr, pt, MV_B_PROM);
+				Move prom_n = move_create(board, p, from, push_sqr, pt, MV_N_PROM);
 				move_list_append(ml, prom_q);
 				move_list_append(ml, prom_r);
 				move_list_append(ml, prom_b);
@@ -152,29 +117,25 @@ void movegen_pawns(const Board *board, PieceType pt, Player p, MoveList *ml) {
 			}
 		}
 
-		pushes				   = bitboards_get_pawn_pushes(sqr, p) & ~occupancies;
-		uint64_t double_pushes = bitboards_get_pawn_double_pushes(sqr, p) & ~occupancies;
+		pushes				   = bitboards_get_pawn_pushes(from, p) & ~occupancies;
+		uint64_t double_pushes = bitboards_get_pawn_double_pushes(from, p) & ~occupancies;
 		if (double_pushes && pushes) {
 			while (double_pushes) {
 				Square push_sqr = bits_pop_lsb(&double_pushes);
-				Move   mv		= {
-							.from	 = sqr,
-							.to		 = push_sqr,
-							.mv_type = MV_PAWN_DOUBLE,
-							.piece	 = pt,
-				};
+				Move   mv		= move_create(board, p, from, push_sqr, pt, MV_PAWN_DOUBLE);
 				move_list_append(ml, mv);
 			}
 		}
 		if (board->ep_target != SQ_NONE) {
 			uint64_t ep_eval = 0;
 			bits_set(&ep_eval, board->ep_target);
-			if (ep_eval & bitboards_get_pawn_attacks(sqr, p)) {
+			if (ep_eval & bitboards_get_pawn_attacks(from, p)) {
 				Move mv = {
-					.from	 = sqr,
-					.to		 = board->ep_target,
-					.mv_type = MV_EN_PASSANT,
-					.piece	 = pt,
+					.from	  = from,
+					.to		  = board->ep_target,
+					.mv_type  = MV_EN_PASSANT,
+					.captured = PAWN,
+					.piece	  = pt,
 				};
 				move_list_append(ml, mv);
 			}
@@ -186,9 +147,10 @@ void movegen_knights(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	assert(p != PLAYER_NONE);
 	uint64_t bb = board->pieces[p][pt];
 	while (bb) {
-		Square	 sqr	 = bits_pop_lsb(&bb);
-		uint64_t attacks = bitboards_get_knight_attacks(sqr);
-		gen_moves_from_mask(sqr, attacks, pt, board->occupancies, p, ml);
+		Square	 from  = bits_pop_lsb(&bb);
+		uint64_t moves = bitboards_get_knight_attacks(from);
+		gen_moves_from_mask(from, moves, pt, board, p, ml);
+		gen_attacks_from_mask(from, moves, pt, board, p, ml);
 	}
 }
 
@@ -197,9 +159,10 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	uint64_t bb = board->pieces[p][pt];
 	if (!bb)
 		return;
-	Square king_sqr = bits_pop_lsb(&bb);
-	gen_moves_from_mask(
-		king_sqr, bitboards_get_king_attacks(king_sqr), pt, board->occupancies, p, ml);
+	Square	 king_sqr = bits_pop_lsb(&bb);
+	uint64_t moves	  = bitboards_get_king_attacks(king_sqr);
+	gen_moves_from_mask(king_sqr, moves, pt, board, p, ml);
+	gen_attacks_from_mask(king_sqr, moves, pt, board, p, ml);
 
 	switch (p) {
 		case PLAYER_W:
@@ -209,12 +172,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 					 (W_KS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
-					Move mv = {
-						.from	 = king_sqr,
-						.to		 = SQ_G1,
-						.mv_type = MV_KS_CASTLE,
-						.piece	 = pt,
-					};
+					Move mv = move_create(board, p, king_sqr, SQ_G1, pt, MV_KS_CASTLE);
 					move_list_append(ml, mv);
 				}
 			}
@@ -224,12 +182,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 					 (W_QS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
-					Move mv = {
-						.from	 = king_sqr,
-						.to		 = SQ_C1,
-						.mv_type = MV_QS_CASTLE,
-						.piece	 = pt,
-					};
+					Move mv = move_create(board, p, king_sqr, SQ_C1, pt, MV_QS_CASTLE);
 					move_list_append(ml, mv);
 				}
 			}
@@ -241,12 +194,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 					 (B_KS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
-					Move mv = {
-						.from	 = king_sqr,
-						.to		 = SQ_G8,
-						.mv_type = MV_KS_CASTLE,
-						.piece	 = pt,
-					};
+					Move mv = move_create(board, p, king_sqr, SQ_G8, pt, MV_KS_CASTLE);
 					move_list_append(ml, mv);
 				}
 			}
@@ -256,12 +204,7 @@ void movegen_king(const Board *board, PieceType pt, Player p, MoveList *ml) {
 					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 					 (B_QS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
-					Move mv = {
-						.from	 = king_sqr,
-						.to		 = SQ_C8,
-						.mv_type = MV_QS_CASTLE,
-						.piece	 = pt,
-					};
+					Move mv = move_create(board, p, king_sqr, SQ_C8, pt, MV_QS_CASTLE);
 					move_list_append(ml, mv);
 				}
 			}
@@ -277,9 +220,10 @@ void movegen_rooks(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	Player	 opponent	 = utils_get_opponent(p);
 	uint64_t occupancies = board->occupancies[p] | board->occupancies[opponent];
 	while (bb) {
-		Square	 sqr	 = bits_pop_lsb(&bb);
-		uint64_t attacks = bitboards_get_rook_attacks(sqr, occupancies);
-		gen_moves_from_mask(sqr, attacks, pt, board->occupancies, p, ml);
+		Square	 from  = bits_pop_lsb(&bb);
+		uint64_t moves = bitboards_get_rook_attacks(from, occupancies);
+		gen_moves_from_mask(from, moves, pt, board, p, ml);
+		gen_attacks_from_mask(from, moves, pt, board, p, ml);
 	}
 }
 
@@ -289,9 +233,10 @@ void movegen_bishops(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	Player	 opponent	 = utils_get_opponent(p);
 	uint64_t occupancies = board->occupancies[p] | board->occupancies[opponent];
 	while (bb) {
-		Square	 sqr	 = bits_pop_lsb(&bb);
-		uint64_t attacks = bitboards_get_bishop_attacks(sqr, occupancies);
-		gen_moves_from_mask(sqr, attacks, pt, board->occupancies, p, ml);
+		Square	 from  = bits_pop_lsb(&bb);
+		uint64_t moves = bitboards_get_bishop_attacks(from, occupancies);
+		gen_moves_from_mask(from, moves, pt, board, p, ml);
+		gen_attacks_from_mask(from, moves, pt, board, p, ml);
 	}
 }
 
@@ -301,9 +246,10 @@ void movegen_queens(const Board *board, PieceType pt, Player p, MoveList *ml) {
 	Player	 opponent	 = utils_get_opponent(p);
 	uint64_t occupancies = board->occupancies[p] | board->occupancies[opponent];
 	while (bb) {
-		Square	 sqr	 = bits_pop_lsb(&bb);
-		uint64_t attacks = bitboards_get_queen_attacks(sqr, occupancies);
-		gen_moves_from_mask(sqr, attacks, pt, board->occupancies, p, ml);
+		Square	 sqr   = bits_pop_lsb(&bb);
+		uint64_t moves = bitboards_get_queen_attacks(sqr, occupancies);
+		gen_moves_from_mask(sqr, moves, pt, board, p, ml);
+		gen_attacks_from_mask(sqr, moves, pt, board, p, ml);
 	}
 }
 
@@ -317,4 +263,9 @@ MoveList *movegen_generate(const Board *board, Player p) {
 	movegen_bishops(board, BISHOP, p, ml);
 	movegen_queens(board, QUEEN, p, ml);
 	return ml;
+}
+
+MoveList *movegen_generate_captures(const Board *board, Player p) {
+	MoveList *ml = NULL;
+	move_list_create(&ml);
 }

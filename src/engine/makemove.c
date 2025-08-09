@@ -61,7 +61,7 @@ bool make_move(Board *board, Move move) {
 	History hist = (History) {.from				= move.from,
 							  .to				= move.to,
 							  .moving			= move.piece,
-							  .captured			= EMPTY,
+							  .captured			= move.captured,
 							  .mv_type			= move.mv_type,
 							  .ep_target		= board->ep_target,
 							  .side				= board->side,
@@ -114,11 +114,9 @@ bool make_move(Board *board, Move move) {
 			break;
 		}
 		case MV_CAPTURE:
-			hist.captured = board_get_piece_type(board, move.to);
 			board_move_piece(board, move.from, move.to, move.piece);
 			break;
 		case MV_EN_PASSANT:
-			hist.captured = PAWN;
 			board_remove_piece(board, utils_ep_capture_pos(board->ep_target, board->side));
 			board_move_piece(board, move.from, move.to, move.piece);
 			break;
@@ -139,22 +137,18 @@ bool make_move(Board *board, Move move) {
 			board_set_piece(board, (Piece) {.player = board->side, .type = QUEEN}, move.to);
 			break;
 		case MV_N_PROM_CAPTURE:
-			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
 			board_set_piece(board, (Piece) {.player = board->side, .type = KNIGHT}, move.to);
 			break;
 		case MV_B_PROM_CAPTURE:
-			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
 			board_set_piece(board, (Piece) {.player = board->side, .type = BISHOP}, move.to);
 			break;
 		case MV_R_PROM_CAPTURE:
-			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
 			board_set_piece(board, (Piece) {.player = board->side, .type = ROOK}, move.to);
 			break;
 		case MV_Q_PROM_CAPTURE:
-			hist.captured = board_get_piece_type(board, move.to);
 			board_remove_piece(board, move.from);
 			board_set_piece(board, (Piece) {.player = board->side, .type = QUEEN}, move.to);
 			break;

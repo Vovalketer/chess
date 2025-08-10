@@ -37,10 +37,9 @@ MoveMask engine_get_valid_moves(Board *board, Position pos) {
 	MoveMask  mm		  = {0};
 	int		  valid_moves = 0;
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		Move move;
-		move_list_get(moves, i, &move);
-		if (move.from == sqr && make_move(board, move)) {
-			mm.mask[move.to / 8][move.to % 8] = true;
+		Move *move = move_list_get(moves, i);
+		if (move->from == sqr && make_move(board, *move)) {
+			mm.mask[move->to / 8][move->to % 8] = true;
 			valid_moves++;
 			unmake_move(board);
 		}
@@ -67,10 +66,10 @@ bool engine_move_piece(Board *board, Position from, Position to) {
 
 	MoveList *moves = movegen_generate(board, board->side);
 	bool	  found = false;
-	Move	  mv;
+	Move	 *mv;
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		move_list_get(moves, i, &mv);
-		if (mv.from == src && mv.to == dst) {
+		mv = move_list_get(moves, i);
+		if (mv->from == src && mv->to == dst) {
 			found = true;
 			break;
 		}
@@ -83,7 +82,7 @@ bool engine_move_piece(Board *board, Position from, Position to) {
 	}
 	log_info("Moving piece from %s to %s", utils_square_to_str(src), utils_square_to_str(dst));
 
-	return make_move(board, mv);
+	return make_move(board, *mv);
 }
 
 bool engine_autoplay_move(Board *board) {

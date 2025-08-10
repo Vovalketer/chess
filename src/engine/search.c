@@ -20,7 +20,7 @@ int alpha_beta(Board* board, int depth, int alpha, int beta) {
 	int legal_moves = 0;
 	for (size_t i = 0; i < move_list_size(moves); i++) {
 		Move move;
-		move_list_get(moves, i, &move);
+		move = *move_list_get(moves, i);
 
 		if (!make_move(board, move))
 			continue;
@@ -54,7 +54,7 @@ Move search_best_move(Board* board, int depth) {
 	int		  best_score = -INF;
 	for (size_t i = 0; i < move_list_size(moves); i++) {
 		Move move;
-		move_list_get(moves, i, &move);
+		move = *move_list_get(moves, i);
 
 		if (!make_move(board, move))
 			continue;

@@ -59,7 +59,7 @@ static void gen_moves_from_mask(Square		   from,
 	while (moves) {
 		Square to = bits_pop_lsb(&moves);
 		Move   mv = move_create(board, p, from, to, pt, MV_QUIET);
-		move_list_append(ml, mv);
+		move_list_push_back(ml, mv);
 	}
 }
 
@@ -70,7 +70,7 @@ static void gen_attacks_from_mask(
 	while (captures) {
 		Square to = bits_pop_lsb(&captures);
 		Move   mv = move_create(board, p, from, to, pt, MV_CAPTURE);
-		move_list_append(ml, mv);
+		move_list_push_back(ml, mv);
 	}
 }
 
@@ -86,16 +86,16 @@ void movegen_pawn_attacks(const Board *board, Player p, MoveList *ml) {
 			Square to = bits_pop_lsb(&captures);
 			if (!is_prom) {
 				Move mv = move_create(board, p, from, to, PAWN, MV_CAPTURE);
-				move_list_append(ml, mv);
+				move_list_push_back(ml, mv);
 			} else {
 				Move prom_q = move_create(board, p, from, to, PAWN, MV_Q_PROM_CAPTURE);
 				Move prom_r = move_create(board, p, from, to, PAWN, MV_R_PROM_CAPTURE);
 				Move prom_b = move_create(board, p, from, to, PAWN, MV_B_PROM_CAPTURE);
 				Move prom_n = move_create(board, p, from, to, PAWN, MV_N_PROM_CAPTURE);
-				move_list_append(ml, prom_q);
-				move_list_append(ml, prom_r);
-				move_list_append(ml, prom_b);
-				move_list_append(ml, prom_n);
+				move_list_push_back(ml, prom_q);
+				move_list_push_back(ml, prom_r);
+				move_list_push_back(ml, prom_b);
+				move_list_push_back(ml, prom_n);
 			}
 		}
 	}
@@ -115,16 +115,16 @@ void movegen_pawn_moves(const Board *board, Player p, MoveList *ml) {
 			Square push_sqr = bits_pop_lsb(&pushes);
 			if (!is_prom) {
 				Move mv = move_create(board, p, from, push_sqr, pt, MV_QUIET);
-				move_list_append(ml, mv);
+				move_list_push_back(ml, mv);
 			} else {
 				Move prom_q = move_create(board, p, from, push_sqr, pt, MV_Q_PROM);
 				Move prom_r = move_create(board, p, from, push_sqr, pt, MV_R_PROM);
 				Move prom_b = move_create(board, p, from, push_sqr, pt, MV_B_PROM);
 				Move prom_n = move_create(board, p, from, push_sqr, pt, MV_N_PROM);
-				move_list_append(ml, prom_q);
-				move_list_append(ml, prom_r);
-				move_list_append(ml, prom_b);
-				move_list_append(ml, prom_n);
+				move_list_push_back(ml, prom_q);
+				move_list_push_back(ml, prom_r);
+				move_list_push_back(ml, prom_b);
+				move_list_push_back(ml, prom_n);
 			}
 		}
 
@@ -134,7 +134,7 @@ void movegen_pawn_moves(const Board *board, Player p, MoveList *ml) {
 			while (double_pushes) {
 				Square push_sqr = bits_pop_lsb(&double_pushes);
 				Move   mv		= move_create(board, p, from, push_sqr, pt, MV_PAWN_DOUBLE);
-				move_list_append(ml, mv);
+				move_list_push_back(ml, mv);
 			}
 		}
 	}
@@ -277,7 +277,7 @@ void movegen_castling_moves(const Board *board, Player p, MoveList *ml) {
 					 (W_KS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
 					Move mv = move_create(board, p, king_sqr, SQ_G1, pt, MV_KS_CASTLE);
-					move_list_append(ml, mv);
+					move_list_push_back(ml, mv);
 				}
 			}
 			if (board_has_castling_rights(board, CASTLING_WHITE_QS)) {
@@ -287,7 +287,7 @@ void movegen_castling_moves(const Board *board, Player p, MoveList *ml) {
 					 (W_QS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
 					Move mv = move_create(board, p, king_sqr, SQ_C1, pt, MV_QS_CASTLE);
-					move_list_append(ml, mv);
+					move_list_push_back(ml, mv);
 				}
 			}
 			break;
@@ -299,7 +299,7 @@ void movegen_castling_moves(const Board *board, Player p, MoveList *ml) {
 					 (B_KS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
 					Move mv = move_create(board, p, king_sqr, SQ_G8, pt, MV_KS_CASTLE);
-					move_list_append(ml, mv);
+					move_list_push_back(ml, mv);
 				}
 			}
 			if (board_has_castling_rights(board, CASTLING_BLACK_QS)) {
@@ -309,7 +309,7 @@ void movegen_castling_moves(const Board *board, Player p, MoveList *ml) {
 					 (B_QS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
 					Move mv = move_create(board, p, king_sqr, SQ_C8, pt, MV_QS_CASTLE);
-					move_list_append(ml, mv);
+					move_list_push_back(ml, mv);
 				}
 			}
 			break;
@@ -319,8 +319,7 @@ void movegen_castling_moves(const Board *board, Player p, MoveList *ml) {
 }
 
 MoveList *movegen_generate(const Board *board, Player p) {
-	MoveList *ml = NULL;
-	move_list_create(&ml);
+	MoveList *ml = move_list_create();
 	movegen_pawn_attacks(board, p, ml);
 	movegen_rook_attacks(board, p, ml);
 	movegen_bishop_attacks(board, p, ml);
@@ -338,8 +337,7 @@ MoveList *movegen_generate(const Board *board, Player p) {
 }
 
 MoveList *movegen_generate_moves(const Board *board, Player p) {
-	MoveList *ml = NULL;
-	move_list_create(&ml);
+	MoveList *ml = move_list_create();
 	movegen_pawn_moves(board, p, ml);
 	movegen_rook_moves(board, p, ml);
 	movegen_bishop_moves(board, p, ml);
@@ -350,8 +348,7 @@ MoveList *movegen_generate_moves(const Board *board, Player p) {
 }
 
 MoveList *movegen_generate_captures(const Board *board, Player p) {
-	MoveList *ml = NULL;
-	move_list_create(&ml);
+	MoveList *ml = move_list_create();
 	movegen_pawn_attacks(board, p, ml);
 	movegen_rook_attacks(board, p, ml);
 	movegen_bishop_attacks(board, p, ml);

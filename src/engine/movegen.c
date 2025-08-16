@@ -107,10 +107,10 @@ void movegen_pawn_moves(const Board *board, Player p, MoveList *ml) {
 	uint64_t  bb		  = board->pieces[p][pt];
 	uint64_t  occupancies = board->occupancies[p] | board->occupancies[utils_get_opponent(p)];
 	while (bb) {
-		Square from	   = bits_pop_lsb(&bb);
-		bool   is_prom = (p == PLAYER_W && (from >= SQ_A7 && from <= SQ_H7)) ||
-					   (p == PLAYER_B && (from >= SQ_A2 && from <= SQ_H2));
-		uint64_t pushes = bitboards_get_pawn_pushes(from, p) & ~occupancies;
+		Square	 from	 = bits_pop_lsb(&bb);
+		uint64_t pushes	 = bitboards_get_pawn_pushes(from, p) & ~occupancies;
+		bool	 is_prom = (p == PLAYER_W && (utils_get_rank(from) == 6)) ||
+					   (p == PLAYER_B && (utils_get_rank(from) == 1));
 		while (pushes) {
 			Square push_sqr = bits_pop_lsb(&pushes);
 			if (!is_prom) {

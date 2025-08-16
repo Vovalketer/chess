@@ -98,4 +98,6 @@ typedef struct {
 
 typedef struct Board Board;
 
+bool move_equals(const Move mv1, const Move mv2);
+
 #endif

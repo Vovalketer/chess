@@ -6,6 +6,7 @@ libboard = library(
 		'bitboards.c',
 		'fen.c',
 		'utils.c',
+		'move.c',
 	],
 	dependencies: [liblog_dep, libarray_dep],
 	include_directories: [common_inc],

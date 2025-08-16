@@ -162,9 +162,7 @@ FixedStr utils_move_description(Board* board, Move move) {
 			 utils_move_type_to_str(move.mv_type),
 			 piece_from.player,
 			 utils_piece_type_to_str(piece_from.type),
-			 move.mv_type == MV_EN_PASSANT
-				 ? utils_piece_type_to_str(PAWN)
-				 : utils_piece_type_to_str(board_get_piece_type(board, move.to)));
+			 utils_piece_type_to_str(move.captured));
 	return str;
 }
 

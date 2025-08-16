@@ -127,14 +127,13 @@ void board_remove_piece(Board *board, Square sqr) {
 	}
 }
 
-void board_move_piece(Board *board, Square from, Square to, PieceType piece) {
+void board_move_piece(Board *board, Square from, Square to) {
 	assert(board != NULL);
 	assert(is_within_bounds(from));
 	assert(is_within_bounds(to));
-	Player p = board_get_occupant(board, from);
-	assert(p != PLAYER_NONE);
+	Piece piece = board_get_piece(board, from);
 	board_remove_piece(board, from);
-	board_set_piece(board, (Piece) {.player = p, .type = piece}, to);
+	board_set_piece(board, piece, to);
 }
 
 PieceType board_get_piece_type(const Board *board, Square sqr) {
@@ -162,7 +161,7 @@ Piece board_get_piece(const Board *board, Square sqr) {
 }
 
 void board_apply_history(Board *board, History hist) {
-	board_move_piece(board, hist.to, hist.from, hist.moving);
+	board_move_piece(board, hist.to, hist.from);
 	if (hist.captured != EMPTY) {
 		Square target = hist.mv_type == MV_EN_PASSANT
 							? utils_ep_capture_pos(hist.ep_target, hist.side)

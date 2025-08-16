@@ -71,11 +71,11 @@ bool make_move(Board *board, Move move) {
 
 	switch (move.mv_type) {
 		case MV_QUIET:
-			board_move_piece(board, move.from, move.to, move.piece);
+			board_move_piece(board, move.from, move.to);
 			break;
 		case MV_PAWN_DOUBLE:
 			board->ep_target = board->side == PLAYER_W ? move.from + DIR_N : move.from + DIR_S;
-			board_move_piece(board, move.from, move.to, move.piece);
+			board_move_piece(board, move.from, move.to);
 			break;
 		case MV_KS_CASTLE: {
 			Player p = board->side;
@@ -88,8 +88,8 @@ bool make_move(Board *board, Move move) {
 				board_is_square_threatened(board, g, p)) {
 				return false;
 			}
-			board_move_piece(board, move.from, move.to, move.piece);
-			board_move_piece(board, h, f, ROOK);
+			board_move_piece(board, move.from, move.to);
+			board_move_piece(board, h, f);
 			board_remove_castling_rights(board,
 										 p == PLAYER_W ? CASTLING_WHITE_KS : CASTLING_BLACK_KS);
 			break;
@@ -107,18 +107,18 @@ bool make_move(Board *board, Move move) {
 				board_is_square_threatened(board, c, p)) {
 				return false;
 			}
-			board_move_piece(board, move.from, move.to, move.piece);
-			board_move_piece(board, a, d, ROOK);
+			board_move_piece(board, move.from, move.to);
+			board_move_piece(board, a, d);
 			board_remove_castling_rights(board,
 										 p == PLAYER_W ? CASTLING_WHITE_QS : CASTLING_BLACK_QS);
 			break;
 		}
 		case MV_CAPTURE:
-			board_move_piece(board, move.from, move.to, move.piece);
+			board_move_piece(board, move.from, move.to);
 			break;
 		case MV_EN_PASSANT:
 			board_remove_piece(board, utils_ep_capture_pos(board->ep_target, board->side));
-			board_move_piece(board, move.from, move.to, move.piece);
+			board_move_piece(board, move.from, move.to);
 			break;
 		case MV_N_PROM:
 			board_remove_piece(board, move.from);

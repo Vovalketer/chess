@@ -55,6 +55,7 @@ typedef struct {
 } Piece;
 
 typedef enum {
+	MV_NONE = -1,
 	MV_QUIET,
 	MV_PAWN_DOUBLE,
 	MV_KS_CASTLE,
@@ -81,6 +82,8 @@ typedef struct {
 	PieceType captured;
 	MoveType  mv_type;
 } Move;
+
+#define NO_MOVE ((Move) {SQ_NONE, SQ_NONE, EMPTY, EMPTY, MV_NONE})
 
 typedef struct {
 	Square	  from;

@@ -2,6 +2,11 @@
 #define FEN_H
 #include "../include/types.h"
 
-bool fen_parse(const char* fen, Board* board);
+typedef struct {
+	char str[96];
+} FenString;
+
+bool	  fen_parse(const char* fen, Board* board);
+FenString fen_from_board(const Board* board);
 
 #endif

@@ -3,6 +3,7 @@
 
 #include "../common/array_tpl.h"
 #include "../include/types.h"
+#include "fen.h"
 ARRAY_DEFINE_TYPE(History, HistoryList, history)
 
 // TODO: add zobrist key
@@ -21,10 +22,11 @@ struct Board {
 	// uint64_t zobrist_key;
 };
 
-Board *board_create(void);
-Board *board_clone(const Board *board);
-void   board_destroy(Board **board);
-bool   board_from_fen(Board *board, const char *fen);
+Board	 *board_create(void);
+Board	 *board_clone(const Board *board);
+void	  board_destroy(Board **board);
+bool	  board_from_fen(Board *board, const char *fen);
+FenString fen_from_board(const Board *board);
 
 // piece
 void	  board_set_piece(Board *board, Piece piece, Square sqr);

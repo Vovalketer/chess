@@ -3,21 +3,16 @@
 #include <stdint.h>
 
 #include "../external/unity/unity.h"
-#include "../src/common/log.h"
 #include "../src/engine/board.h"
 #include "../src/engine/utils.h"
 
 Board* board = NULL;
-int	   prev_log_level;
 
 void setUp(void) {
-	prev_log_level = log_get_level();
-	log_set_level(LOG_NONE);
 	board = board_create();
 }
 
 void tearDown(void) {
-	log_set_level(prev_log_level);
 	board_destroy(&board);
 }
 
@@ -271,6 +266,197 @@ void test_parse_fullmove_counter_invalid(void) {
 	TEST_ASSERT_EQUAL(parsed, false);
 }
 
+void test_parse_situation_kiwipete(void) {
+	bool parsed =
+		fen_parse("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1", board);
+	TEST_ASSERT_TRUE(parsed);
+
+	// white side
+
+	Piece w_lrook = board_get_piece(board, SQ_A1);
+	TEST_ASSERT_EQUAL(w_lrook.type, ROOK);
+	TEST_ASSERT_EQUAL(w_lrook.player, PLAYER_W);
+
+	Piece w_lknight = board_get_piece(board, SQ_C3);
+	TEST_ASSERT_EQUAL(w_lknight.type, KNIGHT);
+	TEST_ASSERT_EQUAL(w_lknight.player, PLAYER_W);
+
+	Piece w_lbishop = board_get_piece(board, SQ_D2);
+	TEST_ASSERT_EQUAL(w_lbishop.type, BISHOP);
+	TEST_ASSERT_EQUAL(w_lbishop.player, PLAYER_W);
+
+	Piece w_queen = board_get_piece(board, SQ_F3);
+	TEST_ASSERT_EQUAL(w_queen.type, QUEEN);
+	TEST_ASSERT_EQUAL(w_queen.player, PLAYER_W);
+
+	Piece w_king = board_get_piece(board, SQ_E1);
+	TEST_ASSERT_EQUAL(w_king.type, KING);
+	TEST_ASSERT_EQUAL(w_king.player, PLAYER_W);
+
+	Piece w_rbishop = board_get_piece(board, SQ_E2);
+	TEST_ASSERT_EQUAL(w_rbishop.type, BISHOP);
+	TEST_ASSERT_EQUAL(w_rbishop.player, PLAYER_W);
+
+	Piece w_rknight = board_get_piece(board, SQ_E5);
+	TEST_ASSERT_EQUAL(w_rknight.type, KNIGHT);
+	TEST_ASSERT_EQUAL(w_rknight.player, PLAYER_W);
+
+	Piece w_rrook = board_get_piece(board, SQ_H1);
+	TEST_ASSERT_EQUAL(w_rrook.type, ROOK);
+	TEST_ASSERT_EQUAL(w_rrook.player, PLAYER_W);
+
+	Piece w_pawn1 = board_get_piece(board, SQ_A2);
+	TEST_ASSERT_EQUAL(w_pawn1.type, PAWN);
+	TEST_ASSERT_EQUAL(w_pawn1.player, PLAYER_W);
+
+	Piece w_pawn2 = board_get_piece(board, SQ_B2);
+	TEST_ASSERT_EQUAL(w_pawn2.type, PAWN);
+	TEST_ASSERT_EQUAL(w_pawn2.player, PLAYER_W);
+
+	Piece w_pawn3 = board_get_piece(board, SQ_C2);
+	TEST_ASSERT_EQUAL(w_pawn3.type, PAWN);
+	TEST_ASSERT_EQUAL(w_pawn3.player, PLAYER_W);
+
+	Piece w_pawn4 = board_get_piece(board, SQ_D5);
+	TEST_ASSERT_EQUAL(w_pawn4.type, PAWN);
+	TEST_ASSERT_EQUAL(w_pawn4.player, PLAYER_W);
+
+	Piece w_pawn5 = board_get_piece(board, SQ_E4);
+	TEST_ASSERT_EQUAL(w_pawn5.type, PAWN);
+	TEST_ASSERT_EQUAL(w_pawn5.player, PLAYER_W);
+
+	Piece w_pawn6 = board_get_piece(board, SQ_F2);
+	TEST_ASSERT_EQUAL(w_pawn6.type, PAWN);
+	TEST_ASSERT_EQUAL(w_pawn6.player, PLAYER_W);
+
+	Piece w_pawn7 = board_get_piece(board, SQ_G2);
+	TEST_ASSERT_EQUAL(w_pawn7.type, PAWN);
+	TEST_ASSERT_EQUAL(w_pawn7.player, PLAYER_W);
+
+	Piece w_pawn8 = board_get_piece(board, SQ_H2);
+	TEST_ASSERT_EQUAL(w_pawn8.type, PAWN);
+	TEST_ASSERT_EQUAL(w_pawn8.player, PLAYER_W);
+
+	// black side
+
+	Piece b_lrook = board_get_piece(board, SQ_A8);
+	TEST_ASSERT_EQUAL(b_lrook.type, ROOK);
+	TEST_ASSERT_EQUAL(b_lrook.player, PLAYER_B);
+
+	Piece b_lknight = board_get_piece(board, SQ_B6);
+	TEST_ASSERT_EQUAL(b_lknight.type, KNIGHT);
+	TEST_ASSERT_EQUAL(b_lknight.player, PLAYER_B);
+
+	Piece b_lbishop = board_get_piece(board, SQ_A6);
+	TEST_ASSERT_EQUAL(b_lbishop.type, BISHOP);
+	TEST_ASSERT_EQUAL(b_lbishop.player, PLAYER_B);
+
+	Piece b_queen = board_get_piece(board, SQ_E7);
+	TEST_ASSERT_EQUAL(b_queen.type, QUEEN);
+	TEST_ASSERT_EQUAL(b_queen.player, PLAYER_B);
+
+	Piece b_king = board_get_piece(board, SQ_E8);
+	TEST_ASSERT_EQUAL(b_king.type, KING);
+	TEST_ASSERT_EQUAL(b_king.player, PLAYER_B);
+
+	Piece b_rbishop = board_get_piece(board, SQ_G7);
+	TEST_ASSERT_EQUAL(b_rbishop.type, BISHOP);
+	TEST_ASSERT_EQUAL(b_rbishop.player, PLAYER_B);
+
+	Piece b_rknight = board_get_piece(board, SQ_F6);
+	TEST_ASSERT_EQUAL(b_rknight.type, KNIGHT);
+	TEST_ASSERT_EQUAL(b_rknight.player, PLAYER_B);
+
+	Piece b_rrook = board_get_piece(board, SQ_H8);
+	TEST_ASSERT_EQUAL(b_rrook.type, ROOK);
+	TEST_ASSERT_EQUAL(b_rrook.player, PLAYER_B);
+
+	Piece b_pawn1 = board_get_piece(board, SQ_A7);
+	TEST_ASSERT_EQUAL(b_pawn1.type, PAWN);
+	TEST_ASSERT_EQUAL(b_pawn1.player, PLAYER_B);
+
+	Piece b_pawn2 = board_get_piece(board, SQ_B4);
+	TEST_ASSERT_EQUAL(b_pawn2.type, PAWN);
+	TEST_ASSERT_EQUAL(b_pawn2.player, PLAYER_B);
+
+	Piece b_pawn3 = board_get_piece(board, SQ_C7);
+	TEST_ASSERT_EQUAL(b_pawn3.type, PAWN);
+	TEST_ASSERT_EQUAL(b_pawn3.player, PLAYER_B);
+
+	Piece b_pawn4 = board_get_piece(board, SQ_D7);
+	TEST_ASSERT_EQUAL(b_pawn4.type, PAWN);
+	TEST_ASSERT_EQUAL(b_pawn4.player, PLAYER_B);
+
+	Piece b_pawn5 = board_get_piece(board, SQ_E6);
+	TEST_ASSERT_EQUAL(b_pawn5.type, PAWN);
+	TEST_ASSERT_EQUAL(b_pawn5.player, PLAYER_B);
+
+	Piece b_pawn6 = board_get_piece(board, SQ_F7);
+	TEST_ASSERT_EQUAL(b_pawn6.type, PAWN);
+	TEST_ASSERT_EQUAL(b_pawn6.player, PLAYER_B);
+
+	Piece b_pawn7 = board_get_piece(board, SQ_G6);
+	TEST_ASSERT_EQUAL(b_pawn7.type, PAWN);
+	TEST_ASSERT_EQUAL(b_pawn7.player, PLAYER_B);
+
+	Piece b_pawn8 = board_get_piece(board, SQ_H3);
+	TEST_ASSERT_EQUAL(b_pawn8.type, PAWN);
+	TEST_ASSERT_EQUAL(b_pawn8.player, PLAYER_B);
+}
+
+void test_fen_from_board(void) {
+	FenString fen = fen_from_board(board);
+	TEST_ASSERT_EQUAL_STRING("8/8/8/8/8/8/8/8 w KQkq - 0 0", fen.str);
+}
+
+void test_fen_from_board_standard_match(void) {
+	char standard[] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	bool parsed		= fen_parse(standard, board);
+	TEST_ASSERT_TRUE(parsed);
+
+	FenString fen = fen_from_board(board);
+	TEST_ASSERT_EQUAL_STRING(standard, fen.str);
+}
+
+void test_fen_from_board_situation_kiwipete(void) {
+	char kiwipete[] = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+	bool parsed		= fen_parse(kiwipete, board);
+	TEST_ASSERT_TRUE(parsed);
+	board_print(board);
+
+	FenString fen = fen_from_board(board);
+	board_from_fen(board, fen.str);
+	board_print(board);
+	TEST_ASSERT_EQUAL_STRING(kiwipete, fen.str);
+}
+
+void test_fen_from_board_without_white_castling_rights(void) {
+	char fen_situation[] = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
+	bool parsed			 = fen_parse(fen_situation, board);
+	TEST_ASSERT_TRUE(parsed);
+
+	FenString fen = fen_from_board(board);
+	TEST_ASSERT_EQUAL_STRING(fen_situation, fen.str);
+}
+
+void test_fen_from_board_without_black_castling_rights(void) {
+	char fen_situation[] = "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1";
+	bool parsed			 = fen_parse(fen_situation, board);
+	TEST_ASSERT_TRUE(parsed);
+
+	FenString fen = fen_from_board(board);
+	TEST_ASSERT_EQUAL_STRING(fen_situation, fen.str);
+}
+
+void test_fen_from_board_en_passant(void) {
+	char fen_situation[] = "8/8/8/8/8/8/8/R3K2R w Qq e6 0 1";
+	bool parsed			 = fen_parse(fen_situation, board);
+	TEST_ASSERT_TRUE(parsed);
+
+	FenString fen = fen_from_board(board);
+	TEST_ASSERT_EQUAL_STRING(fen_situation, fen.str);
+}
+
 int main(void) {
 	UNITY_BEGIN();
 	RUN_TEST(test_parse_empty_board);
@@ -301,5 +487,12 @@ int main(void) {
 	RUN_TEST(test_parse_fullmove_counter_prime);
 	RUN_TEST(test_parse_fullmove_counter_hundred);
 	RUN_TEST(test_parse_fullmove_counter_invalid);
+	RUN_TEST(test_parse_situation_kiwipete);
+	RUN_TEST(test_fen_from_board);
+	RUN_TEST(test_fen_from_board_situation_kiwipete);
+	RUN_TEST(test_fen_from_board_without_white_castling_rights);
+	RUN_TEST(test_fen_from_board_without_black_castling_rights);
+	RUN_TEST(test_fen_from_board_en_passant);
+
 	return UNITY_END();
 }

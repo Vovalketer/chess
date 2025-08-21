@@ -1,3 +1,5 @@
+#include "fen.h"
+
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
@@ -242,4 +244,111 @@ static bool _parse_str_to_int(const char* str, int* out) {
 	}
 	*out = negative ? -res : res;
 	return true;
+}
+
+FenString fen_from_board(const Board* board) {
+	FenString fen = {0};
+	char	  pieces[8][8];
+	char	  side[2];
+	char	  castling_rights[5];
+	char	  en_passant_target[3];
+	int		  halfmove_clock;
+	int		  fullmove_counter;
+
+	for (int row = 0; row < 8; row++) {
+		for (int col = 0; col < 8; col++) {
+			Piece p				 = board_get_piece(board, utils_fr_to_square(col, row));
+			pieces[7 - row][col] = utils_piece_to_char(p);
+		}
+	}
+	log_info("printing pieces");
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			printf("%c", pieces[i][j]);
+		}
+	}
+	printf("\n");
+	side[0] = board->side == PLAYER_W ? 'w' : 'b';
+	side[1] = '\0';
+
+	int fen_idx = 0;
+	if (board_has_castling_rights(board, CASTLING_WHITE_KS)) {
+		castling_rights[fen_idx++] = 'K';
+	}
+	if (board_has_castling_rights(board, CASTLING_WHITE_QS)) {
+		castling_rights[fen_idx++] = 'Q';
+	}
+	if (board_has_castling_rights(board, CASTLING_BLACK_KS)) {
+		castling_rights[fen_idx++] = 'k';
+	}
+	if (board_has_castling_rights(board, CASTLING_BLACK_QS)) {
+		castling_rights[fen_idx++] = 'q';
+	}
+	if (fen_idx == 0) {
+		castling_rights[fen_idx++] = '-';
+	}
+	castling_rights[fen_idx] = '\0';
+
+	if (board->ep_target == SQ_NONE) {
+		en_passant_target[0] = '-';
+		en_passant_target[1] = '\0';
+	} else {
+		en_passant_target[0] = utils_get_file(board->ep_target) + 'a';
+		en_passant_target[1] = utils_get_rank(board->ep_target) + '1';
+		en_passant_target[2] = '\0';
+	}
+
+	halfmove_clock	 = board->halfmove_clock;
+	fullmove_counter = board->fullmove_counter;
+
+	const char empty_square_char =
+		utils_piece_to_char((Piece) {.player = PLAYER_NONE, .type = EMPTY});
+	fen_idx = 0;
+	for (int row = 0; row < 8; row++) {
+		int empty_squares = 0;
+		for (int col = 0; col < 8; col++) {
+			if (col == 0 && row != 0) {
+				fen.str[fen_idx++] = '/';
+			}
+			if (pieces[row][col] != empty_square_char) {
+				if (empty_squares > 0) {
+					fen.str[fen_idx++] = empty_squares + '0';
+					empty_squares	   = 0;
+				}
+				fen.str[fen_idx++] = pieces[row][col];
+			} else {
+				empty_squares++;
+				if (col == 7) {
+					fen.str[fen_idx++] = empty_squares + '0';
+				}
+			}
+		}
+	}
+	fen.str[fen_idx++] = ' ';
+
+	char* ptr = side;
+	while (*ptr) {
+		fen.str[fen_idx++] = *ptr++;
+	}
+	fen.str[fen_idx++] = ' ';
+
+	ptr = castling_rights;
+	while (*ptr) {
+		fen.str[fen_idx++] = *ptr++;
+	}
+	fen.str[fen_idx++] = ' ';
+
+	ptr = en_passant_target;
+	while (*ptr) {
+		fen.str[fen_idx++] = *ptr++;
+	}
+	fen.str[fen_idx++] = ' ';
+
+	fen.str[fen_idx++] = halfmove_clock + '0';
+	fen.str[fen_idx++] = ' ';
+
+	fen.str[fen_idx++] = fullmove_counter + '0';
+	fen.str[fen_idx++] = '\0';
+
+	return fen;
 }

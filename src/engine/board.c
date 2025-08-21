@@ -202,6 +202,10 @@ bool board_from_fen(Board *board, const char *fen) {
 	return true;
 }
 
+FenString board_to_fen(const Board *board) {
+	return fen_from_board(board);
+}
+
 void board_print(const Board *board) {
 	for (int row = 7; row >= 0; row--) {
 		printf("\n %d ", row + 1);

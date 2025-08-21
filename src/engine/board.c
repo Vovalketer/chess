@@ -191,11 +191,14 @@ void board_apply_history(Board *board, History hist) {
 }
 
 bool board_from_fen(Board *board, const char *fen) {
+	// prevent issues if the board gets reused
+	history_clear(board->history);
+	memset(board->pieces, 0, sizeof(board->pieces));
+	memset(board->occupancies, 0, sizeof(board->occupancies));
 	if (!fen_parse(fen, board)) {
 		log_error("Error parsing FEN");
 		return false;
 	};
-	board_print(board);
 	return true;
 }
 

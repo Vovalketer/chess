@@ -161,7 +161,8 @@ Piece board_get_piece(const Board *board, Square sqr) {
 }
 
 void board_apply_history(Board *board, History hist) {
-	board_move_piece(board, hist.to, hist.from);
+	board_remove_piece(board, hist.to);
+	board_set_piece(board, (Piece) {.player = hist.side, .type = hist.moving}, hist.from);
 	if (hist.captured != EMPTY) {
 		Square target = hist.mv_type == MV_EN_PASSANT
 							? utils_ep_capture_pos(hist.ep_target, hist.side)

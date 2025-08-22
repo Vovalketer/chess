@@ -5,6 +5,22 @@
 #include "../include/types.h"
 #include "fen.h"
 ARRAY_DEFINE_TYPE(History, HistoryList, history)
+#define ROOK_CASTLING_W_KS_SRC SQ_H1
+#define ROOK_CASTLING_W_QS_SRC SQ_A1
+#define ROOK_CASTLING_B_KS_SRC SQ_H8
+#define ROOK_CASTLING_B_QS_SRC SQ_A8
+#define ROOK_CASTLING_W_KS_DST SQ_F1
+#define ROOK_CASTLING_W_QS_DST SQ_D1
+#define ROOK_CASTLING_B_KS_DST SQ_F8
+#define ROOK_CASTLING_B_QS_DST SQ_D8
+#define KING_CASTLING_W_KS_SRC SQ_E1
+#define KING_CASTLING_W_QS_SRC SQ_E1
+#define KING_CASTLING_B_KS_SRC SQ_E8
+#define KING_CASTLING_B_QS_SRC SQ_E8
+#define KING_CASTLING_W_KS_DST SQ_G1
+#define KING_CASTLING_W_QS_DST SQ_C1
+#define KING_CASTLING_B_KS_DST SQ_G8
+#define KING_CASTLING_B_QS_DST SQ_C8
 
 // TODO: add zobrist key
 // we must expose the board because the speed of the movegen depends on bit manipulation

@@ -79,9 +79,9 @@ bool make_move(Board *board, Move move) {
 			break;
 		case MV_KS_CASTLE: {
 			Player p = board->side;
-			Square f = p == PLAYER_W ? SQ_F1 : SQ_F8;
-			Square g = p == PLAYER_W ? SQ_G1 : SQ_G8;
-			Square h = p == PLAYER_W ? SQ_H1 : SQ_H8;
+			Square f = p == PLAYER_W ? ROOK_CASTLING_W_KS_DST : ROOK_CASTLING_B_KS_DST;
+			Square g = p == PLAYER_W ? KING_CASTLING_W_KS_DST : KING_CASTLING_B_KS_DST;
+			Square h = p == PLAYER_W ? ROOK_CASTLING_W_KS_SRC : ROOK_CASTLING_B_KS_SRC;
 			if (board_is_check(board, p) || board_get_occupant(board, f) != PLAYER_NONE ||
 				board_get_occupant(board, g) != PLAYER_NONE ||
 				board_is_square_threatened(board, f, p) ||
@@ -96,10 +96,10 @@ bool make_move(Board *board, Move move) {
 		}
 		case MV_QS_CASTLE: {
 			Player p = board->side;
-			Square a = p == PLAYER_W ? SQ_A1 : SQ_A8;
+			Square a = p == PLAYER_W ? ROOK_CASTLING_W_QS_SRC : ROOK_CASTLING_B_QS_SRC;
 			Square b = p == PLAYER_W ? SQ_B1 : SQ_B8;
-			Square c = p == PLAYER_W ? SQ_C1 : SQ_C8;
-			Square d = p == PLAYER_W ? SQ_D1 : SQ_D8;
+			Square c = p == PLAYER_W ? KING_CASTLING_W_QS_DST : KING_CASTLING_B_QS_DST;
+			Square d = p == PLAYER_W ? ROOK_CASTLING_W_QS_DST : ROOK_CASTLING_B_QS_DST;
 			if (board_is_check(board, p) || board_get_occupant(board, d) != PLAYER_NONE ||
 				board_get_occupant(board, c) != PLAYER_NONE ||
 				board_get_occupant(board, b) != PLAYER_NONE ||

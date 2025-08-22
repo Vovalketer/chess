@@ -271,44 +271,52 @@ void movegen_castling_moves(const Board *board, Player p, MoveList *ml) {
 	switch (p) {
 		case PLAYER_W:
 			if (board_has_castling_rights(board, CASTLING_WHITE_KS)) {
-				Piece rook = board_get_piece(board, SQ_H1);
-				if (king_sqr == SQ_E1 && rook.type == ROOK && rook.player == PLAYER_W &&
+				Piece rook = board_get_piece(board, ROOK_CASTLING_W_KS_SRC);
+				if (king_sqr == KING_CASTLING_W_KS_SRC && rook.type == ROOK &&
+					rook.player == PLAYER_W &&
 					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 					 (W_KS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
-					Move mv = move_create(board, p, king_sqr, SQ_G1, pt, MV_KS_CASTLE);
+					Move mv =
+						move_create(board, p, king_sqr, KING_CASTLING_W_KS_DST, pt, MV_KS_CASTLE);
 					move_list_push_back(ml, mv);
 				}
 			}
 			if (board_has_castling_rights(board, CASTLING_WHITE_QS)) {
-				Piece rook = board_get_piece(board, SQ_A1);
-				if (king_sqr == SQ_E1 && rook.type == ROOK && rook.player == PLAYER_W &&
+				Piece rook = board_get_piece(board, ROOK_CASTLING_W_QS_SRC);
+				if (king_sqr == KING_CASTLING_W_QS_SRC && rook.type == ROOK &&
+					rook.player == PLAYER_W &&
 					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 					 (W_QS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
-					Move mv = move_create(board, p, king_sqr, SQ_C1, pt, MV_QS_CASTLE);
+					Move mv =
+						move_create(board, p, king_sqr, KING_CASTLING_W_QS_DST, pt, MV_QS_CASTLE);
 					move_list_push_back(ml, mv);
 				}
 			}
 			break;
 		case PLAYER_B:
 			if (board_has_castling_rights(board, CASTLING_BLACK_KS)) {
-				Piece rook = board_get_piece(board, SQ_H8);
-				if (king_sqr == SQ_E8 && rook.type == ROOK && rook.player == PLAYER_B &&
+				Piece rook = board_get_piece(board, ROOK_CASTLING_B_KS_SRC);
+				if (king_sqr == KING_CASTLING_B_KS_SRC && rook.type == ROOK &&
+					rook.player == PLAYER_B &&
 					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 					 (B_KS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
-					Move mv = move_create(board, p, king_sqr, SQ_G8, pt, MV_KS_CASTLE);
+					Move mv =
+						move_create(board, p, king_sqr, KING_CASTLING_B_KS_DST, pt, MV_KS_CASTLE);
 					move_list_push_back(ml, mv);
 				}
 			}
 			if (board_has_castling_rights(board, CASTLING_BLACK_QS)) {
-				Piece rook = board_get_piece(board, SQ_A8);
-				if (king_sqr == SQ_E8 && rook.type == ROOK && rook.player == PLAYER_B &&
+				Piece rook = board_get_piece(board, ROOK_CASTLING_B_QS_SRC);
+				if (king_sqr == KING_CASTLING_B_QS_SRC && rook.type == ROOK &&
+					rook.player == PLAYER_B &&
 					((board->occupancies[PLAYER_W] | board->occupancies[PLAYER_B]) &
 					 (B_QS_CASTLING_SQUARES)) == 0) {
 					// checking for threats is deferred to makemove
-					Move mv = move_create(board, p, king_sqr, SQ_C8, pt, MV_QS_CASTLE);
+					Move mv =
+						move_create(board, p, king_sqr, KING_CASTLING_B_QS_DST, pt, MV_QS_CASTLE);
 					move_list_push_back(ml, mv);
 				}
 			}

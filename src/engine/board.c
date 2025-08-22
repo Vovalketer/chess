@@ -80,6 +80,7 @@ Board *board_create(void) {
 
 void board_destroy(Board **board) {
 	if (board && *board) {
+		history_destroy(&(*board)->history);
 		free(*board);
 		*board = NULL;
 	}

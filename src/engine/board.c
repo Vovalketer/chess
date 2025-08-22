@@ -133,6 +133,7 @@ void board_move_piece(Board *board, Square from, Square to) {
 	assert(is_within_bounds(from));
 	assert(is_within_bounds(to));
 	Piece piece = board_get_piece(board, from);
+	assert(piece.type != EMPTY);
 	board_remove_piece(board, from);
 	board_set_piece(board, piece, to);
 }

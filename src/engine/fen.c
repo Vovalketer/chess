@@ -180,7 +180,6 @@ static bool _parse_en_passant_target(const char* en_passant_target, Board* board
 				en_passant_target);
 			return false;
 		}
-		log_info("Parsed en passant target from FEN: file: %d, rank: %d", file, rank);
 		board->ep_target = utils_fr_to_square(file, rank);
 	} else {
 		log_error("Error parsing en passant target from FEN: invalid en passant target - %s",

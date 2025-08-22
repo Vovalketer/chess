@@ -25,89 +25,217 @@ void tearDown(void) {
 }
 
 void test_white_pawns_have_two_moves_at_starting_row(void) {
+	Piece pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
 	for (Square sqr = SQ_A2; sqr <= SQ_H2; sqr++) {
-		Piece pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
 		board_set_piece(board, pawn, sqr);
 	}
 
 	MoveList *ml = movegen_generate(board, PLAYER_W);
 	TEST_ASSERT_EQUAL_size_t(16, move_list_size(ml));
 
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_A2, .to = SQ_A3, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_A2, .to = SQ_A4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_B2, .to = SQ_B3, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_B2, .to = SQ_B4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_C2, .to = SQ_C3, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_C2, .to = SQ_C4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_D2, .to = SQ_D3, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_D2, .to = SQ_D4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_E2, .to = SQ_E3, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_E2, .to = SQ_E4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_F2, .to = SQ_F3, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_F2, .to = SQ_F4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_G2, .to = SQ_G3, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_G2, .to = SQ_G4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_H2, .to = SQ_H3, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_H2, .to = SQ_H4, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_A2,
+												.to			   = SQ_A3,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_A2,
+												.to			   = SQ_A4,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_B2,
+												.to			   = SQ_B3,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_B2,
+												.to			   = SQ_B4,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_C2,
+												.to			   = SQ_C3,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_C2,
+												.to			   = SQ_C4,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_D2,
+												.to			   = SQ_D3,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_D2,
+												.to			   = SQ_D4,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_E2,
+												.to			   = SQ_E3,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_E2,
+												.to			   = SQ_E4,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_F2,
+												.to			   = SQ_F3,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_F2,
+												.to			   = SQ_F4,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_G2,
+												.to			   = SQ_G3,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_G2,
+												.to			   = SQ_G4,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_H2,
+												.to			   = SQ_H3,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_H2,
+												.to			   = SQ_H4,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
 }
 
 void test_black_pawns_have_two_moves_at_starting_row(void) {
+	Piece pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
 	for (Square sqr = SQ_A7; sqr <= SQ_H7; sqr++) {
-		Piece pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
 		board_set_piece(board, pawn, sqr);
 	}
 
 	MoveList *ml = movegen_generate(board, PLAYER_B);
 	TEST_ASSERT_EQUAL_size_t(16, move_list_size(ml));
 
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_A7, .to = SQ_A6, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_A7, .to = SQ_A5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_B7, .to = SQ_B6, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_B7, .to = SQ_B5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_C7, .to = SQ_C6, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_C7, .to = SQ_C5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_D7, .to = SQ_D6, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_D7, .to = SQ_D5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_E7, .to = SQ_E6, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_E7, .to = SQ_E5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_F7, .to = SQ_F6, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_F7, .to = SQ_F5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_G7, .to = SQ_G6, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_G7, .to = SQ_G5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_H7, .to = SQ_H6, .mv_type = MV_QUIET, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = SQ_H7, .to = SQ_H5, .mv_type = MV_PAWN_DOUBLE, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_A7,
+												.to			   = SQ_A6,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_A7,
+												.to			   = SQ_A5,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_B7,
+												.to			   = SQ_B6,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_B7,
+												.to			   = SQ_B5,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_C7,
+												.to			   = SQ_C6,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_C7,
+												.to			   = SQ_C5,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_D7,
+												.to			   = SQ_D6,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_D7,
+												.to			   = SQ_D5,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_E7,
+												.to			   = SQ_E6,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_E7,
+												.to			   = SQ_E5,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_F7,
+												.to			   = SQ_F6,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_F7,
+												.to			   = SQ_F5,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_G7,
+												.to			   = SQ_G6,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_G7,
+												.to			   = SQ_G5,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_H7,
+												.to			   = SQ_H6,
+												.mv_type	   = MV_QUIET,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = SQ_H7,
+												.to			   = SQ_H5,
+												.mv_type	   = MV_PAWN_DOUBLE,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
 }
 
 void test_white_pawns_double_push_cant_skip_allies(void) {
@@ -184,12 +312,12 @@ void test_white_pawns_can_capture_enemies_at_ne_and_nw(void) {
 		MoveList *ml = movegen_generate(board, PLAYER_W);
 
 		if (utils_get_file(sqr) != 0) {
-			Move m = (Move) {.from = sqr, .to = nw, .mv_type = MV_CAPTURE, .piece = PAWN};
+			Move m = (Move) {.from = sqr, .to = nw, .mv_type = MV_CAPTURE, .piece = w_pawn};
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
 									 utils_move_description(board, m).str);
 		}
 		if (utils_get_file(sqr) != 7) {
-			Move m = (Move) {.from = sqr, .to = ne, .mv_type = MV_CAPTURE, .piece = PAWN};
+			Move m = (Move) {.from = sqr, .to = ne, .mv_type = MV_CAPTURE, .piece = w_pawn};
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
 									 utils_move_description(board, m).str);
 		}
@@ -214,12 +342,20 @@ void test_black_pawns_can_capture_enemies_at_se_and_sw(void) {
 		MoveList *ml = movegen_generate(board, PLAYER_B);
 
 		if (utils_get_file(sqr) != 0) {
-			Move m = (Move) {.from = sqr, .to = sw, .mv_type = MV_CAPTURE, .piece = PAWN};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sw,
+							 .mv_type		= MV_CAPTURE,
+							 .piece			= b_pawn,
+							 .captured_type = w_pawn.type};
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
 									 utils_move_description(board, m).str);
 		}
 		if (utils_get_file(sqr) != 7) {
-			Move m = (Move) {.from = sqr, .to = se, .mv_type = MV_CAPTURE, .piece = PAWN};
+			Move m = (Move) {.from			= sqr,
+							 .to			= se,
+							 .mv_type		= MV_CAPTURE,
+							 .piece			= b_pawn,
+							 .captured_type = w_pawn.type};
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
 									 utils_move_description(board, m).str);
 		}
@@ -277,8 +413,11 @@ void test_rook_can_move_in_cross(void) {
 		int w_moves_cnt = file;
 
 		for (int i = 1; i <= n_moves_cnt; i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_N * i, .mv_type = MV_QUIET, .piece = rook.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_N * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= rook,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"rook should be able to move N to square:%d from square: %d",
 					m.to,
@@ -286,8 +425,11 @@ void test_rook_can_move_in_cross(void) {
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
 		}
 		for (int i = 1; i <= s_moves_cnt; i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_S * i, .mv_type = MV_QUIET, .piece = rook.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_S * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= rook,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"rook should be able to move S to square:%d from square: %d",
 					m.to,
@@ -295,8 +437,11 @@ void test_rook_can_move_in_cross(void) {
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
 		}
 		for (int i = 1; i <= e_moves_cnt; i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_E * i, .mv_type = MV_QUIET, .piece = rook.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_E * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= rook,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"rook should be able to move E to square:%d from square: %d",
 					m.to,
@@ -305,8 +450,11 @@ void test_rook_can_move_in_cross(void) {
 		}
 
 		for (int i = 1; i <= w_moves_cnt; i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_W * i, .mv_type = MV_QUIET, .piece = rook.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_W * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= rook,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"rook should be able to move W to square:%d from square: %d",
 					m.to,
@@ -356,23 +504,47 @@ void test_knight_can_move_in_L(void) {
 		int		  file = utils_get_file(sqr);
 		MoveList *ml   = movegen_generate(board, knight.player);
 
-		Move nwn = (Move) {
-			.from = sqr, .to = sqr + DIR_NW + DIR_N, .mv_type = MV_QUIET, .piece = knight.type};
-		Move nww = (Move) {
-			.from = sqr, .to = sqr + DIR_NW + DIR_W, .mv_type = MV_QUIET, .piece = knight.type};
-		Move nen = (Move) {
-			.from = sqr, .to = sqr + DIR_NE + DIR_N, .mv_type = MV_QUIET, .piece = knight.type};
-		Move nee = (Move) {
-			.from = sqr, .to = sqr + DIR_NE + DIR_E, .mv_type = MV_QUIET, .piece = knight.type};
+		Move nwn = (Move) {.from		  = sqr,
+						   .to			  = sqr + DIR_NW + DIR_N,
+						   .mv_type		  = MV_QUIET,
+						   .piece		  = knight,
+						   .captured_type = EMPTY};
+		Move nww = (Move) {.from		  = sqr,
+						   .to			  = sqr + DIR_NW + DIR_W,
+						   .mv_type		  = MV_QUIET,
+						   .piece		  = knight,
+						   .captured_type = EMPTY};
+		Move nen = (Move) {.from		  = sqr,
+						   .to			  = sqr + DIR_NE + DIR_N,
+						   .mv_type		  = MV_QUIET,
+						   .piece		  = knight,
+						   .captured_type = EMPTY};
+		Move nee = (Move) {.from		  = sqr,
+						   .to			  = sqr + DIR_NE + DIR_E,
+						   .mv_type		  = MV_QUIET,
+						   .piece		  = knight,
+						   .captured_type = EMPTY};
 
-		Move sws = (Move) {
-			.from = sqr, .to = sqr + DIR_SW + DIR_S, .mv_type = MV_QUIET, .piece = knight.type};
-		Move sww = (Move) {
-			.from = sqr, .to = sqr + DIR_SW + DIR_W, .mv_type = MV_QUIET, .piece = knight.type};
-		Move ses = (Move) {
-			.from = sqr, .to = sqr + DIR_SE + DIR_S, .mv_type = MV_QUIET, .piece = knight.type};
-		Move see = (Move) {
-			.from = sqr, .to = sqr + DIR_SE + DIR_E, .mv_type = MV_QUIET, .piece = knight.type};
+		Move sws = (Move) {.from		  = sqr,
+						   .to			  = sqr + DIR_SW + DIR_S,
+						   .mv_type		  = MV_QUIET,
+						   .piece		  = knight,
+						   .captured_type = EMPTY};
+		Move sww = (Move) {.from		  = sqr,
+						   .to			  = sqr + DIR_SW + DIR_W,
+						   .mv_type		  = MV_QUIET,
+						   .piece		  = knight,
+						   .captured_type = EMPTY};
+		Move ses = (Move) {.from		  = sqr,
+						   .to			  = sqr + DIR_SE + DIR_S,
+						   .mv_type		  = MV_QUIET,
+						   .piece		  = knight,
+						   .captured_type = EMPTY};
+		Move see = (Move) {.from		  = sqr,
+						   .to			  = sqr + DIR_SE + DIR_E,
+						   .mv_type		  = MV_QUIET,
+						   .piece		  = knight,
+						   .captured_type = EMPTY};
 
 		if (file != 0) {
 			if (nwn.to > SQ_NONE && nwn.to < SQ_CNT) {
@@ -429,8 +601,11 @@ void test_bishop_can_move_in_diagonals(void) {
 		int rank = utils_get_rank(sqr);
 		for (int i = 1, f = file + 1, r = rank + 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
 			 f++, r++, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_NE * i, .mv_type = MV_QUIET, .piece = bishop.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_NE * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= bishop,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"bishop should be able to move NE to square:%d from square: %d",
 					m.to,
@@ -439,8 +614,11 @@ void test_bishop_can_move_in_diagonals(void) {
 		}
 		for (int i = 1, f = file + 1, r = rank - 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
 			 f++, r--, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_SE * i, .mv_type = MV_QUIET, .piece = bishop.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_SE * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= bishop,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"bishop should be able to move SE to square:%d from square: %d",
 					m.to,
@@ -449,8 +627,11 @@ void test_bishop_can_move_in_diagonals(void) {
 		}
 		for (int i = 1, f = file - 1, r = rank - 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
 			 f--, r--, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_SW * i, .mv_type = MV_QUIET, .piece = bishop.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_SW * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= bishop,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"bishop should be able to move SW to square:%d from square: %d",
 					m.to,
@@ -459,8 +640,11 @@ void test_bishop_can_move_in_diagonals(void) {
 		}
 		for (int i = 1, f = file - 1, r = rank + 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
 			 f--, r++, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_NW * i, .mv_type = MV_QUIET, .piece = bishop.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_NW * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= bishop,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"bishop should be able to move NW to square:%d from square: %d",
 					m.to,
@@ -511,8 +695,11 @@ void test_queen_can_move_in_cross_and_diag(void) {
 		int		  file = utils_get_file(sqr);
 		int		  rank = utils_get_rank(sqr);
 		for (int i = 1, r = rank + 1; r >= 0 && r <= 7; r++, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_N * i, .mv_type = MV_QUIET, .piece = queen.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_N * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= queen,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"queen should be able to move N to square:%d from square: %d",
 					m.to,
@@ -520,8 +707,11 @@ void test_queen_can_move_in_cross_and_diag(void) {
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
 		}
 		for (int i = 1, r = rank - 1; r >= 0 && r <= 7; r--, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_S * i, .mv_type = MV_QUIET, .piece = queen.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_S * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= queen,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"queen should be able to move S to square:%d from square: %d",
 					m.to,
@@ -529,8 +719,11 @@ void test_queen_can_move_in_cross_and_diag(void) {
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
 		}
 		for (int i = 1, f = file + 1; f >= 0 && f <= 7; f++, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_E * i, .mv_type = MV_QUIET, .piece = queen.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_E * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= queen,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"queen should be able to move E to square:%d from square: %d",
 					m.to,
@@ -538,8 +731,11 @@ void test_queen_can_move_in_cross_and_diag(void) {
 			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), err_msg);
 		}
 		for (int i = 1, f = file - 1; f >= 0 && f <= 7; f--, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_W * i, .mv_type = MV_QUIET, .piece = queen.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_W * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= queen,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"queen should be able to move W to square:%d from square: %d",
 					m.to,
@@ -548,8 +744,11 @@ void test_queen_can_move_in_cross_and_diag(void) {
 		}
 		for (int i = 1, f = file + 1, r = rank + 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
 			 f++, r++, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_NE * i, .mv_type = MV_QUIET, .piece = queen.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_NE * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= queen,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"queen should be able to move NE to square:%d from square: %d",
 					m.to,
@@ -558,8 +757,11 @@ void test_queen_can_move_in_cross_and_diag(void) {
 		}
 		for (int i = 1, f = file + 1, r = rank - 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
 			 f++, r--, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_SE * i, .mv_type = MV_QUIET, .piece = queen.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_SE * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= queen,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"queen should be able to move SE to square:%d from square: %d",
 					m.to,
@@ -568,8 +770,11 @@ void test_queen_can_move_in_cross_and_diag(void) {
 		}
 		for (int i = 1, f = file - 1, r = rank - 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
 			 f--, r--, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_SW * i, .mv_type = MV_QUIET, .piece = queen.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_SW * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= queen,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"queen should be able to move SW to square:%d from square: %d",
 					m.to,
@@ -578,8 +783,11 @@ void test_queen_can_move_in_cross_and_diag(void) {
 		}
 		for (int i = 1, f = file - 1, r = rank + 1; f >= 0 && f <= 7 && r >= 0 && r <= 7;
 			 f--, r++, i++) {
-			Move m = (Move) {
-				.from = sqr, .to = sqr + DIR_NW * i, .mv_type = MV_QUIET, .piece = queen.type};
+			Move m = (Move) {.from			= sqr,
+							 .to			= sqr + DIR_NW * i,
+							 .mv_type		= MV_QUIET,
+							 .piece			= queen,
+							 .captured_type = EMPTY};
 			sprintf(err_msg,
 					"queen should be able to move NW to square:%d from square: %d",
 					m.to,
@@ -638,43 +846,75 @@ void test_king_can_move_one_square_in_any_direction(void) {
 
 		int expected_moves = 0;
 		if (utils_get_rank(sqr) != 0) {
-			TEST_ASSERT_TRUE(move_list_contains(
-				ml, (Move) {.from = sqr, .to = sqr + DIR_S, .mv_type = MV_QUIET, .piece = KING}));
+			TEST_ASSERT_TRUE(move_list_contains(ml,
+												(Move) {.from		   = sqr,
+														.to			   = sqr + DIR_S,
+														.mv_type	   = MV_QUIET,
+														.piece		   = king,
+														.captured_type = EMPTY}));
 			expected_moves++;
 		}
 		if (utils_get_rank(sqr) != 7) {
-			TEST_ASSERT_TRUE(move_list_contains(
-				ml, (Move) {.from = sqr, .to = sqr + DIR_N, .mv_type = MV_QUIET, .piece = KING}));
+			TEST_ASSERT_TRUE(move_list_contains(ml,
+												(Move) {.from		   = sqr,
+														.to			   = sqr + DIR_N,
+														.mv_type	   = MV_QUIET,
+														.piece		   = king,
+														.captured_type = EMPTY}));
 			expected_moves++;
 		}
 		if (utils_get_file(sqr) != 0) {
-			TEST_ASSERT_TRUE(move_list_contains(
-				ml, (Move) {.from = sqr, .to = sqr + DIR_W, .mv_type = MV_QUIET, .piece = KING}));
+			TEST_ASSERT_TRUE(move_list_contains(ml,
+												(Move) {.from		   = sqr,
+														.to			   = sqr + DIR_W,
+														.mv_type	   = MV_QUIET,
+														.piece		   = king,
+														.captured_type = EMPTY}));
 			expected_moves++;
 		}
 		if (utils_get_file(sqr) != 7) {
-			TEST_ASSERT_TRUE(move_list_contains(
-				ml, (Move) {.from = sqr, .to = sqr + DIR_E, .mv_type = MV_QUIET, .piece = KING}));
+			TEST_ASSERT_TRUE(move_list_contains(ml,
+												(Move) {.from		   = sqr,
+														.to			   = sqr + DIR_E,
+														.mv_type	   = MV_QUIET,
+														.piece		   = king,
+														.captured_type = EMPTY}));
 			expected_moves++;
 		}
 		if (utils_get_rank(sqr) != 0 && utils_get_file(sqr) != 0) {
-			TEST_ASSERT_TRUE(move_list_contains(
-				ml, (Move) {.from = sqr, .to = sqr + DIR_SW, .mv_type = MV_QUIET, .piece = KING}));
+			TEST_ASSERT_TRUE(move_list_contains(ml,
+												(Move) {.from		   = sqr,
+														.to			   = sqr + DIR_SW,
+														.mv_type	   = MV_QUIET,
+														.piece		   = king,
+														.captured_type = EMPTY}));
 			expected_moves++;
 		}
 		if (utils_get_rank(sqr) != 0 && utils_get_file(sqr) != 7) {
-			TEST_ASSERT_TRUE(move_list_contains(
-				ml, (Move) {.from = sqr, .to = sqr + DIR_SE, .mv_type = MV_QUIET, .piece = KING}));
+			TEST_ASSERT_TRUE(move_list_contains(ml,
+												(Move) {.from		   = sqr,
+														.to			   = sqr + DIR_SE,
+														.mv_type	   = MV_QUIET,
+														.piece		   = king,
+														.captured_type = EMPTY}));
 			expected_moves++;
 		}
 		if (utils_get_rank(sqr) != 7 && utils_get_file(sqr) != 0) {
-			TEST_ASSERT_TRUE(move_list_contains(
-				ml, (Move) {.from = sqr, .to = sqr + DIR_NW, .mv_type = MV_QUIET, .piece = KING}));
+			TEST_ASSERT_TRUE(move_list_contains(ml,
+												(Move) {.from		   = sqr,
+														.to			   = sqr + DIR_NW,
+														.mv_type	   = MV_QUIET,
+														.piece		   = king,
+														.captured_type = EMPTY}));
 			expected_moves++;
 		}
 		if (utils_get_rank(sqr) != 7 && utils_get_file(sqr) != 7) {
-			TEST_ASSERT_TRUE(move_list_contains(
-				ml, (Move) {.from = sqr, .to = sqr + DIR_NE, .mv_type = MV_QUIET, .piece = KING}));
+			TEST_ASSERT_TRUE(move_list_contains(ml,
+												(Move) {.from		   = sqr,
+														.to			   = sqr + DIR_NE,
+														.mv_type	   = MV_QUIET,
+														.piece		   = king,
+														.captured_type = EMPTY}));
 			expected_moves++;
 		}
 		TEST_ASSERT_EQUAL(expected_moves, move_list_size(ml));
@@ -694,7 +934,11 @@ void test_gen_white_ks_castling_move(void) {
 	board_set_piece(board, w_rook, w_rook_sq);
 	MoveList *ml = movegen_generate(board, w_king.player);
 
-	Move m = (Move) {.from = w_king_sq, .to = SQ_G1, .mv_type = MV_KS_CASTLE, .piece = KING};
+	Move m = (Move) {.from			= w_king_sq,
+					 .to			= SQ_G1,
+					 .mv_type		= MV_KS_CASTLE,
+					 .piece			= w_king,
+					 .captured_type = EMPTY};
 	TEST_ASSERT_TRUE(move_list_contains(ml, m));
 
 	move_list_destroy(&ml);
@@ -710,7 +954,11 @@ void test_gen_white_qs_castling_move(void) {
 	board_set_piece(board, w_rook, w_rook_sq);
 	MoveList *ml = movegen_generate(board, w_king.player);
 
-	Move m = (Move) {.from = w_king_sq, .to = SQ_C1, .mv_type = MV_QS_CASTLE, .piece = KING};
+	Move m = (Move) {.from			= w_king_sq,
+					 .to			= SQ_C1,
+					 .mv_type		= MV_QS_CASTLE,
+					 .piece			= w_king,
+					 .captured_type = EMPTY};
 	TEST_ASSERT_TRUE(move_list_contains(ml, m));
 
 	move_list_destroy(&ml);
@@ -728,7 +976,11 @@ void test_gen_black_ks_castling_move(void) {
 	board_set_piece(board, b_rook, b_rook_sq);
 	MoveList *ml = movegen_generate(board, b_king.player);
 
-	Move m = (Move) {.from = b_king_sq, .to = SQ_G8, .mv_type = MV_KS_CASTLE, .piece = KING};
+	Move m = (Move) {.from			= b_king_sq,
+					 .to			= SQ_G8,
+					 .mv_type		= MV_KS_CASTLE,
+					 .piece			= b_king,
+					 .captured_type = EMPTY};
 	TEST_ASSERT_TRUE(move_list_contains(ml, m));
 
 	move_list_destroy(&ml);
@@ -746,7 +998,11 @@ void test_gen_black_qs_castling_move(void) {
 	board_set_piece(board, b_rook, b_rook_sq);
 	MoveList *ml = movegen_generate(board, b_king.player);
 
-	Move m = (Move) {.from = b_king_sq, .to = SQ_C8, .mv_type = MV_QS_CASTLE, .piece = KING};
+	Move m = (Move) {.from			= b_king_sq,
+					 .to			= SQ_C8,
+					 .mv_type		= MV_QS_CASTLE,
+					 .piece			= b_king,
+					 .captured_type = EMPTY};
 	TEST_ASSERT_TRUE(move_list_contains(ml, m));
 
 	move_list_destroy(&ml);
@@ -766,7 +1022,11 @@ void test_white_ks_castling_move_is_prevented_when_blocked(void) {
 
 	MoveList *ml = movegen_generate(board, w_king.player);
 
-	Move m = (Move) {.from = w_king_sq, .to = SQ_G1, .mv_type = MV_KS_CASTLE, .piece = KING};
+	Move m = (Move) {.from			= w_king_sq,
+					 .to			= SQ_G1,
+					 .mv_type		= MV_KS_CASTLE,
+					 .piece			= w_king,
+					 .captured_type = EMPTY};
 	TEST_ASSERT_FALSE(move_list_contains(ml, m));
 
 	move_list_destroy(&ml);
@@ -786,7 +1046,11 @@ void test_white_qs_castling_move_is_prevented_when_blocked(void) {
 
 	MoveList *ml = movegen_generate(board, w_king.player);
 
-	Move m = (Move) {.from = w_king_sq, .to = SQ_C1, .mv_type = MV_KS_CASTLE, .piece = KING};
+	Move m = (Move) {.from			= w_king_sq,
+					 .to			= SQ_C1,
+					 .mv_type		= MV_KS_CASTLE,
+					 .piece			= w_king,
+					 .captured_type = EMPTY};
 	TEST_ASSERT_FALSE(move_list_contains(ml, m));
 
 	move_list_destroy(&ml);
@@ -808,7 +1072,11 @@ void test_black_ks_castling_move_is_prevented_when_blocked(void) {
 
 	MoveList *ml = movegen_generate(board, b_king.player);
 
-	Move m = (Move) {.from = b_king_sq, .to = SQ_G8, .mv_type = MV_KS_CASTLE, .piece = KING};
+	Move m = (Move) {.from			= b_king_sq,
+					 .to			= SQ_G8,
+					 .mv_type		= MV_KS_CASTLE,
+					 .piece			= b_king,
+					 .captured_type = EMPTY};
 	TEST_ASSERT_FALSE(move_list_contains(ml, m));
 
 	move_list_destroy(&ml);
@@ -830,7 +1098,11 @@ void test_black_qs_castling_move_is_prevented_when_blocked(void) {
 
 	MoveList *ml = movegen_generate(board, b_king.player);
 
-	Move m = (Move) {.from = b_king_sq, .to = SQ_C8, .mv_type = MV_QS_CASTLE, .piece = KING};
+	Move m = (Move) {.from			= b_king_sq,
+					 .to			= SQ_C8,
+					 .mv_type		= MV_QS_CASTLE,
+					 .piece			= b_king,
+					 .captured_type = EMPTY};
 	TEST_ASSERT_FALSE(move_list_contains(ml, m));
 
 	move_list_destroy(&ml);
@@ -842,14 +1114,30 @@ void test_w_pawn_generates_prom_moves_when_advancing_to_rank_8(void) {
 	board_set_piece(board, pawn, from);
 	MoveList *ml = movegen_generate(board, pawn.player);
 	TEST_ASSERT_EQUAL(4, move_list_size(ml));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = from, .to = SQ_B8, .mv_type = MV_Q_PROM, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = from, .to = SQ_B8, .mv_type = MV_R_PROM, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = from, .to = SQ_B8, .mv_type = MV_B_PROM, .piece = PAWN}));
-	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = from, .to = SQ_B8, .mv_type = MV_N_PROM, .piece = PAWN}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = from,
+												.to			   = SQ_B8,
+												.mv_type	   = MV_Q_PROM,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = from,
+												.to			   = SQ_B8,
+												.mv_type	   = MV_R_PROM,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = from,
+												.to			   = SQ_B8,
+												.mv_type	   = MV_B_PROM,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
+	TEST_ASSERT_TRUE(move_list_contains(ml,
+										(Move) {.from		   = from,
+												.to			   = SQ_B8,
+												.mv_type	   = MV_N_PROM,
+												.piece		   = pawn,
+												.captured_type = EMPTY}));
 	move_list_destroy(&ml);
 }
 
@@ -861,13 +1149,21 @@ void test_b_pawn_generates_prom_moves_when_advancing_to_rank_1(void) {
 	MoveList *ml = movegen_generate(board, pawn.player);
 	TEST_ASSERT_EQUAL(4, move_list_size(ml));
 	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = from, .to = to, .mv_type = MV_Q_PROM, .piece = PAWN}));
+		ml,
+		(Move) {
+			.from = from, .to = to, .mv_type = MV_Q_PROM, .piece = pawn, .captured_type = EMPTY}));
 	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = from, .to = to, .mv_type = MV_R_PROM, .piece = PAWN}));
+		ml,
+		(Move) {
+			.from = from, .to = to, .mv_type = MV_R_PROM, .piece = pawn, .captured_type = EMPTY}));
 	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = from, .to = to, .mv_type = MV_B_PROM, .piece = PAWN}));
+		ml,
+		(Move) {
+			.from = from, .to = to, .mv_type = MV_B_PROM, .piece = pawn, .captured_type = EMPTY}));
 	TEST_ASSERT_TRUE(move_list_contains(
-		ml, (Move) {.from = from, .to = to, .mv_type = MV_N_PROM, .piece = PAWN}));
+		ml,
+		(Move) {
+			.from = from, .to = to, .mv_type = MV_N_PROM, .piece = pawn, .captured_type = EMPTY}));
 	move_list_destroy(&ml);
 }
 

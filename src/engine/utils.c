@@ -162,7 +162,7 @@ FixedStr utils_move_description(Board* board, Move move) {
 			 utils_move_type_to_str(move.mv_type),
 			 piece_from.player,
 			 utils_piece_type_to_str(piece_from.type),
-			 utils_piece_type_to_str(move.captured));
+			 utils_piece_type_to_str(move.captured_type));
 	return str;
 }
 

@@ -39,11 +39,11 @@ static Move move_create(
 		}
 	}
 	Move mv = {
-		.from	  = from,
-		.to		  = to,
-		.mv_type  = mv_type,
-		.captured = captured,
-		.piece	  = pt,
+		.from		   = from,
+		.to			   = to,
+		.mv_type	   = mv_type,
+		.captured_type = captured,
+		.piece		   = (Piece) {.type = pt, .player = p},
 	};
 	return mv;
 }

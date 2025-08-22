@@ -32,7 +32,7 @@ typedef enum {
 	DIR_SE = -7,
 } Direction;
 
-typedef enum { PLAYER_W = 0, PLAYER_B = 1, PLAYER_NONE = -1 } Player;
+typedef enum { PLAYER_NONE = -1, PLAYER_W = 0, PLAYER_B = 1, PLAYER_CNT = 2 } Player;
 
 typedef enum {
 	CASTLING_NO_RIGHTS	= 0,
@@ -78,12 +78,12 @@ typedef struct {
 	// bit int
 	Square	  from;
 	Square	  to;
-	PieceType piece;
-	PieceType captured;
+	Piece	  piece;
+	PieceType captured_type;
 	MoveType  mv_type;
 } Move;
 
-#define NO_MOVE ((Move) {SQ_NONE, SQ_NONE, EMPTY, EMPTY, MV_NONE})
+#define NO_MOVE ((Move) {0})
 
 typedef struct {
 	Square	  from;

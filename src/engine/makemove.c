@@ -8,7 +8,7 @@
 static void handle_castling_rights(Board *board, Move move, PieceType captured);
 
 static void handle_castling_rights(Board *board, Move move, PieceType captured) {
-	if (move.piece == ROOK) {
+	if (move.piece.type == ROOK) {
 		if (board_get_castling_rights(board, board->side) == CASTLING_NO_RIGHTS) {
 			return;
 		}
@@ -25,7 +25,7 @@ static void handle_castling_rights(Board *board, Move move, PieceType captured) 
 				board_remove_castling_rights(board, CASTLING_BLACK_QS);
 			}
 		}
-	} else if (move.piece == KING) {
+	} else if (move.piece.type == KING) {
 		if (board_get_castling_rights(board, board->side) == CASTLING_NO_RIGHTS) {
 			return;
 		}
@@ -60,8 +60,8 @@ static void handle_castling_rights(Board *board, Move move, PieceType captured) 
 bool make_move(Board *board, Move move) {
 	History hist = (History) {.from				= move.from,
 							  .to				= move.to,
-							  .moving			= move.piece,
-							  .captured			= move.captured,
+							  .moving			= move.piece.type,
+							  .captured			= move.captured_type,
 							  .mv_type			= move.mv_type,
 							  .ep_target		= board->ep_target,
 							  .side				= board->side,
@@ -162,7 +162,7 @@ bool make_move(Board *board, Move move) {
 		return false;
 	}
 
-	if (move.piece == PAWN || hist.captured != EMPTY) {
+	if (move.piece.type == PAWN || hist.captured != EMPTY) {
 		board->halfmove_clock = 0;
 	} else {
 		board->halfmove_clock++;

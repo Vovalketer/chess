@@ -18,7 +18,7 @@ void test_quiet_move_removes_from_original_square_and_sets_at_new_square(void) {
 	Piece  pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
 	Square from = SQ_B2;
 	Square to	= SQ_B3;
-	Move   move = (Move) {.piece = pawn.type, .from = from, .to = to, .mv_type = MV_QUIET};
+	Move   move = (Move) {.piece = pawn, .from = from, .to = to, .mv_type = MV_QUIET};
 	board_set_piece(board, pawn, from);
 	TEST_ASSERT_TRUE(board_get_piece(board, from).type == pawn.type);
 	TEST_ASSERT_TRUE(board_get_piece(board, to).type == EMPTY);
@@ -33,7 +33,7 @@ void test_w_pawn_double_push_sets_ep_target(void) {
 	Piece  pawn = (Piece) {.player = PLAYER_W, .type = PAWN};
 	Square from = SQ_B2;
 	Square to	= SQ_B4;
-	Move   move = (Move) {.piece = pawn.type, .from = from, .to = to, .mv_type = MV_PAWN_DOUBLE};
+	Move   move = (Move) {.piece = pawn, .from = from, .to = to, .mv_type = MV_PAWN_DOUBLE};
 	board_set_piece(board, pawn, from);
 	TEST_ASSERT_TRUE(board->ep_target == SQ_NONE);
 	TEST_ASSERT_TRUE(make_move(board, move));
@@ -45,7 +45,7 @@ void test_b_pawn_double_push_sets_ep_target(void) {
 	Piece  pawn = (Piece) {.player = PLAYER_B, .type = PAWN};
 	Square from = SQ_B7;
 	Square to	= SQ_B5;
-	Move   move = (Move) {.piece = pawn.type, .from = from, .to = to, .mv_type = MV_PAWN_DOUBLE};
+	Move   move = (Move) {.piece = pawn, .from = from, .to = to, .mv_type = MV_PAWN_DOUBLE};
 	board_set_piece(board, pawn, from);
 	TEST_ASSERT_TRUE(board->ep_target == SQ_NONE);
 	TEST_ASSERT_TRUE(make_move(board, move));
@@ -57,7 +57,7 @@ void test_non_double_pawn_pushes_reset_ep_target(void) {
 	Piece  pawn		 = (Piece) {.player = PLAYER_W, .type = PAWN};
 	Square from		 = SQ_B2;
 	Square to		 = SQ_B3;
-	Move   move		 = (Move) {.piece = pawn.type, .from = from, .to = to, .mv_type = MV_QUIET};
+	Move   move		 = (Move) {.piece = pawn, .from = from, .to = to, .mv_type = MV_QUIET};
 	board_set_piece(board, pawn, from);
 	TEST_ASSERT_TRUE(board->ep_target == SQ_H3);
 	TEST_ASSERT_TRUE(make_move(board, move));
@@ -68,7 +68,7 @@ void test_ks_w_rook_move_removes_ks_castling_rights(void) {
 	Piece  rook = (Piece) {.player = PLAYER_W, .type = ROOK};
 	Square from = SQ_H1;
 	Square to	= SQ_F1;
-	Move   move = (Move) {.piece = rook.type, .from = from, .to = to, .mv_type = MV_QUIET};
+	Move   move = (Move) {.piece = rook, .from = from, .to = to, .mv_type = MV_QUIET};
 	board_set_piece(board, rook, from);
 	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_WHITE_KS));
 
@@ -81,7 +81,7 @@ void test_qs_w_rook_move_removes_qs_castling_rights(void) {
 	Piece  rook = (Piece) {.player = PLAYER_W, .type = ROOK};
 	Square from = SQ_A1;
 	Square to	= SQ_D1;
-	Move   move = (Move) {.piece = rook.type, .from = from, .to = to, .mv_type = MV_QUIET};
+	Move   move = (Move) {.piece = rook, .from = from, .to = to, .mv_type = MV_QUIET};
 	board_set_piece(board, rook, from);
 	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_WHITE_QS));
 
@@ -95,7 +95,7 @@ void test_ks_b_rook_move_removes_ks_castling_rights(void) {
 	Piece  rook = (Piece) {.player = PLAYER_B, .type = ROOK};
 	Square from = SQ_H8;
 	Square to	= SQ_F8;
-	Move   move = (Move) {.piece = rook.type, .from = from, .to = to, .mv_type = MV_QUIET};
+	Move   move = (Move) {.piece = rook, .from = from, .to = to, .mv_type = MV_QUIET};
 	board_set_piece(board, rook, from);
 	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_BLACK_KS));
 
@@ -109,7 +109,7 @@ void test_qs_b_rook_move_removes_qs_castling_rights(void) {
 	Piece  rook = (Piece) {.player = PLAYER_B, .type = ROOK};
 	Square from = SQ_A8;
 	Square to	= SQ_D8;
-	Move   move = (Move) {.piece = rook.type, .from = from, .to = to, .mv_type = MV_QUIET};
+	Move   move = (Move) {.piece = rook, .from = from, .to = to, .mv_type = MV_QUIET};
 	board_set_piece(board, rook, from);
 	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_BLACK_QS));
 
@@ -123,7 +123,7 @@ void test_w_king_move_removes_w_castling_rights(void) {
 	Piece  king = (Piece) {.player = PLAYER_W, .type = KING};
 	Square from = SQ_E1;
 	Square to	= SQ_E2;
-	Move   move = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QUIET};
+	Move   move = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QUIET};
 	board_set_piece(board, king, from);
 	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_WHITE_KS));
 	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_WHITE_QS));
@@ -139,7 +139,7 @@ void test_b_king_move_removes_b_castling_rights(void) {
 	Piece  king = (Piece) {.player = PLAYER_B, .type = KING};
 	Square from = SQ_E8;
 	Square to	= SQ_E7;
-	Move   move = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QUIET};
+	Move   move = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QUIET};
 	board_set_piece(board, king, from);
 	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_BLACK_KS));
 	TEST_ASSERT_TRUE(board_has_castling_rights(board, CASTLING_BLACK_QS));
@@ -158,7 +158,7 @@ void test_w_ks_castling_moves_rook_and_king(void) {
 	Square rook_to	 = SQ_F1;
 	Square from		 = SQ_E1;
 	Square to		 = SQ_G1;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -179,7 +179,7 @@ void test_b_ks_castling_moves_rook_and_king(void) {
 	Square rook_to	 = SQ_F8;
 	Square from		 = SQ_E8;
 	Square to		 = SQ_G8;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -200,7 +200,7 @@ void test_w_qs_castling_moves_rook_and_king(void) {
 	Square rook_to	 = SQ_D1;
 	Square from		 = SQ_E1;
 	Square to		 = SQ_C1;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -221,7 +221,7 @@ void test_b_qs_castling_moves_rook_and_king(void) {
 	Square rook_to	 = SQ_D8;
 	Square from		 = SQ_E8;
 	Square to		 = SQ_C8;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -242,7 +242,7 @@ void test_w_ks_castling_cannot_be_done_if_king_is_in_check(void) {
 	Square rook_to	 = SQ_F1;
 	Square from		 = SQ_E1;
 	Square to		 = SQ_G1;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -267,7 +267,7 @@ void test_b_ks_castling_cannot_be_done_if_king_is_in_check(void) {
 	Square rook_to	 = SQ_F8;
 	Square from		 = SQ_E8;
 	Square to		 = SQ_G8;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -292,7 +292,7 @@ void test_w_qs_castling_cannot_be_done_if_king_is_in_check(void) {
 	Square rook_to	 = SQ_D1;
 	Square from		 = SQ_E1;
 	Square to		 = SQ_C1;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -317,7 +317,7 @@ void test_b_qs_castling_cannot_be_done_if_king_is_in_check(void) {
 	Square rook_to	 = SQ_D8;
 	Square from		 = SQ_E8;
 	Square to		 = SQ_C8;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -341,7 +341,7 @@ void test_w_ks_castling_cannot_be_done_if_path_is_blocked(Square blocker_sqr) {
 	Square rook_from = SQ_H1;
 	Square from		 = SQ_E1;
 	Square to		 = SQ_G1;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -373,7 +373,7 @@ void test_b_ks_castling_cannot_be_done_if_path_is_blocked(Square blocker_sqr) {
 	Square rook_from = SQ_H8;
 	Square from		 = SQ_E8;
 	Square to		 = SQ_G8;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -405,7 +405,7 @@ void test_w_qs_castling_cannot_be_done_if_path_is_blocked(Square blocker_sqr) {
 	Square rook_from = SQ_A1;
 	Square from		 = SQ_E1;
 	Square to		 = SQ_C1;
-	Move   move		 = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
+	Move   move		 = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -439,7 +439,7 @@ void test_b_qs_castling_cannot_be_done_if_path_is_blocked(Square blocker_sqr) {
 	// Square rook_to	 = SQ_D8;
 	Square from = SQ_E8;
 	Square to	= SQ_C8;
-	Move   move = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
+	Move   move = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
 	board_set_piece(board, king, from);
 	board_set_piece(board, rook, rook_from);
 
@@ -481,7 +481,7 @@ void test_ks_castling_cannot_be_done_if_squares_are_threatened(Square threatened
 	Square	  threat_from = threatened_sqr + offset;
 	board_set_piece(board, threat, threat_from);
 
-	Move move = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
+	Move move = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_KS_CASTLE};
 	TEST_ASSERT_FALSE(make_move(board, move));
 
 	TEST_ASSERT_TRUE_MESSAGE(board_get_piece(board, rook_from).type == rook.type,
@@ -518,7 +518,7 @@ void test_qs_castling_cannot_be_done_if_squares_are_threatened(Square threatened
 	Square	  threat_from = threatened_sqr + offset;
 	board_set_piece(board, threat, threat_from);
 
-	Move move = (Move) {.piece = king.type, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
+	Move move = (Move) {.piece = king, .from = from, .to = to, .mv_type = MV_QS_CASTLE};
 	TEST_ASSERT_FALSE(make_move(board, move));
 
 	TEST_ASSERT_TRUE_MESSAGE(board_get_piece(board, rook_from).type == rook.type,
@@ -547,7 +547,7 @@ void test_capture_move_removes_from_original_square_and_sets_at_new_square(void)
 	board_set_piece(board, pawn, from);
 	board_set_piece(board, captured, to);
 
-	Move move = (Move) {.piece = pawn.type, .from = from, .to = to, .mv_type = MV_CAPTURE};
+	Move move = (Move) {.piece = pawn, .from = from, .to = to, .mv_type = MV_CAPTURE};
 	TEST_ASSERT_TRUE(make_move(board, move));
 
 	TEST_ASSERT_TRUE(board_get_piece(board, from).type == EMPTY);
@@ -565,7 +565,7 @@ void test_w_en_passant_move_removes_opponent_pawn_and_sets_ep_target(void) {
 	board_set_piece(board, pawn, from);
 	board_set_piece(board, captured, captured_sqr);
 
-	Move move = (Move) {.piece = pawn.type, .from = from, .to = to, .mv_type = MV_EN_PASSANT};
+	Move move = (Move) {.piece = pawn, .from = from, .to = to, .mv_type = MV_EN_PASSANT};
 	TEST_ASSERT_TRUE(make_move(board, move));
 
 	TEST_ASSERT_TRUE(board_get_piece(board, from).type == EMPTY);
@@ -586,7 +586,7 @@ void test_b_en_passant_move_removes_opponent_pawn_and_sets_ep_target(void) {
 	board_set_piece(board, pawn, from);
 	board_set_piece(board, captured, captured_sqr);
 
-	Move move = (Move) {.piece = pawn.type, .from = from, .to = to, .mv_type = MV_EN_PASSANT};
+	Move move = (Move) {.piece = pawn, .from = from, .to = to, .mv_type = MV_EN_PASSANT};
 	TEST_ASSERT_TRUE(make_move(board, move));
 
 	TEST_ASSERT_TRUE(board_get_piece(board, from).type == EMPTY);

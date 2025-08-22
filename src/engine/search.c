@@ -68,8 +68,8 @@ static int mvv_lva_get(PieceType victim, PieceType attacker) {
 static int mvv_lva_compare(const void* x, const void* y) {
 	Move* xt	= (Move*) x;
 	Move* yt	= (Move*) y;
-	int	  x_val = mvv_lva_get(xt->captured, xt->piece);
-	int	  y_val = mvv_lva_get(yt->captured, yt->piece);
+	int	  x_val = mvv_lva_get(xt->captured_type, xt->piece.type);
+	int	  y_val = mvv_lva_get(yt->captured_type, yt->piece.type);
 	if (x_val < y_val)
 		return 1;
 	else if (x_val > y_val)
@@ -88,8 +88,8 @@ static int scored_move_compare(const void* x, const void* y) {
 }
 
 static int score_move(Move move, SearchContext* ctx) {
-	if (move.captured != EMPTY)
-		return mvv_lva_get(move.captured, move.piece) + SCORE_CAPTURE;
+	if (move.captured_type != EMPTY)
+		return mvv_lva_get(move.captured_type, move.piece.type) + SCORE_CAPTURE;
 
 	if (move_equals(move, ctx->killer_moves[ctx->depth][0]))
 		return SCORE_KILLER_FIRST;
@@ -180,7 +180,7 @@ int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta,
 			alpha = score;
 		if (score >= beta) {
 			// killer heuristic
-			if (sm.move.captured == EMPTY) {
+			if (sm.move.captured_type == EMPTY) {
 				ctx->killer_moves[ply][1] = ctx->killer_moves[ply][0];
 				ctx->killer_moves[ply][0] = sm.move;
 			}

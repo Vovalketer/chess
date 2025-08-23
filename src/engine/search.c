@@ -112,34 +112,36 @@ static ScoredMoveList get_scored_moves(MoveList* moves, SearchContext* ctx) {
 }
 
 int quiescence(Board* board, int alpha, int beta) {
-	int stand_pat = eval(board);
-	if (stand_pat >= beta)
-		return beta;
-	if (stand_pat > alpha)
-		alpha = stand_pat;
+	int val = eval(board);
+	if (val >= beta)
+		return val;
+	if (val > alpha)
+		alpha = val;
 
 	MoveList* moves = movegen_generate_captures(board, board->side);
-	move_list_sort(moves, mvv_lva_compare);
+	if (move_list_size(moves))
+		move_list_sort(moves, mvv_lva_compare);
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		Move move;
-		move = *move_list_get(moves, i);
+		Move move = *move_list_get(moves, i);
 
 		if (!make_move(board, move))
 			continue;
 		int score = -quiescence(board, -beta, -alpha);
 		unmake_move(board);
 		if (score >= beta)
-			return beta;
+			return score;
+		if (score > val)
+			val = score;
 		if (score > alpha)
 			alpha = score;
 	}
 	move_list_destroy(&moves);
-	return alpha;
+	return val;
 }
 
 int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta, int ply) {
 	if (depth == 0) {
-		return eval(board);
+		return quiescence(board, alpha, beta);
 	}
 	ctx->pv_length[ply]		  = 0;
 	ctx->side				  = board->side;

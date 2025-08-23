@@ -78,7 +78,7 @@ bool make_move(Board *board, Move move) {
 			board_move_piece(board, move.from, move.to);
 			break;
 		case MV_KS_CASTLE: {
-			Player p = board->side;
+			Player p = move.piece.player;
 			Square f = p == PLAYER_W ? ROOK_CASTLING_W_KS_DST : ROOK_CASTLING_B_KS_DST;
 			Square g = p == PLAYER_W ? KING_CASTLING_W_KS_DST : KING_CASTLING_B_KS_DST;
 			Square h = p == PLAYER_W ? ROOK_CASTLING_W_KS_SRC : ROOK_CASTLING_B_KS_SRC;
@@ -95,7 +95,7 @@ bool make_move(Board *board, Move move) {
 			break;
 		}
 		case MV_QS_CASTLE: {
-			Player p = board->side;
+			Player p = move.piece.player;
 			Square a = p == PLAYER_W ? ROOK_CASTLING_W_QS_SRC : ROOK_CASTLING_B_QS_SRC;
 			Square b = p == PLAYER_W ? SQ_B1 : SQ_B8;
 			Square c = p == PLAYER_W ? KING_CASTLING_W_QS_DST : KING_CASTLING_B_QS_DST;

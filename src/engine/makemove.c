@@ -6,8 +6,6 @@
 #include "types.h"
 #include "utils.h"
 
-static void handle_castling_rights(Board *board, Move move, PieceType captured);
-
 static void handle_castling_rights(Board *board, Move move, PieceType captured) {
 	if (move.piece.type == ROOK) {
 		if (board_get_castling_rights(board, board->side) == CASTLING_NO_RIGHTS) {
@@ -177,16 +175,16 @@ bool make_move(Board *board, Move move) {
 	}
 	handle_castling_rights(board, move, hist.captured);
 	board->side = utils_get_opponent(hist.side);
-	history_append(board->history, hist);
+	history_push_back(board->history, hist);
 	hash_update(board, move, hist.castling_rights, hist.ep_target);
 	return true;
 }
 
 void unmake_move(Board *board) {
-	History hist = {0};
-	if (!history_pop_last(board->history, &hist)) {
-		log_warning("Could not unmake move, history is empty");
-		return;
+	if (history_size(board->history) > 0) {
+		History hist = history_pop_back(board->history);
+		board_apply_history(board, hist);
+	} else {
+		log_warning("Could not undo move, history is empty");
 	}
-	board_apply_history(board, hist);
 }

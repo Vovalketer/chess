@@ -1,10 +1,10 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "../common/array_tpl.h"
+#include "../common/vector.h"
 #include "../include/types.h"
 #include "fen.h"
-ARRAY_DEFINE_TYPE(History, HistoryList, history)
+VECTOR_DEFINE_TYPE(History, HistoryList, history)
 #define ROOK_CASTLING_W_KS_SRC SQ_H1
 #define ROOK_CASTLING_W_QS_SRC SQ_A1
 #define ROOK_CASTLING_B_KS_SRC SQ_H8

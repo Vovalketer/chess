@@ -68,7 +68,8 @@ Board *board_create(void) {
 	b->side		 = PLAYER_W;
 	b->ep_target = SQ_NONE;
 	b->hash		 = hash_board(b);
-	if (!history_create(&b->history)) {
+	b->history	 = history_create();
+	if (!b->history) {
 		log_error("Failed to allocate history");
 		free(b);
 		return NULL;
@@ -91,14 +92,8 @@ void board_destroy(Board **board) {
 Board *board_clone(const Board *board) {
 	Board *b = board_create();
 	memcpy(b, board, sizeof(Board));
-	HistoryList *hl = NULL;
-	history_create(&hl);
-	for (size_t i = 0; i < history_size(board->history); i++) {
-		History h;
-		history_get(board->history, i, &h);
-		history_append(hl, h);
-	}
-	b->history = hl;
+	history_init(b->history);
+	history_clone(b->history, board->history);
 	return b;
 }
 

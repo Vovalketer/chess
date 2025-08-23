@@ -35,7 +35,7 @@ struct Board {
 	Player		 side;
 	HistoryList *history;  // we could infer the ply from the size of the list
 
-	// uint64_t zobrist_key;
+	uint64_t hash;
 };
 
 Board	 *board_create(void);

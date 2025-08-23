@@ -5,6 +5,7 @@ libboard = library(
 		'bits.c',
 		'bitboards.c',
 		'fen.c',
+		'hash.c',
 		'utils.c',
 		'move.c',
 	],
@@ -15,7 +16,7 @@ libboard_dep = declare_dependency(link_with: [libboard], dependencies: [libarray
 
 libmakemove = library(
 	'makemove',
-	['makemove.c', 'movegen.c', 'bitboards.c'],
+	['makemove.c', 'movegen.c', 'bitboards.c', 'hash.c'],
 	dependencies: [libboard_dep],
 )
 

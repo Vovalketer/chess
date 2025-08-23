@@ -36,6 +36,7 @@ test('movegen_test', movegen_test)
 makemove_files = [
 	engine_path + 'makemove.c',
 	engine_path + 'bitboards.c',
+	engine_path + 'hash.c',
 ]
 makemove_test = executable(
 	'makemove_test',
@@ -45,3 +46,16 @@ makemove_test = executable(
 	dependencies: [libboard_dep, unity_dep],
 )
 test('makemove_test', makemove_test)
+
+hashing_files = [
+	engine_path + 'hash.c',
+]
+hashing_test = executable(
+	'hash_test',
+	'hash_test.c',
+	hashing_files,
+	makemove_files,
+	include_directories: [common_inc, engine_inc],
+	dependencies: [libboard_dep, unity_dep],
+)
+test('hash_test', hashing_test)

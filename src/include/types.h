@@ -96,7 +96,7 @@ typedef struct {
 	uint8_t	  halfmove_clock;
 	uint16_t  fullmove_counter;
 	Player	  side;
-	// uint64_t zobrist_key;
+	uint64_t  hash;
 } History;
 
 typedef struct Board Board;

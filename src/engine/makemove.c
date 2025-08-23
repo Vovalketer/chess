@@ -1,6 +1,7 @@
 #include "makemove.h"
 
 #include "board.h"
+#include "hash.h"
 #include "log.h"
 #include "types.h"
 #include "utils.h"
@@ -67,7 +68,8 @@ bool make_move(Board *board, Move move) {
 							  .side				= board->side,
 							  .castling_rights	= board->castling_rights,
 							  .halfmove_clock	= board->halfmove_clock,
-							  .fullmove_counter = board->fullmove_counter};
+							  .fullmove_counter = board->fullmove_counter,
+							  .hash				= board->hash};
 
 	switch (move.mv_type) {
 		case MV_QUIET:
@@ -176,6 +178,7 @@ bool make_move(Board *board, Move move) {
 	handle_castling_rights(board, move, hist.captured);
 	board->side = utils_get_opponent(hist.side);
 	history_append(board->history, hist);
+	hash_update(board, move, hist.castling_rights, hist.ep_target);
 	return true;
 }
 

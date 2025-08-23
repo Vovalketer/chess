@@ -8,6 +8,7 @@
 #include "bitboards.h"
 #include "bits.h"
 #include "fen.h"
+#include "hash.h"
 #include "log.h"
 #include "types.h"
 #include "utils.h"
@@ -66,6 +67,7 @@ Board *board_create(void) {
 	board_set_castling_rights(b, CASTLING_ALL_RIGHTS);
 	b->side		 = PLAYER_W;
 	b->ep_target = SQ_NONE;
+	b->hash		 = hash_board(b);
 	if (!history_create(&b->history)) {
 		log_error("Failed to allocate history");
 		free(b);
@@ -190,6 +192,7 @@ void board_apply_history(Board *board, History hist) {
 	board->castling_rights	= hist.castling_rights;
 	board->halfmove_clock	= hist.halfmove_clock;
 	board->fullmove_counter = hist.fullmove_counter;
+	board->hash				= hist.hash;
 }
 
 bool board_from_fen(Board *board, const char *fen) {
@@ -201,6 +204,7 @@ bool board_from_fen(Board *board, const char *fen) {
 		log_error("Error parsing FEN");
 		return false;
 	};
+	board->hash = hash_board(board);
 	return true;
 }
 

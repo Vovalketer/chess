@@ -87,6 +87,21 @@ static int scored_move_compare(const void* x, const void* y) {
 	return 0;
 }
 
+static bool is_repetition(Board* board) {
+	int count = 0;
+	for (size_t i = 0; i < history_size(board->history) - 1; i++) {
+		History* h = history_get(board->history, i);
+		if (h->hash == board->hash) {
+			count++;
+		}
+		// two-fold repetition to avoid dancing pieces
+		if (count > 1) {
+			return true;
+		}
+	}
+	return false;
+}
+
 static int score_move(Move move, SearchContext* ctx) {
 	if (move.captured_type != EMPTY)
 		return mvv_lva_get(move.captured_type, move.piece.type) + SCORE_CAPTURE;
@@ -161,8 +176,12 @@ int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta,
 		ScoredMove sm = *sm_get(&scored_moves, i);
 		if (!make_move(board, sm.move))
 			continue;
-		int score = -alpha_beta(ctx, board, depth - 1, -beta, -alpha, ply + 1);
-		legal_moves++;
+
+		int score = 0;
+		if (board->halfmove_clock < 99 || !is_repetition(board)) {
+			score = -alpha_beta(ctx, board, depth - 1, -beta, -alpha, ply + 1);
+			legal_moves++;
+		}
 		ctx->nodes++;
 		unmake_move(board);
 

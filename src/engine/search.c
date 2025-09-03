@@ -47,7 +47,7 @@ typedef struct {
 	Move		   killer_moves[MAX_DEPTH][2];
 	int			   history_heuristic[2][SQ_CNT][SQ_CNT];  // player, from, to
 	ScoredMoveList scored_moves;						  // meant to be used as cache for sorting
-	int			   depth;
+	int			   ply;
 	Player		   side;
 	uint64_t	   nodes;
 } SearchContext;
@@ -89,26 +89,23 @@ static int scored_move_compare(const void* x, const void* y) {
 
 static bool is_repetition(Board* board) {
 	int count = 0;
-	for (size_t i = 0; i < history_size(board->history) - 1; i++) {
+	for (size_t i = 0; i < history_size(board->history); i++) {
 		History* h = history_get(board->history, i);
+		assert(h != NULL);
 		if (h->hash == board->hash) {
 			count++;
 		}
-		// two-fold repetition to avoid dancing pieces
-		if (count > 1) {
-			return true;
-		}
 	}
-	return false;
+	return count >= 2;
 }
 
 static int score_move(Move move, SearchContext* ctx) {
 	if (move.captured_type != EMPTY)
 		return mvv_lva_get(move.captured_type, move.piece.type) + SCORE_CAPTURE;
 
-	if (move_equals(move, ctx->killer_moves[ctx->depth][0]))
+	if (move_equals(move, ctx->killer_moves[ctx->ply][0]))
 		return SCORE_KILLER_FIRST;
-	else if (move_equals(move, ctx->killer_moves[ctx->depth][1]))
+	else if (move_equals(move, ctx->killer_moves[ctx->ply][1]))
 		return SCORE_KILLER_SECOND;
 	else
 		return ctx->history_heuristic[ctx->side][move.from][move.to] + SCORE_HISTORY;
@@ -118,7 +115,8 @@ static ScoredMoveList get_scored_moves(MoveList* moves, SearchContext* ctx) {
 	ScoredMoveList scored_moves;
 	sm_init(&scored_moves);
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		Move	   move		   = *move_list_get(moves, i);
+		Move move = *move_list_get(moves, i);
+		assert(move.from != move.to);
 		ScoredMove scored_move = {move, score_move(move, ctx)};
 		sm_push_back(&scored_moves, scored_move);
 	}
@@ -126,7 +124,23 @@ static ScoredMoveList get_scored_moves(MoveList* moves, SearchContext* ctx) {
 	return scored_moves;
 }
 
-int quiescence(Board* board, int alpha, int beta) {
+void copy_pv(SearchContext* ctx, Move best_move, int ply) {
+	ctx->pv_table[ply][0] = best_move;
+
+	if (ctx->pv_length[ply + 1] > 0) {
+		memcpy(&ctx->pv_table[ply][1],
+			   &ctx->pv_table[ply + 1][0],
+			   sizeof(Move) * (ctx->pv_length[ply + 1]));
+	}
+	ctx->pv_length[ply] = 1 + ctx->pv_length[ply + 1];
+}
+
+int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
+	ctx->side = board->side;
+	ctx->ply  = ply;
+	ctx->nodes++;
+	if (is_repetition(board) || board->halfmove_clock > 99)
+		return 0;
 	int val = eval(board);
 	if (val >= beta)
 		return val;
@@ -141,7 +155,7 @@ int quiescence(Board* board, int alpha, int beta) {
 
 		if (!make_move(board, move))
 			continue;
-		int score = -quiescence(board, -beta, -alpha);
+		int score = -quiescence(ctx, board, -beta, -alpha, ply + 1);
 		unmake_move(board);
 		if (score >= beta)
 			return score;
@@ -160,12 +174,9 @@ void copy_tt_entry(SearchContext* ctx, TEntry* entry) {
 }
 
 int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta, int ply) {
-	if (depth == 0) {
-		return quiescence(board, alpha, beta);
-	}
 	ctx->pv_length[ply]		  = 0;
 	ctx->side				  = board->side;
-	ctx->depth				  = depth;
+	ctx->ply				  = ply;
 	ctx->killer_moves[ply][0] = NO_MOVE;
 	ctx->killer_moves[ply][1] = NO_MOVE;
 	sm_clear(&ctx->scored_moves);
@@ -214,31 +225,31 @@ int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta,
 
 	for (size_t i = 0; i < sm_size(&scored_moves); i++) {
 		ScoredMove sm = *sm_get(&scored_moves, i);
+		assert(sm.move.from != sm.move.to);
 		if (!make_move(board, sm.move))
 			continue;
 
-		int score = 0;
-		if (board->halfmove_clock < 99 || !is_repetition(board)) {
-			score = -alpha_beta(ctx, board, depth - 1, -beta, -alpha, ply + 1);
-			legal_moves++;
-		}
+		int score = -alpha_beta(ctx, board, depth - 1, -beta, -alpha, ply + 1);
+		legal_moves++;
 		ctx->nodes++;
 		unmake_move(board);
 
 		if (score > best_score) {
-			best_score			  = score;
-			ctx->pv_table[ply][0] = sm.move;
+			best_score = score;
+			best_move  = sm.move;
 
+			ctx->pv_table[ply][0] = sm.move;
 			if (ctx->pv_length[ply + 1] > 0) {
 				// copy the child's PV
 				memcpy(&ctx->pv_table[ply][1],
 					   &ctx->pv_table[ply + 1][0],
-					   sizeof(sm) * ctx->pv_length[ply + 1]);
+					   sizeof(ctx->pv_table[ply][0]) * ctx->pv_length[ply + 1]);
 			}
 			ctx->pv_length[ply] = 1 + ctx->pv_length[ply + 1];
 		}
-		if (score > alpha)
+		if (score > alpha) {
 			alpha = score;
+		}
 		if (score >= beta) {
 			// killer heuristic
 			if (sm.move.captured_type == EMPTY) {
@@ -294,7 +305,7 @@ Move search_best_move(Board* board, int max_depth) {
 		// reset pvs for this search
 		memset(&ctx.pv_length, 0, sizeof(ctx.pv_length));
 
-		int score = -alpha_beta(&ctx, board, depth, -INF, INF, 0);
+		int score = alpha_beta(&ctx, board, depth, -INF, INF, 0);
 		log_info("info depth %d score %d nodes %llu", depth, score, ctx.nodes);
 		move_list_clear(&root_pv);
 		for (int i = 0; i < ctx.pv_length[0]; i++) {

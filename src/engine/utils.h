@@ -19,7 +19,7 @@ const char* utils_piece_type_to_str(PieceType type);
 const char* utils_move_type_to_str(MoveType type);
 const char* utils_piece_to_unicode_str(Piece piece);
 // returns a char[256] string with the move description as a string, for debugging
-FixedStr utils_move_description(Board* board, Move move);
+FixedStr utils_move_description(Move move);
 FixedStr utils_square_contents(Board* board, Square sqr);
 
 #endif	// UTILS_H

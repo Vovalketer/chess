@@ -316,8 +316,7 @@ Move search_best_move(Board* board, int max_depth) {
 		}
 		log_info("PV:");
 		for (size_t i = 0; i < move_list_size(&root_pv); i++) {
-			Move move = *move_list_get(&root_pv, i);
-			log_info("%s", utils_move_description(board, move).str);
+			log_info("%s", utils_move_description(*move_list_get(&root_pv, i)).str);
 		}
 	}
 	search_ctx_free(&ctx);

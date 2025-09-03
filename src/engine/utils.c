@@ -151,17 +151,16 @@ const char* utils_move_type_to_str(MoveType type) {
 	return move_type_name[type];
 }
 
-FixedStr utils_move_description(Board* board, Move move) {
+FixedStr utils_move_description(Move move) {
 	FixedStr str;
-	Piece	 piece_from = board_get_piece(board, move.from);
 	snprintf(str.str,
 			 sizeof(str.str),
 			 "Move: %s -> %s | Type: %s | Player: %d | Piece: %s | Captured: %s",
 			 utils_square_to_str(move.from),
 			 utils_square_to_str(move.to),
 			 utils_move_type_to_str(move.mv_type),
-			 piece_from.player,
-			 utils_piece_type_to_str(piece_from.type),
+			 move.piece.player,
+			 utils_piece_type_to_str(move.piece.type),
 			 utils_piece_type_to_str(move.captured_type));
 	return str;
 }

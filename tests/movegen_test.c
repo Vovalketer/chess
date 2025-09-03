@@ -313,13 +313,11 @@ void test_white_pawns_can_capture_enemies_at_ne_and_nw(void) {
 
 		if (utils_get_file(sqr) != 0) {
 			Move m = (Move) {.from = sqr, .to = nw, .mv_type = MV_CAPTURE, .piece = w_pawn};
-			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
-									 utils_move_description(board, m).str);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), utils_move_description(m).str);
 		}
 		if (utils_get_file(sqr) != 7) {
 			Move m = (Move) {.from = sqr, .to = ne, .mv_type = MV_CAPTURE, .piece = w_pawn};
-			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
-									 utils_move_description(board, m).str);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), utils_move_description(m).str);
 		}
 
 		board_remove_piece(board, sqr);
@@ -347,8 +345,7 @@ void test_black_pawns_can_capture_enemies_at_se_and_sw(void) {
 							 .mv_type		= MV_CAPTURE,
 							 .piece			= b_pawn,
 							 .captured_type = w_pawn.type};
-			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
-									 utils_move_description(board, m).str);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), utils_move_description(m).str);
 		}
 		if (utils_get_file(sqr) != 7) {
 			Move m = (Move) {.from			= sqr,
@@ -356,8 +353,7 @@ void test_black_pawns_can_capture_enemies_at_se_and_sw(void) {
 							 .mv_type		= MV_CAPTURE,
 							 .piece			= b_pawn,
 							 .captured_type = w_pawn.type};
-			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m),
-									 utils_move_description(board, m).str);
+			TEST_ASSERT_TRUE_MESSAGE(move_list_contains(ml, m), utils_move_description(m).str);
 		}
 
 		board_remove_piece(board, sqr);

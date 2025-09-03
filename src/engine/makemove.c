@@ -57,11 +57,9 @@ static void handle_castling_rights(Board *board, Move move, PieceType captured) 
 }
 
 bool make_move(Board *board, Move move) {
-	History hist = (History) {.from				= move.from,
-							  .to				= move.to,
-							  .moving			= move.piece.type,
-							  .captured			= move.captured_type,
-							  .mv_type			= move.mv_type,
+	assert(move.piece.type != EMPTY);
+	assert(move.from != move.to);
+	History hist = (History) {.move				= move,
 							  .ep_target		= board->ep_target,
 							  .side				= board->side,
 							  .castling_rights	= board->castling_rights,
@@ -162,7 +160,7 @@ bool make_move(Board *board, Move move) {
 		return false;
 	}
 
-	if (move.piece.type == PAWN || hist.captured != EMPTY) {
+	if (move.piece.type == PAWN || hist.move.captured_type != EMPTY) {
 		board->halfmove_clock = 0;
 	} else {
 		board->halfmove_clock++;
@@ -173,7 +171,7 @@ bool make_move(Board *board, Move move) {
 	if (hist.side == PLAYER_B) {
 		board->fullmove_counter++;
 	}
-	handle_castling_rights(board, move, hist.captured);
+	handle_castling_rights(board, move, hist.move.captured_type);
 	board->side = utils_get_opponent(hist.side);
 	history_push_back(board->history, hist);
 	hash_update(board, move, hist.castling_rights, hist.ep_target);

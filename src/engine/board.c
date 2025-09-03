@@ -160,23 +160,24 @@ Piece board_get_piece(const Board *board, Square sqr) {
 }
 
 void board_apply_history(Board *board, History hist) {
-	board_remove_piece(board, hist.to);
-	board_set_piece(board, (Piece) {.player = hist.side, .type = hist.moving}, hist.from);
-	if (hist.captured != EMPTY) {
-		Square target = hist.mv_type == MV_EN_PASSANT
+	board_remove_piece(board, hist.move.to);
+	board_set_piece(board, hist.move.piece, hist.move.from);
+	if (hist.move.captured_type != EMPTY) {
+		Square target = hist.move.mv_type == MV_EN_PASSANT
 							? utils_ep_capture_pos(hist.ep_target, hist.side)
-							: hist.to;
+							: hist.move.to;
 		board_set_piece(board,
-						(Piece) {.player = utils_get_opponent(hist.side), .type = hist.captured},
+						(Piece) {.player = utils_get_opponent(hist.move.piece.player),
+								 .type	 = hist.move.captured_type},
 						target);
 	}
-	if (hist.mv_type == MV_KS_CASTLE) {
+	if (hist.move.mv_type == MV_KS_CASTLE) {
 		board_remove_piece(board, hist.side == PLAYER_W ? SQ_F1 : SQ_F8);
 		board_set_piece(board,
 						(Piece) {.player = hist.side, .type = ROOK},
 						hist.side == PLAYER_W ? SQ_H1 : SQ_H8);
 	}
-	if (hist.mv_type == MV_QS_CASTLE) {
+	if (hist.move.mv_type == MV_QS_CASTLE) {
 		board_remove_piece(board, hist.side == PLAYER_W ? SQ_D1 : SQ_D8);
 		board_set_piece(board,
 						(Piece) {.player = hist.side, .type = ROOK},

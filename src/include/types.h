@@ -93,17 +93,13 @@ typedef struct {
 	})
 
 typedef struct {
-	Square	  from;
-	Square	  to;
-	PieceType moving;
-	PieceType captured;
-	MoveType  mv_type;
-	Square	  ep_target;
-	uint8_t	  castling_rights;
-	uint8_t	  halfmove_clock;
-	uint16_t  fullmove_counter;
-	Player	  side;
-	uint64_t  hash;
+	Move	 move;
+	Square	 ep_target;
+	uint8_t	 castling_rights;
+	uint8_t	 halfmove_clock;
+	uint16_t fullmove_counter;
+	Player	 side;
+	uint64_t hash;
 } History;
 
 typedef struct Board Board;

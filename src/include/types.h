@@ -83,7 +83,14 @@ typedef struct {
 	MoveType  mv_type;
 } Move;
 
-#define NO_MOVE ((Move) {0})
+#define NO_MOVE                                                          \
+	((Move) {                                                            \
+		.from		   = SQ_NONE,                                        \
+		.to			   = SQ_NONE,                                        \
+		.piece		   = (Piece) {.player = PLAYER_NONE, .type = EMPTY}, \
+		.captured_type = EMPTY,                                          \
+		.mv_type	   = MV_NONE \
+	})
 
 typedef struct {
 	Square	  from;

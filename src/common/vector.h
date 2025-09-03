@@ -23,7 +23,7 @@
 		v->capacity = 0;                                                                           \
 	}                                                                                              \
                                                                                                    \
-	__attribute__((unused)) static bool FN_PREFIX##_resize(CONTAINER_NAME *v, size_t new_cap) {    \
+	__attribute__((unused)) static bool FN_PREFIX##_reserve(CONTAINER_NAME *v, size_t new_cap) {   \
 		if (new_cap <= v->capacity)                                                                \
 			return true;                                                                           \
 		TYPE *new_data = realloc(v->data, new_cap * sizeof(TYPE));                                 \
@@ -42,7 +42,7 @@
 	__attribute__((unused)) static CONTAINER_NAME *FN_PREFIX##_create(void) {                      \
 		CONTAINER_NAME *v = malloc(sizeof(CONTAINER_NAME));                                        \
 		FN_PREFIX##_init(v);                                                                       \
-		FN_PREFIX##_resize(v, 8);                                                                  \
+		FN_PREFIX##_reserve(v, 8);                                                                 \
 		return v;                                                                                  \
 	}                                                                                              \
                                                                                                    \
@@ -66,7 +66,7 @@
 			return false;                                                                          \
 		if (v->size == v->capacity) {                                                              \
 			size_t new_cap = v->capacity ? v->capacity * VECTOR_GROWTH_FACTOR : 8;                 \
-			if (!FN_PREFIX##_resize(v, new_cap))                                                   \
+			if (!FN_PREFIX##_reserve(v, new_cap))                                                  \
 				return false;                                                                      \
 		}                                                                                          \
 		memmove(&v->data[index + 1], &v->data[index], (v->size - index) * sizeof(TYPE));           \
@@ -87,7 +87,7 @@
 																	 TYPE			 value) {                 \
 		if (v->size == v->capacity) {                                                              \
 			size_t new_cap = v->capacity ? v->capacity * VECTOR_GROWTH_FACTOR : 8;                 \
-			FN_PREFIX##_resize(v, new_cap);                                                        \
+			FN_PREFIX##_reserve(v, new_cap);                                                       \
 		}                                                                                          \
 		v->data[v->size++] = value;                                                                \
 	}                                                                                              \
@@ -96,7 +96,7 @@
 																	  TYPE			  value) {                \
 		if (v->size == v->capacity) {                                                              \
 			size_t new_cap = v->capacity ? v->capacity * VECTOR_GROWTH_FACTOR : 8;                 \
-			FN_PREFIX##_resize(v, new_cap);                                                        \
+			FN_PREFIX##_reserve(v, new_cap);                                                       \
 		}                                                                                          \
 		memmove(v->data + 1, v->data, v->size * sizeof(TYPE));                                     \
 		v->data[0] = value;                                                                        \
@@ -141,9 +141,10 @@
                                                                                                    \
 	__attribute__((unused)) static inline bool FN_PREFIX##_clone(CONTAINER_NAME *dst,              \
 																 CONTAINER_NAME *src) {            \
-		if (!FN_PREFIX##_resize(dst, src->size))                                                   \
+		if (!FN_PREFIX##_reserve(dst, src->size))                                                  \
 			return false;                                                                          \
 		dst->data = memcpy(dst->data, src->data, sizeof(TYPE) * src->size);                        \
+		dst->size = src->size;                                                                     \
 		return true;                                                                               \
 	}
 

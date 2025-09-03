@@ -34,6 +34,11 @@
 		return true;                                                                               \
 	}                                                                                              \
                                                                                                    \
+	__attribute__((unused)) static bool FN_PREFIX##_init_reserve(CONTAINER_NAME *v, size_t cap) {  \
+		FN_PREFIX##_init(v);                                                                       \
+		return FN_PREFIX##_reserve(v, cap);                                                        \
+	}                                                                                              \
+                                                                                                   \
 	__attribute__((unused)) static CONTAINER_NAME *FN_PREFIX##_create(void) {                      \
 		CONTAINER_NAME *v = malloc(sizeof(CONTAINER_NAME));                                        \
 		FN_PREFIX##_init(v);                                                                       \

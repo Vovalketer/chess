@@ -54,8 +54,7 @@ typedef struct {
 
 static void search_ctx_init(SearchContext* ctx) {
 	memset(ctx, 0, sizeof(*ctx));
-	sm_init(&ctx->scored_moves);
-	sm_resize(&ctx->scored_moves, 128);
+	sm_init_reserve(&ctx->scored_moves, 128);
 }
 
 static void search_ctx_free(SearchContext* ctx) {

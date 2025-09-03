@@ -8,6 +8,7 @@
 #include "makemove.h"
 #include "movegen.h"
 #include "movelist.h"
+#include "transposition.h"
 #include "types.h"
 #include "utils.h"
 #include "vector.h"
@@ -154,6 +155,11 @@ int quiescence(Board* board, int alpha, int beta) {
 	return val;
 }
 
+void copy_tt_entry(SearchContext* ctx, TEntry* entry) {
+	ctx->pv_table[ctx->ply][0] = entry->best_move;
+	ctx->pv_length[0]		   = 1;
+}
+
 int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta, int ply) {
 	if (depth == 0) {
 		return quiescence(board, alpha, beta);
@@ -165,10 +171,45 @@ int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta,
 	ctx->killer_moves[ply][1] = NO_MOVE;
 	sm_clear(&ctx->scored_moves);
 
+	TEntry entry;
+	if (ttable_probe(board->hash, &entry)) {
+		if (entry.key == board->hash) {
+			if (entry.depth >= depth) {
+				switch (entry.bound) {
+					case BOUND_LOWER:
+						if (entry.score >= beta) {
+							copy_tt_entry(ctx, &entry);
+							return entry.score;
+						}
+						break;
+					case BOUND_EXACT:
+						copy_tt_entry(ctx, &entry);
+						return entry.score;
+						break;
+					case BOUND_UPPER:
+						if (entry.score <= alpha) {
+							copy_tt_entry(ctx, &entry);
+							return entry.score;
+						}
+						break;
+				}
+			}
+		}
+	}
+
+	if (depth == 0) {
+		return quiescence(ctx, board, alpha, beta, ply);
+	}
+
+	if (board->halfmove_clock > 99 || is_repetition(board))
+		return 0;
+
 	MoveList* moves = movegen_generate(board, board->side);
 
-	int best_score				= -INF;
-	int legal_moves				= 0;
+	int	 original_alpha			= alpha;
+	int	 best_score				= -INF;
+	Move best_move				= NO_MOVE;
+	int	 legal_moves			= 0;
 	ctx->scored_moves			= get_scored_moves(moves, ctx);
 	ScoredMoveList scored_moves = ctx->scored_moves;
 
@@ -215,11 +256,29 @@ int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta,
 	if (legal_moves == 0) {
 		if (board_is_check(board, board->side)) {
 			// shorter mate preferred
-			return -CHECKMATE + ply;
+			best_score = -CHECKMATE + ply;
 		} else {
 			// stalemate
-			return 0;
+			best_score = 0;
 		}
+	}
+
+	if (!move_equals(best_move, NO_MOVE)) {
+		BoundType bound;
+		if (best_score <= original_alpha) {
+			bound = BOUND_UPPER;
+		} else if (best_score >= beta) {
+			bound = BOUND_LOWER;
+		} else {
+			bound = BOUND_EXACT;
+		}
+		// normalize checkmate score by removing the bias for shorter mates
+		int tt_score = best_score;
+		if (tt_score > CHECKMATE)
+			tt_score -= CHECKMATE - depth;
+		else if (tt_score < -CHECKMATE)
+			tt_score += CHECKMATE - depth;
+		ttable_store(board->hash, depth, tt_score, best_move, bound);
 	}
 	return best_score;
 }

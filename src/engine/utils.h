@@ -15,6 +15,7 @@ char		utils_piece_to_char(Piece piece);
 Piece		utils_char_to_piece(char c);
 bool		utils_is_valid_square(Square sqr);
 const char* utils_square_to_str(Square sqr);
+const char* utils_prom_to_str(MoveType type);  // returns null if it is not a promotion
 const char* utils_piece_type_to_str(PieceType type);
 const char* utils_move_type_to_str(MoveType type);
 const char* utils_piece_to_unicode_str(Piece piece);

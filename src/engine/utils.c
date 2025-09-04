@@ -27,6 +27,7 @@ const char* move_type_name[MOVE_TYPE_CNT]	= {"quiet",
 											   "b prom capture",
 											   "r prom capture",
 											   "q prom capture"};
+const char* prom_name[]						= {"q", "r", "b", "n"};
 const char* piece_type_white_unicode[PIECE_TYPE_CNT] = {"♙", "♖", "♘", "♗", "♕", "♔"};
 const char* piece_type_black_unicode[PIECE_TYPE_CNT] = {"♟", "♜", "♞", "♝", "♛", "♚"};
 
@@ -138,6 +139,29 @@ const char* utils_square_to_str(Square sqr) {
 		return "no sq";
 	}
 	return square_name[sqr];
+}
+
+const char* utils_prom_to_str(MoveType type) {
+	switch (type) {
+		case MV_Q_PROM:
+			return prom_name[0];
+		case MV_R_PROM:
+			return prom_name[1];
+		case MV_B_PROM:
+			return prom_name[2];
+		case MV_N_PROM:
+			return prom_name[3];
+		case MV_Q_PROM_CAPTURE:
+			return prom_name[0];
+		case MV_R_PROM_CAPTURE:
+			return prom_name[1];
+		case MV_B_PROM_CAPTURE:
+			return prom_name[2];
+		case MV_N_PROM_CAPTURE:
+			return prom_name[3];
+		default:
+			return 0;
+	}
 }
 
 const char* utils_piece_type_to_str(PieceType type) {

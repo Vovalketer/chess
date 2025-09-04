@@ -8,8 +8,6 @@
 #include "log.h"
 #include "types.h"
 #include "utils.h"
-#define FEN_VALID_CHARS_LEN 30
-#define MAX_FEN_LEN			92
 
 typedef struct {
 	char* pieces;
@@ -18,7 +16,7 @@ typedef struct {
 	char* en_passant_target;
 	char* halfmove_clock;
 	char* fullmove_counter;
-	char  _buffer[MAX_FEN_LEN];	 // copy of the original fen
+	char  _buffer[FEN_MAX_LENGTH];	// copy of the original fen
 } ParsedFEN;
 
 static bool _parse_to_ptr(const char* fen, ParsedFEN* pf_out);
@@ -48,26 +46,26 @@ bool fen_parse(const char* fen, Board* board) {
 
 static bool _parse_to_ptr(const char* fen, ParsedFEN* pf_out) {
 	size_t fen_len = strlen(fen);
-	if (fen_len > MAX_FEN_LEN) {
-		log_error("FEN exceeded the max length of %d", MAX_FEN_LEN);
+	if (fen_len > FEN_MAX_LENGTH) {
+		log_error("FEN exceeded the max length of %d", FEN_MAX_LENGTH);
 		return false;
 	}
 
 	strcpy(pf_out->_buffer, fen);
 
-	char* cursor	  = pf_out->_buffer;
-	char* fields[6]	  = {0};
-	int	  field_index = 0;
+	char* cursor				  = pf_out->_buffer;
+	char* fields[FEN_TOKEN_COUNT] = {0};
+	int	  field_index			  = 0;
 
 	fields[field_index++] = cursor;
-	while (*cursor && field_index < 6) {
+	while (*cursor && field_index < FEN_TOKEN_COUNT) {
 		if (*cursor == ' ') {
 			*cursor				  = '\0';
 			fields[field_index++] = cursor + 1;
 		}
 		cursor++;
 	}
-	if (field_index != 6) {
+	if (field_index != FEN_TOKEN_COUNT) {
 		log_error("Error parsing FEN: Expected 5 spaces, got %d", field_index - 1);
 		return false;
 	}

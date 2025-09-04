@@ -1,6 +1,8 @@
 #ifndef FEN_H
 #define FEN_H
 #include "../include/types.h"
+#define FEN_MAX_LENGTH	96
+#define FEN_TOKEN_COUNT 6
 
 typedef struct {
 	char str[96];

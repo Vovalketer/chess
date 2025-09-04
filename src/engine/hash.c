@@ -40,6 +40,10 @@ void hash_init(void) {
 	black_to_move_key = rand64();
 }
 
+void hash_reset(void) {
+	hash_init();
+}
+
 uint64_t hash_board(Board* board) {
 	uint64_t key = 0ULL;
 

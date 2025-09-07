@@ -9,14 +9,14 @@ libboard = library(
 		'utils.c',
 		'move.c',
 	],
-	dependencies: [liblog_dep, libarray_dep],
+	dependencies: [liblog_dep],
 	include_directories: [common_inc],
 )
-libboard_dep = declare_dependency(link_with: [libboard], dependencies: [libarray_dep, liblog_dep])
+libboard_dep = declare_dependency(link_with: [libboard], dependencies: [ liblog_dep])
 
 libmakemove = library(
 	'makemove',
-	['makemove.c', 'movegen.c', 'bitboards.c', 'hash.c'],
+	['makemove.c', 'movegen.c', 'hash.c'],
 	dependencies: [libboard_dep],
 )
 

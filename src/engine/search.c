@@ -110,12 +110,14 @@ int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
 	ctx->nodes++;
 	if (is_repetition(board) || board->halfmove_clock > 99)
 		return 0;
-	int val = eval(board);
-	if (val >= beta)
-		return val;
-	if (val > alpha)
-		alpha = val;
 
+	int best_score = eval(board);
+	if (best_score >= beta)
+		return beta;
+	if (best_score > alpha)
+		alpha = best_score;
+
+	// might be good to generate promotions as well, anything that changes the mat balance
 	MoveList* moves = movegen_generate_captures(board, board->side);
 	if (move_list_size(moves))
 		move_list_sort(moves, mvv_lva_compare);
@@ -126,16 +128,16 @@ int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
 			continue;
 		int score = -quiescence(ctx, board, -beta, -alpha, ply + 1);
 		unmake_move(board);
+
 		if (score >= beta)
-			return score;
-		if (score > val)
-			val = score;
-		if (score > alpha) {
+			break;
+		if (score > best_score)
+			best_score = score;
+		if (score > alpha)
 			alpha = score;
-		}
 	}
 	move_list_destroy(&moves);
-	return val;
+	return best_score;
 }
 
 void copy_tt_entry(SearchContext* ctx, TEntry* entry) {

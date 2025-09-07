@@ -1,6 +1,5 @@
 subdir('common')
 common_inc = include_directories('common', 'include')
-libarray_dep = declare_dependency(link_with: [libarray], include_directories: common_inc)
 liblog_dep = declare_dependency(link_with: [liblog], include_directories: common_inc)
 subdir('engine')
 subdir('ui')

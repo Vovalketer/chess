@@ -75,9 +75,6 @@ Board *board_create(void) {
 		return NULL;
 	}
 
-	if (!bitboards_is_init()) {
-		bitboards_init();
-	}
 	return b;
 }
 

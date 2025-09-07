@@ -237,6 +237,8 @@ bool board_is_square_threatened(const Board *board, Square sqr, Player player) {
 }
 
 bool board_is_check(const Board *board, Player player) {
+	if (board->pieces[player][KING] == 0)
+		return false;
 	Square king_sqr = bits_get_lsb(board->pieces[player][KING]);
 	return board_is_square_threatened(board, king_sqr, player);
 }

@@ -52,16 +52,20 @@ void log_write(int level, const char *file, int line, const char *fmt, ...) {
 	fprintf(out, "[%s] %s %s:%d: ", log_get_log_type(level), timebuf, file, line);
 
 	// append contents
-	va_list args;
-	va_start(args, fmt);
-	vfprintf(out, fmt, args);
-	va_end(args);
+	if (fmt) {
+		va_list args;
+		va_start(args, fmt);
+		vfprintf(out, fmt, args);
+		va_end(args);
+	}
 
 	fprintf(out, "\n");
 	fflush(out);
 }
 
 LogMessage log_create_message(const char *fmt, ...) {
+	if (!fmt)
+		return (LogMessage) {0};
 	LogMessage msg;
 	va_list	   args;
 	va_start(args, fmt);

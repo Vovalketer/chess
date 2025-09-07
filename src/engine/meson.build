@@ -22,9 +22,9 @@ libmakemove = library(
 
 libmakemove_dep = declare_dependency(link_with: [libmakemove], dependencies: [libboard_dep])
 
-libengine = library(
+libenginegui = library(
 	'engine',
-	['engine.c', 'search.c', 'transposition.c', 'eval.c'],
+	['enginegui.c', 'search.c', 'transposition.c', 'eval.c'],
 	dependencies: [libmakemove_dep],
 	include_directories: [common_inc],
 )

@@ -1,16 +1,33 @@
-#include "../include/engine.h"
+#include "engine.h"
 
 #include <assert.h>
 #include <stdlib.h>
 
+#include "../include/enginegui.h"
+#include "bitboards.h"
 #include "board.h"
+#include "hash.h"
 #include "log.h"
 #include "makemove.h"
 #include "movegen.h"
 #include "search.h"
+#include "transposition.h"
 #include "utils.h"
 
+bool engine_is_init = false;
+
+void engine_init(void) {
+	bitboards_init();
+	hash_init();
+	ttable_init(64);
+
+	engine_is_init = true;
+}
+
 bool engine_create_standard_match(Board **board) {
+	if (!engine_is_init) {
+		engine_init();
+	}
 	Board *b = board_create();
 	if (!b) {
 		return false;
@@ -22,6 +39,9 @@ bool engine_create_standard_match(Board **board) {
 }
 
 bool engine_create_match_from_fen(Board **board, const char *fen) {
+	if (!engine_is_init) {
+		engine_init();
+	}
 	Board *b = board_create();
 	if (!b || !board_from_fen(b, fen)) {
 		return false;
@@ -86,8 +106,10 @@ bool engine_move_piece(Board *board, Position from, Position to) {
 }
 
 bool engine_autoplay_move(Board *board) {
-	Move best_move = search_best_move(board, 5);
-	log_info("Best move: %s", utils_move_description(board, best_move).str);
+	SearchOptions opt		= {.depth = 6};
+	EngineConfig  cfg		= {0};
+	Move		  best_move = search_best_move(board, &opt, &cfg);
+	log_info("Best move: %s", utils_move_description(best_move).str);
 	bool success = make_move(board, best_move);
 	if (!success) {
 		log_error("Failed to make AI move");
@@ -97,6 +119,14 @@ bool engine_autoplay_move(Board *board) {
 
 void engine_undo_move(Board *board) {
 	unmake_move(board);
+	log_info("white occupancies");
+	board_print_bitboard(board->occupancies[PLAYER_W]);
+	log_info("black occupancies");
+	board_print_bitboard(board->occupancies[PLAYER_B]);
+	log_info("bishop white");
+	board_print_bitboard(board->pieces[PLAYER_W][BISHOP]);
+	log_info("bishop black");
+	board_print_bitboard(board->pieces[PLAYER_B][BISHOP]);
 }
 
 void engine_destroy_match(Board **board) {

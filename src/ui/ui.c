@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/engine.h"
+#include "../include/enginegui.h"
 
 int CURRENT_WINDOW_WIDTH;
 int CURRENT_WINDOW_HEIGHT;

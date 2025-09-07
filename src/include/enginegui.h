@@ -1,5 +1,5 @@
-#ifndef ENGINE_H
-#define ENGINE_H
+#ifndef ENGINEGUI_H
+#define ENGINEGUI_H
 
 #include "types.h"
 

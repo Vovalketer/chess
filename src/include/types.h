@@ -74,13 +74,12 @@ typedef enum {
 } MoveType;
 
 typedef struct {
-	// could be optimized by using a 8 bit int to encode from/to or encode the whole move in a 16
-	// bit int
 	Square	  from;
 	Square	  to;
 	Piece	  piece;
 	PieceType captured_type;
 	MoveType  mv_type;
+	int		  score;  // used for move ordering
 } Move;
 
 #define NO_MOVE                                                          \

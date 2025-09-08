@@ -73,7 +73,7 @@ uint64_t perft(Board *board, int depth) {
 	uint64_t  nodes = 0;
 	MoveList *ml	= movegen_generate(board, board_get_player_turn(board));
 	for (size_t i = 0; i < move_list_size(ml); i++) {
-		Move *m = move_list_get(ml, i);
+		Move *m = move_list_at(ml, i);
 		if (make_move(board, *m)) {
 			nodes += perft(board, depth - 1);
 			unmake_move(board);
@@ -89,7 +89,7 @@ uint64_t perft_divide(Board *board, int depth) {
 	uint64_t  total = 0;
 
 	for (size_t i = 0; i < move_list_size(ml); i++) {
-		Move m = *move_list_get(ml, i);
+		Move m = *move_list_at(ml, i);
 
 		if (!make_move(board, m))
 			continue;
@@ -185,7 +185,7 @@ uint64_t perft_divide_parallel(Board *board, int depth, int threads_num) {
 	MoveList *ml = movegen_generate(board, board_get_player_turn(board));
 
 	for (size_t i = 0; i < move_list_size(ml); i++) {
-		Move *m = move_list_get(ml, i);
+		Move *m = move_list_at(ml, i);
 		if (!make_move(board, *m))
 			continue;
 		perft_add_task(board, m->from, m->to, depth - 1);

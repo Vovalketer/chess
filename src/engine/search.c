@@ -1,6 +1,7 @@
 #include "search.h"
 
 #include <limits.h>
+#include <sys/time.h>
 
 #include "board.h"
 #include "engine.h"
@@ -44,14 +45,22 @@ typedef struct {
 	int		 ply;
 	Player	 side;
 	uint64_t nodes;
+	uint32_t time_start;
+	uint32_t time_limit;
 } SearchContext;
 
-volatile bool  stop = false;
-Move		   pv_table[MAX_DEPTH][MAX_DEPTH];
-uint8_t		   pv_length[MAX_DEPTH];
-Move		   killer_moves[MAX_DEPTH][2];
-int			   history_heuristic[PLAYER_CNT][SQ_CNT][SQ_CNT];  // player, from, to
-MoveList	   root_pv;
+uint32_t time_now(void);
+bool	 search_should_end(SearchOptions* options,
+						   uint32_t		  nodes,
+						   uint32_t		  time_start,
+						   uint32_t		  time_limit);
+
+Move		  pv_table[MAX_DEPTH][MAX_DEPTH];
+uint8_t		  pv_length[MAX_DEPTH];
+Move		  killer_moves[MAX_DEPTH][2];
+int			  history_heuristic[PLAYER_CNT][SQ_CNT][SQ_CNT];  // player, from, to
+MoveList	  root_pv;
+volatile bool stop = false;
 
 static int mvv_lva_compare(const void* x, const void* y) {
 	Move* xt	= (Move*) x;
@@ -68,7 +77,7 @@ static int mvv_lva_compare(const void* x, const void* y) {
 static bool is_repetition(Board* board) {
 	int count = 0;
 	for (size_t i = 0; i < history_size(board->history); i++) {
-		History* h = history_get(board->history, i);
+		History* h = history_at(board->history, i);
 		assert(h != NULL);
 		if (h->hash == board->hash) {
 			count++;
@@ -99,7 +108,7 @@ static int compare_move(const void* m1, const void* m2) {
 
 static void sort_moves(MoveList* moves, SearchContext* ctx) {
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		score_move(move_list_get(moves, i), ctx);
+		score_move(move_list_at(moves, i), ctx);
 	}
 	move_list_sort(moves, compare_move);
 }
@@ -122,7 +131,7 @@ int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
 	if (move_list_size(moves))
 		move_list_sort(moves, mvv_lva_compare);
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		Move move = *move_list_get(moves, i);
+		Move move = *move_list_at(moves, i);
 
 		if (!make_move(board, move))
 			continue;
@@ -140,12 +149,24 @@ int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
 	return best_score;
 }
 
-int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta, int ply) {
+int alpha_beta(SearchContext* ctx,
+			   SearchOptions* opts,
+			   Board*		  board,
+			   int			  depth,
+			   int			  alpha,
+			   int			  beta,
+			   int			  ply) {
 	pv_length[ply]		 = 0;
 	ctx->side			 = board->side;
 	ctx->ply			 = ply;
 	killer_moves[ply][0] = NO_MOVE;
 	killer_moves[ply][1] = NO_MOVE;
+
+	if (depth == 0) {
+		return quiescence(ctx, board, alpha, beta, ply);
+	}
+
+	ctx->nodes++;
 
 	TEntry entry;
 	if (ttable_probe(board->hash, &entry) && entry.depth >= depth) {
@@ -159,9 +180,8 @@ int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta,
 		}
 	}
 
-	if (depth == 0) {
-		return quiescence(ctx, board, alpha, beta, ply);
-	}
+	if (search_should_end(opts, ctx->nodes, ctx->time_start, ctx->time_limit))
+		return 0;
 
 	if (board->halfmove_clock > 99 || is_repetition(board))
 		return 0;
@@ -175,7 +195,11 @@ int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta,
 	sort_moves(moves, ctx);
 
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		Move mv = *move_list_get(moves, i);
+		if (search_should_end(opts, ctx->nodes, ctx->time_start, ctx->time_limit)) {
+			move_list_destroy(&moves);
+			return 0;
+		}
+		Move mv = *move_list_at(moves, i);
 		if (!make_move(board, mv)) {
 			continue;
 		}
@@ -284,7 +308,7 @@ Move search_best_move(Board* board, SearchOptions* options, EngineConfig* cfg) {
 		}
 	}
 	assert(move_list_size(&root_pv) > 0);
-	return *move_list_get(&root_pv, 0);
+	return *move_list_at(&root_pv, 0);
 }
 
 void search_stop(void) {

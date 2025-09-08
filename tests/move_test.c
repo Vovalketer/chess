@@ -76,7 +76,7 @@ Test(moves, get_move_at_index_returns_correct_move, .init = setup, .fini = teard
 		move_list_append(moves, move_create((Position) {i, i}, (Position) {i, i}));
 	}
 	Move *move = NULL;
-	move_list_get(moves, 1, &move);
+	move_list_at(moves, 1, &move);
 	cr_assert_eq(move->src.x, 2);
 	cr_assert_eq(move->src.y, 2);
 	cr_assert_eq(move->dst.x, 2);
@@ -110,7 +110,7 @@ Test(moves, move_list_resizes_correctly, .init = setup, .fini = teardown) {
 	cr_assert_eq(move_list_size(moves), 17);
 	for (int i = 0; i < 17; i++) {
 		Move *m = NULL;
-		move_list_get(moves, i, &m);
+		move_list_at(moves, i, &m);
 		cr_assert_eq(m->src.x, i);
 		cr_assert_eq(m->src.y, i);
 		cr_assert_eq(m->dst.x, i);

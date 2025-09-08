@@ -57,7 +57,7 @@ MoveMask engine_get_valid_moves(Board *board, Position pos) {
 	MoveMask  mm		  = {0};
 	int		  valid_moves = 0;
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		Move *move = move_list_get(moves, i);
+		Move *move = move_list_at(moves, i);
 		if (move->from == sqr && make_move(board, *move)) {
 			mm.mask[move->to / 8][move->to % 8] = true;
 			valid_moves++;
@@ -88,7 +88,7 @@ bool engine_move_piece(Board *board, Position from, Position to) {
 	bool	  found = false;
 	Move	 *mv;
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		mv = move_list_get(moves, i);
+		mv = move_list_at(moves, i);
 		if (mv->from == src && mv->to == dst) {
 			found = true;
 			break;

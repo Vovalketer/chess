@@ -245,7 +245,7 @@ void test_white_pawns_double_push_cant_skip_allies(void) {
 		board_set_piece(board, pawn, sqr + DIR_N);
 		MoveList *ml = movegen_generate(board, PLAYER_W);
 		for (size_t i = 0; i < move_list_size(ml); i++) {
-			Move *m = move_list_get(ml, i);
+			Move *m = move_list_at(ml, i);
 			TEST_ASSERT_TRUE(m->from != sqr);
 		}
 		move_list_destroy(&ml);
@@ -259,7 +259,7 @@ void test_black_pawns_double_push_cant_skip_allies(void) {
 		board_set_piece(board, pawn, sqr + DIR_S);
 		MoveList *ml = movegen_generate(board, PLAYER_B);
 		for (size_t i = 0; i < move_list_size(ml); i++) {
-			Move *m = move_list_get(ml, i);
+			Move *m = move_list_at(ml, i);
 			TEST_ASSERT_TRUE(m->from != sqr);
 		}
 		move_list_destroy(&ml);
@@ -275,7 +275,7 @@ void test_white_pawns_can_only_move_forward_at_non_starting_rows(void) {
 		board_set_piece(board, pawn, sqr);
 		MoveList *ml = movegen_generate(board, PLAYER_W);
 
-		Move *m = move_list_get(ml, 0);
+		Move *m = move_list_at(ml, 0);
 		TEST_ASSERT_EQUAL(m->to, m->from + DIR_N);
 		board_remove_piece(board, sqr);
 		move_list_destroy(&ml);
@@ -292,7 +292,7 @@ void test_black_pawns_can_only_move_forward_at_non_starting_rows(void) {
 
 		MoveList *ml = movegen_generate(board, PLAYER_B);
 
-		Move *m = move_list_get(ml, 0);
+		Move *m = move_list_at(ml, 0);
 		TEST_ASSERT_EQUAL(m->to, m->from + DIR_S);
 		board_remove_piece(board, sqr);
 		move_list_destroy(&ml);
@@ -372,7 +372,7 @@ void test_white_pawn_cant_capture_allies(void) {
 
 	MoveList *ml = movegen_generate(board, PLAYER_W);
 	for (size_t i = 0; i < move_list_size(ml); i++) {
-		Move *m = move_list_get(ml, i);
+		Move *m = move_list_at(ml, i);
 		TEST_ASSERT_TRUE(m->mv_type != MV_CAPTURE);
 	}
 	move_list_destroy(&ml);
@@ -387,7 +387,7 @@ void test_black_pawns_cant_capture_allies(void) {
 
 	MoveList *ml = movegen_generate(board, PLAYER_B);
 	for (size_t i = 0; i < move_list_size(ml); i++) {
-		Move *m = move_list_get(ml, i);
+		Move *m = move_list_at(ml, i);
 		TEST_ASSERT_TRUE(m->mv_type != MV_CAPTURE);
 	}
 	move_list_destroy(&ml);
@@ -475,7 +475,7 @@ void test_rook_cant_go_over_allies(void) {
 	// movegen will include the pawns so we'll just check if there is any moves that start at the
 	// rook sqr
 	for (size_t i = 0; i < move_list_size(ml); i++) {
-		Move *m = move_list_get(ml, i);
+		Move *m = move_list_at(ml, i);
 		TEST_ASSERT_TRUE(m->from != sqr);
 	}
 }
@@ -663,7 +663,7 @@ void test_bishop_cant_skip_allies(void) {
 	board_set_piece(board, bishop, sqr + DIR_SW);
 	MoveList *ml = movegen_generate(board, bishop.player);
 	for (size_t i = 0; i < move_list_size(ml); i++) {
-		Move *m = move_list_get(ml, i);
+		Move *m = move_list_at(ml, i);
 		TEST_ASSERT_TRUE(m->from != sqr);
 	}
 	move_list_destroy(&ml);
@@ -810,7 +810,7 @@ void test_queen_cant_skip_allies(void) {
 	board_set_piece(board, pawn, sqr + DIR_SW);
 	MoveList *ml = movegen_generate(board, queen.player);
 	for (size_t i = 0; i < move_list_size(ml); i++) {
-		Move *m = move_list_get(ml, i);
+		Move *m = move_list_at(ml, i);
 		TEST_ASSERT_TRUE(m->from != sqr);
 	}
 	move_list_destroy(&ml);

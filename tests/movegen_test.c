@@ -129,6 +129,7 @@ void test_white_pawns_have_two_moves_at_starting_row(void) {
 												.mv_type	   = MV_PAWN_DOUBLE,
 												.piece		   = pawn,
 												.captured_type = EMPTY}));
+	move_list_destroy(&ml);
 }
 
 void test_black_pawns_have_two_moves_at_starting_row(void) {
@@ -236,6 +237,7 @@ void test_black_pawns_have_two_moves_at_starting_row(void) {
 												.mv_type	   = MV_PAWN_DOUBLE,
 												.piece		   = pawn,
 												.captured_type = EMPTY}));
+	move_list_destroy(&ml);
 }
 
 void test_white_pawns_double_push_cant_skip_allies(void) {
@@ -478,6 +480,7 @@ void test_rook_cant_go_over_allies(void) {
 		Move *m = move_list_at(ml, i);
 		TEST_ASSERT_TRUE(m->from != sqr);
 	}
+	move_list_destroy(&ml);
 }
 
 void test_rook_cant_go_over_enemies(void) {
@@ -491,6 +494,7 @@ void test_rook_cant_go_over_enemies(void) {
 	board_set_piece(board, pawn, sqr + DIR_W);
 	MoveList *ml = movegen_generate(board, rook.player);
 	TEST_ASSERT_EQUAL(4, move_list_size(ml));
+	move_list_destroy(&ml);
 }
 
 void test_knight_can_move_in_L(void) {

@@ -140,11 +140,6 @@ int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
 	return best_score;
 }
 
-void copy_tt_entry(SearchContext* ctx, TEntry* entry) {
-	pv_table[ctx->ply][0] = entry->best_move;
-	pv_length[0]		  = 1;
-}
-
 int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta, int ply) {
 	pv_length[ply]		 = 0;
 	ctx->side			 = board->side;
@@ -153,28 +148,14 @@ int alpha_beta(SearchContext* ctx, Board* board, int depth, int alpha, int beta,
 	killer_moves[ply][1] = NO_MOVE;
 
 	TEntry entry;
-	if (ttable_probe(board->hash, &entry)) {
-		if (entry.key == board->hash) {
-			if (entry.depth >= depth) {
-				switch (entry.bound) {
-					case BOUND_LOWER:
-						if (entry.score >= beta) {
-							copy_tt_entry(ctx, &entry);
-							return entry.score;
-						}
-						break;
-					case BOUND_EXACT:
-						copy_tt_entry(ctx, &entry);
-						return entry.score;
-						break;
-					case BOUND_UPPER:
-						if (entry.score <= alpha) {
-							copy_tt_entry(ctx, &entry);
-							return entry.score;
-						}
-						break;
-				}
-			}
+	if (ttable_probe(board->hash, &entry) && entry.depth >= depth) {
+		if (entry.bound == BOUND_EXACT || (entry.bound == BOUND_LOWER && entry.score >= beta) ||
+			(entry.bound == BOUND_UPPER && entry.score <= alpha)) {
+			// TT hit, dont need to analyze any further
+			pv_table[ctx->ply][0] = entry.best_move;
+			pv_length[0]		  = 1;
+
+			return entry.score;
 		}
 	}
 

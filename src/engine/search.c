@@ -47,11 +47,29 @@ typedef struct {
 	uint32_t time_limit;
 } SearchContext;
 
-uint32_t time_now(void);
-void	 gstop_cond_eval(SearchOptions* options,
-						 uint32_t		nodes,
-						 uint32_t		time_start,
-						 uint32_t		time_limit);
+int search(int			  depth,
+		   int			  alpha,
+		   int			  beta,
+		   int			  ply,
+		   Board*		  board,
+		   SearchOptions* opts,
+		   SearchContext* ctx,
+		   bool			  is_pv);
+int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply);
+
+static bool is_repetition(Board* board);
+static int	mvv_lva_compare(const void* x, const void* y);
+static void score_move(Move* move, int ply, Player side, TEntry* tte);
+static int	compare_move(const void* x, const void* y);
+static void sort_moves(MoveList* moves, SearchContext* ctx, TEntry* tte);
+static void gstop_cond_eval(SearchOptions* options,
+							uint32_t	   nodes,
+							uint32_t	   time_start,
+							uint32_t	   time_limit);
+
+static uint32_t timeval_to_ms(struct timeval tv);
+static uint32_t time_now(void);
+static uint32_t search_calculate_time_budget(const SearchOptions* opts, Player p);
 
 Move		  pv_table[MAX_DEPTH][MAX_DEPTH];
 uint8_t		  pv_length[MAX_DEPTH];
@@ -60,57 +78,58 @@ int			  history_heuristic[PLAYER_CNT][SQ_CNT][SQ_CNT];  // player, from, to
 MoveList	  root_pv;
 volatile bool stop = false;
 
-static int mvv_lva_compare(const void* x, const void* y) {
-	Move* xt	= (Move*) x;
-	Move* yt	= (Move*) y;
-	int	  x_val = mvv_lva[xt->piece.type][xt->captured_type];
-	int	  y_val = mvv_lva[yt->piece.type][yt->captured_type];
-	if (x_val < y_val)
-		return 1;
-	else if (x_val > y_val)
-		return -1;
-	return 0;
-}
+Move search_best_move(Board* board, SearchOptions* opts, EngineConfig* cfg) {
+	assert(board != NULL);
+	assert(opts != NULL);
+	assert(cfg != NULL);
+	SearchContext ctx = {0};
+	stop			  = false;
+	ctx.time_start	  = time_now();
+	ctx.time_limit	  = search_calculate_time_budget(opts, board->side);
+	log_debug(
+		"search options - depth: %d, nodes: %d, movetime: %u, wtime: %u, btime: %u, winc: %u, "
+		"binc: %u, movestogo: %d, infinite: %d",
+		opts->depth,
+		opts->nodes,
+		opts->movetime,
+		opts->wtime,
+		opts->btime,
+		opts->winc,
+		opts->binc,
+		opts->movestogo,
+		opts->infinite);
 
-static bool is_repetition(Board* board) {
-	int count = 0;
-	for (size_t i = 0; i < history_size(board->history); i++) {
-		History* h = history_at(board->history, i);
-		assert(h != NULL);
-		if (h->hash == board->hash) {
-			count++;
+	// if depth isnt set, iterate until MAX_DEPTH-1 at most to avoid overflows
+	size_t max_depth = opts->depth != 0 ? opts->depth : MAX_DEPTH - 1;
+	// iterative deepening
+	for (size_t depth = 1; depth <= max_depth; depth++) {
+		memset(&pv_length, 0, sizeof(pv_length));
+		int score = search(depth, -INF, INF, 0, board, opts, &ctx, true);
+
+		gstop_cond_eval(opts, ctx.nodes, ctx.time_start, ctx.time_limit);
+		if (stop)
+			break;
+
+		log_info("info depth %d score %d nodes %llu", depth, score, ctx.nodes);
+		if (pv_length[0] >= move_list_size(&root_pv)) {
+			move_list_clear(&root_pv);
+			for (size_t i = 0; i < pv_length[0]; ++i) {
+				move_list_push_back(&root_pv, pv_table[0][i]);
+			}
+		} else {
+			for (size_t i = 0; i < pv_length[0]; ++i) {
+				Move* m = move_list_at(&root_pv, i);
+				*m		= pv_table[0][i];
+			}
+		}
+
+		log_info("PV:");
+		for (size_t i = 0; i < move_list_size(&root_pv); i++) {
+			log_info("%s", utils_move_description(*move_list_at(&root_pv, i)).str);
 		}
 	}
-	return count >= 3;
-}
-
-static void score_move(Move* move, int ply, Player side, TEntry* tte) {
-	// check if the TEntry is not empty before performing the comparison
-	if (tte->key && move_equals(*move, tte->best_move))
-		move->score = SCORE_TT;
-	else if (move->captured_type != EMPTY)
-		move->score = mvv_lva[move->piece.type][move->captured_type] + SCORE_CAPTURE;
-	else if (move_equals(*move, killer_moves[ply][0]))
-		move->score = SCORE_KILLER_FIRST;
-	else if (move_equals(*move, killer_moves[ply][1]))
-		move->score = SCORE_KILLER_SECOND;
-	else if (history_heuristic[side][move->from][move->to] != 0)
-		move->score = history_heuristic[side][move->from][move->to] + SCORE_HISTORY;
-	else
-		move->score = SCORE_NONE;
-}
-
-static int compare_move(const void* m1, const void* m2) {
-	const Move* move1 = (const Move*) m1;
-	const Move* move2 = (const Move*) m2;
-	return move2->score - move1->score;
-}
-
-static void sort_moves(MoveList* moves, SearchContext* ctx, TEntry* tte) {
-	for (size_t i = 0; i < move_list_size(moves); i++) {
-		score_move(move_list_at(moves, i), ctx->ply, ctx->side, tte);
-	}
-	move_list_sort(moves, compare_move);
+	assert(move_list_size(&root_pv) > 0);
+	return *move_list_at(&root_pv, 0);
 }
 
 int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
@@ -283,6 +302,10 @@ int search(int			  depth,
 	return best_score;
 }
 
+/*
+ * Lifetime
+ */
+
 void search_init(void) {
 	memset(pv_table, 0, sizeof(pv_table));
 	memset(pv_length, 0, sizeof(pv_length));
@@ -298,6 +321,14 @@ void search_reset(void) {
 	memset(history_heuristic, 0, sizeof(history_heuristic));
 	move_list_clear(&root_pv);
 }
+
+void search_stop(void) {
+	stop = true;
+}
+
+/*
+ * Time functions
+ */
 
 uint32_t search_calculate_time_budget(const SearchOptions* opts, Player p) {
 	log_trace("calculating time budget");
@@ -366,60 +397,59 @@ void gstop_cond_eval(SearchOptions* options,
 	}
 }
 
-Move search_best_move(Board* board, SearchOptions* opts, EngineConfig* cfg) {
-	assert(board != NULL);
-	assert(opts != NULL);
-	assert(cfg != NULL);
-	SearchContext ctx = {0};
-	stop			  = false;
-	ctx.time_start	  = time_now();
-	ctx.time_limit	  = search_calculate_time_budget(opts, board->side);
-	log_debug(
-		"search options - depth: %d, nodes: %d, movetime: %u, wtime: %u, btime: %u, winc: %u, "
-		"binc: %u, movestogo: %d, infinite: %d",
-		opts->depth,
-		opts->nodes,
-		opts->movetime,
-		opts->wtime,
-		opts->btime,
-		opts->winc,
-		opts->binc,
-		opts->movestogo,
-		opts->infinite);
+/*
+ * Score functions
+ */
 
-	// if depth isnt set, iterate until MAX_DEPTH-1 at most to avoid overflows
-	size_t max_depth = opts->depth != 0 ? opts->depth : MAX_DEPTH - 1;
-	// iterative deepening
-	for (size_t depth = 1; depth <= max_depth; depth++) {
-		memset(&pv_length, 0, sizeof(pv_length));
-		int score = search(depth, -INF, INF, 0, board, opts, &ctx, true);
-
-		gstop_cond_eval(opts, ctx.nodes, ctx.time_start, ctx.time_limit);
-		if (stop)
-			break;
-
-		log_info("info depth %d score %d nodes %llu", depth, score, ctx.nodes);
-		if (pv_length[0] >= move_list_size(&root_pv)) {
-			move_list_clear(&root_pv);
-			for (size_t i = 0; i < pv_length[0]; ++i) {
-				move_list_push_back(&root_pv, pv_table[0][i]);
-			}
-		} else {
-			for (size_t i = 0; i < pv_length[0]; ++i) {
-				Move* m = move_list_at(&root_pv, i);
-				*m		= pv_table[0][i];
-			}
-		}
-
-		log_info("PV:");
-		for (size_t i = 0; i < move_list_size(&root_pv); i++) {
-			log_info("%s", utils_move_description(*move_list_at(&root_pv, i)).str);
-		}
-	}
-	assert(move_list_size(&root_pv) > 0);
-	return *move_list_at(&root_pv, 0);
+static int compare_move(const void* m1, const void* m2) {
+	const Move* move1 = (const Move*) m1;
+	const Move* move2 = (const Move*) m2;
+	return move2->score - move1->score;
 }
 
-void search_stop(void) {
-	stop = true;
+static void sort_moves(MoveList* moves, SearchContext* ctx, TEntry* tte) {
+	for (size_t i = 0; i < move_list_size(moves); i++) {
+		score_move(move_list_at(moves, i), ctx->ply, ctx->side, tte);
+	}
+	move_list_sort(moves, compare_move);
+}
+
+static int mvv_lva_compare(const void* x, const void* y) {
+	Move* xt	= (Move*) x;
+	Move* yt	= (Move*) y;
+	int	  x_val = mvv_lva[xt->piece.type][xt->captured_type];
+	int	  y_val = mvv_lva[yt->piece.type][yt->captured_type];
+	if (x_val < y_val)
+		return 1;
+	else if (x_val > y_val)
+		return -1;
+	return 0;
+}
+
+static void score_move(Move* move, int ply, Player side, TEntry* tte) {
+	// check if the TEntry is not empty before performing the comparison
+	if (tte->key && move_equals(*move, tte->best_move))
+		move->score = SCORE_TT;
+	else if (move->captured_type != EMPTY)
+		move->score = mvv_lva[move->piece.type][move->captured_type] + SCORE_CAPTURE;
+	else if (move_equals(*move, killer_moves[ply][0]))
+		move->score = SCORE_KILLER_FIRST;
+	else if (move_equals(*move, killer_moves[ply][1]))
+		move->score = SCORE_KILLER_SECOND;
+	else if (history_heuristic[side][move->from][move->to] != 0)
+		move->score = history_heuristic[side][move->from][move->to] + SCORE_HISTORY;
+	else
+		move->score = SCORE_NONE;
+}
+
+static bool is_repetition(Board* board) {
+	int count = 0;
+	for (size_t i = 0; i < history_size(board->history); i++) {
+		History* h = history_at(board->history, i);
+		assert(h != NULL);
+		if (h->hash == board->hash) {
+			count++;
+		}
+	}
+	return count >= 3;
 }

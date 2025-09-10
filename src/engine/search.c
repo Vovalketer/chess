@@ -84,7 +84,7 @@ static bool is_repetition(Board* board) {
 			count++;
 		}
 	}
-	return count >= 2;
+	return count >= 3;
 }
 
 static void score_move(Move* move, int ply, Player side, TEntry* tte) {

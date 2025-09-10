@@ -30,6 +30,7 @@ static const int mvv_lva[PIECE_TYPE_CNT][PIECE_TYPE_CNT] = {
 };
 
 typedef enum {
+	SCORE_TT			= 20000,
 	SCORE_CAPTURE		= 10000,
 	SCORE_KILLER_FIRST	= 9000,
 	SCORE_KILLER_SECOND = 8000,
@@ -86,16 +87,18 @@ static bool is_repetition(Board* board) {
 	return count >= 2;
 }
 
-static void score_move(Move* move, SearchContext* ctx) {
-	if (move->captured_type != EMPTY)
+static void score_move(Move* move, int ply, Player side, TEntry* tte) {
+	// check if the TEntry is not empty before performing the comparison
+	if (tte->key && move_equals(*move, tte->best_move))
+		move->score = SCORE_TT;
+	else if (move->captured_type != EMPTY)
 		move->score = mvv_lva[move->piece.type][move->captured_type] + SCORE_CAPTURE;
-
-	if (move_equals(*move, killer_moves[ctx->ply][0]))
+	else if (move_equals(*move, killer_moves[ply][0]))
 		move->score = SCORE_KILLER_FIRST;
-	else if (move_equals(*move, killer_moves[ctx->ply][1]))
+	else if (move_equals(*move, killer_moves[ply][1]))
 		move->score = SCORE_KILLER_SECOND;
-	else if (history_heuristic[ctx->side][move->from][move->to] != 0)
-		move->score = history_heuristic[ctx->side][move->from][move->to] + SCORE_HISTORY;
+	else if (history_heuristic[side][move->from][move->to] != 0)
+		move->score = history_heuristic[side][move->from][move->to] + SCORE_HISTORY;
 	else
 		move->score = 0;
 }
@@ -106,9 +109,9 @@ static int compare_move(const void* m1, const void* m2) {
 	return move2->score - move1->score;
 }
 
-static void sort_moves(MoveList* moves, SearchContext* ctx) {
+static void sort_moves(MoveList* moves, SearchContext* ctx, TEntry* tte) {
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		score_move(move_list_at(moves, i), ctx);
+		score_move(move_list_at(moves, i), ctx->ply, ctx->side, tte);
 	}
 	move_list_sort(moves, compare_move);
 }
@@ -117,6 +120,7 @@ int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
 	ctx->side = board->side;
 	ctx->ply  = ply;
 	ctx->nodes++;
+
 	if (is_repetition(board) || board->halfmove_clock > 99)
 		return 0;
 
@@ -192,7 +196,7 @@ int alpha_beta(SearchContext* ctx,
 	int	 best_score		= -INF;
 	Move best_move		= NO_MOVE;
 	int	 legal_moves	= 0;
-	sort_moves(moves, ctx);
+	sort_moves(moves, ctx, &entry);
 
 	for (size_t i = 0; i < move_list_size(moves); i++) {
 		if (search_should_end(opts, ctx->nodes, ctx->time_start, ctx->time_limit)) {

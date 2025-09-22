@@ -8,6 +8,8 @@ AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
 AllowAllArgumentsOnNextLine: true
+PointerAlignment: Right
+AlignOperands: true
 
 AlignArrayOfStructures: Right
 AlignConsecutiveDeclarations: Consecutive

@@ -4,11 +4,7 @@
 #define FEN_MAX_LENGTH	96
 #define FEN_TOKEN_COUNT 6
 
-typedef struct {
-	char str[96];
-} FenString;
-
-bool	  fen_parse(const char* fen, Board* board);
-FenString fen_from_board(const Board* board);
+bool	  fen_parse(const char *fen, Board *board);
+FenString fen_from_board(const Board *board);
 
 #endif

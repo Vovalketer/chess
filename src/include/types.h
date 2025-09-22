@@ -101,6 +101,10 @@ typedef struct {
 	uint64_t hash;
 } History;
 
+typedef struct {
+	char str[96];
+} FenString;
+
 typedef struct Board Board;
 
 bool move_equals(const Move mv1, const Move mv2);

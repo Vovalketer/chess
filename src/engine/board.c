@@ -78,6 +78,17 @@ Board *board_create(void) {
 	return b;
 }
 
+void board_init(Board *board) {
+	board_set_castling_rights(board, CASTLING_ALL_RIGHTS);
+	board->side		 = PLAYER_W;
+	board->ep_target = SQ_NONE;
+	board->hash		 = hash_board(board);
+	board->history	 = history_create();
+	if (!board->history) {
+		log_error("Failed to allocate history");
+	}
+}
+
 void board_destroy(Board **board) {
 	if (board && *board) {
 		history_destroy(&(*board)->history);
@@ -92,6 +103,12 @@ Board *board_clone(const Board *board) {
 	history_init(b->history);
 	history_clone(b->history, board->history);
 	return b;
+}
+
+void board_reset(Board *board) {
+	if (!board)
+		return;
+	board_from_fen(board, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
 static bool is_within_bounds(Square sqr) {

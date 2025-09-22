@@ -39,6 +39,8 @@ struct Board {
 };
 
 Board	 *board_create(void);
+void	  board_init(Board *board);
+void	  board_reset(Board *board);
 Board	 *board_clone(const Board *board);
 void	  board_destroy(Board **board);
 bool	  board_from_fen(Board *board, const char *fen);

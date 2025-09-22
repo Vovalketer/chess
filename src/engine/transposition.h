@@ -18,6 +18,7 @@ typedef struct {
 typedef struct TTable TTable;
 
 void ttable_init(uint32_t size_mb);
+void ttable_destroy(void);
 void ttable_reset(void);
 bool ttable_probe(uint64_t key, TEntry *entry);
 void ttable_store(uint64_t key, int depth, int score, Move best_move, BoundType bound);

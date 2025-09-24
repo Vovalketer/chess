@@ -128,8 +128,12 @@
  * @param cb_ptr A pointer to the declared circular buffer struct.
  * @return 1 if full, 0 otherwise.
  */
-#define circbuf_full(cb_ptr) \
-	((cb_ptr)->capacity != 0) && ((((cb_ptr)->in + 1) % (cb_ptr)->capacity) == (cb_ptr)->out)
+#define circbuf_full(cb_ptr)                                                                      \
+	({                                                                                            \
+		((cb_ptr)->capacity) == 0 ? 1                                                             \
+								  : ((((cb_ptr)->in + 1) % (cb_ptr)->capacity) == (cb_ptr)->out); \
+	})
+
 /**
  * @brief Checks if the buffer is empty.
  *

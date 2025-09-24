@@ -8,7 +8,7 @@ typedef struct {
 } TestStruct;
 
 #define CB_CAPACITY 16
-DECLARE_CIRCBUF(test_cb, TestStruct, CB_CAPACITY);
+DECLARE_CIRCBUF(test_cb, TestStruct);
 typedef struct test_cb CircBuf;
 
 CircBuf	   cb;
@@ -148,12 +148,12 @@ void test_cb_get_fails_when_empty(void) {
 }
 
 void t(void) {
-	DECLARE_CIRCBUF(_CircBufPtr, TestStruct*, 16);
+	DECLARE_CIRCBUF(_CircBufPtr, TestStruct *);
 	typedef struct _CircBufPtr CircBufPtr;
 	CircBufPtr				   cbptr;
-	TestStruct*				   buf[16];
+	TestStruct				  *buf[16];
 	circbuf_init(&cbptr, buf, 16);
-	TestStruct* ts = NULL;
+	TestStruct *ts = NULL;
 	circbuf_put(&cbptr, ts);
 	circbuf_get(&cbptr, &ts);
 }

@@ -46,7 +46,7 @@
 	}
 
 #define DEFINE_CIRCBUF_BUFFER(name, type, cap) \
-	DECLARE_CIRCBUF(name, type, cap);          \
+	DECLARE_CIRCBUF(name, type);               \
 	type		name##_buf[cap];               \
 	struct name name = {.in = 0, .out = 0, .capacity = cap, .data = name##_buf};
 

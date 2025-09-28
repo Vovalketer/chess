@@ -1,5 +1,6 @@
 #include "msg_queue.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -60,6 +61,9 @@ MsgQueue *msg_queue_create(unsigned int capacity) {
 }
 
 void msg_queue_destroy(MsgQueue *queue) {
+	if (!queue) {
+		return;
+	}
 	msg_queue_close(queue);
 	pthread_cond_broadcast(&queue->read_cond);
 	pthread_cond_broadcast(&queue->write_cond);
@@ -72,6 +76,8 @@ void msg_queue_destroy(MsgQueue *queue) {
 }
 
 int msg_queue_push_wait(MsgQueue *queue, Message *msg) {
+	assert(queue != NULL);
+	assert(msg != NULL);
 	int ret = 0;
 	pthread_mutex_lock(&queue->write_lock);
 
@@ -86,6 +92,8 @@ int msg_queue_push_wait(MsgQueue *queue, Message *msg) {
 }
 
 int msg_queue_push_timeout(MsgQueue *queue, Message *msg, unsigned long timeout_ms) {
+	assert(queue != NULL);
+	assert(msg != NULL);
 	struct timeval	tv;
 	struct timespec timeout;
 	gettimeofday(&tv, NULL);
@@ -111,6 +119,7 @@ int msg_queue_push_timeout(MsgQueue *queue, Message *msg, unsigned long timeout_
 }
 
 int msg_queue_try_pop(MsgQueue *queue, Message *msg_out) {
+	assert(queue != NULL);
 	int ret = 0;
 	pthread_mutex_lock(&queue->read_lock);
 	if (queue->open)
@@ -123,6 +132,7 @@ int msg_queue_try_pop(MsgQueue *queue, Message *msg_out) {
 }
 
 int msg_queue_pop_wait(MsgQueue *queue, Message *msg_out) {
+	assert(queue != NULL);
 	int ret = 0;
 	pthread_mutex_lock(&queue->read_lock);
 
@@ -136,6 +146,7 @@ int msg_queue_pop_wait(MsgQueue *queue, Message *msg_out) {
 }
 
 int msg_queue_pop_timeout(MsgQueue *queue, Message *msg_out, unsigned long timeout_ms) {
+	assert(queue != NULL);
 	struct timeval	tv;
 	struct timespec timeout;
 	gettimeofday(&tv, NULL);

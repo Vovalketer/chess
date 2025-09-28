@@ -25,7 +25,7 @@ VECTOR_DEFINE_TYPE(History, HistoryList, history)
 // TODO: add zobrist key
 // we must expose the board because the speed of the movegen depends on bit manipulation
 
-struct Board {
+struct board {
 	uint64_t	 pieces[2][6];	  // bitboards, Player and Piece used as index
 	uint64_t	 occupancies[2];  // white - black
 	uint16_t	 fullmove_counter;

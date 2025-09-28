@@ -105,7 +105,7 @@ typedef struct {
 	char str[96];
 } FenString;
 
-typedef struct Board Board;
+typedef struct board Board;
 
 bool move_equals(const Move mv1, const Move mv2);
 

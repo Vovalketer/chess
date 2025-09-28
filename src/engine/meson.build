@@ -12,6 +12,8 @@ uci_file = files('uci.c')
 transposition_file = files('transposition.c')
 eval_file = files('eval.c')
 search_file = files('search.c')
+msg_queue_file = files('msg_queue.c')
+engine_file = files('engine.c')
 
 board_sources = [
   bitboards_file,
@@ -48,10 +50,11 @@ perft = executable(
   include_directories: [common_inc],
 )
 
-uci_sources = [uci_file, eval_file, search_file, transposition_file]
-uci = executable(
-  'uci',
-  uci_sources,
+engine_sources = [engine_file, uci_file, eval_file, search_file, transposition_file, msg_queue_file]
+engine = executable(
+  'engine',
+  engine_sources,
+  link_with: [libthrunner],
   dependencies: [libboard_dep, libmakemove_dep, liblog_dep],
   include_directories: [common_inc],
 )

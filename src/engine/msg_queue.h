@@ -32,7 +32,7 @@ typedef struct message {
 	MessageType	 type;
 	unsigned int subtype;
 	void		*payload;
-	void (*free_payload)(void *payload, MessageType type, unsigned int subtype);
+	void (*free_payload)(struct message *msg);
 } Message;
 
 MsgQueue *msg_queue_create(unsigned int capacity);

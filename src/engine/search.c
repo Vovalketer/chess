@@ -1,10 +1,12 @@
 #include "search.h"
 
 #include <limits.h>
+#include <stdint.h>
 #include <sys/time.h>
+#include <threads.h>
 
 #include "board.h"
-#include "engine.h"
+#include "engine_types.h"
 #include "eval.h"
 #include "log.h"
 #include "makemove.h"
@@ -19,6 +21,15 @@
 #define INF		  (INT_MAX - 100000)
 #define CHECKMATE (INF - 1000000)
 #define MAX_DEPTH 64
+
+typedef struct search_context {
+	struct search_info	 *info;
+	struct board		 *board;
+	struct search_options opts;
+	mtx_t				  lock;
+	cnd_t				  cond;
+	bool				  searching;
+} SearchContext;
 
 static const int mvv_lva[PIECE_TYPE_CNT][PIECE_TYPE_CNT] = {
 	// Victim:  P    N    B    R    Q    K
@@ -45,72 +56,59 @@ typedef struct {
 	uint64_t nodes;
 	uint32_t time_start;
 	uint32_t time_limit;
-} SearchContext;
+} SearchState;
 
-int search(int			  depth,
-		   int			  alpha,
-		   int			  beta,
-		   int			  ply,
-		   Board*		  board,
-		   SearchOptions* opts,
-		   SearchContext* ctx,
-		   bool			  is_pv);
-int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply);
+int	 search(int			   depth,
+			int			   alpha,
+			int			   beta,
+			int			   ply,
+			Board		  *board,
+			SearchOptions *opts,
+			SearchState	  *ctx,
+			bool		   is_pv);
+int	 quiescence(SearchState *ctx, Board *board, int alpha, int beta, int ply);
+void iter_deepening(struct board *board, struct search_options *opts);
+bool search_should_stop(void);
 
-static bool is_repetition(Board* board);
-static int	mvv_lva_compare(const void* x, const void* y);
-static void score_move(Move* move, int ply, Player side, TEntry* tte);
-static int	compare_move(const void* x, const void* y);
-static void sort_moves(MoveList* moves, SearchContext* ctx, TEntry* tte);
-static void gstop_cond_eval(SearchOptions* options,
+static bool is_repetition(Board *board);
+static int	mvv_lva_compare(const void *x, const void *y);
+static void score_move(Move *move, int ply, Player side, TEntry *tte);
+static int	compare_move(const void *x, const void *y);
+static void sort_moves(MoveList *moves, SearchState *ctx, TEntry *tte);
+static void gstop_cond_eval(SearchOptions *options,
 							uint32_t	   nodes,
 							uint32_t	   time_start,
 							uint32_t	   time_limit);
 
 static uint32_t timeval_to_ms(struct timeval tv);
 static uint32_t time_now(void);
-static uint32_t search_calculate_time_budget(const SearchOptions* opts, Player p);
+static uint32_t search_calculate_time_budget(const SearchOptions *opts, Player p);
 
 Move		  pv_table[MAX_DEPTH][MAX_DEPTH];
 uint8_t		  pv_length[MAX_DEPTH];
 Move		  killer_moves[MAX_DEPTH][2];
 int			  history_heuristic[PLAYER_CNT][SQ_CNT][SQ_CNT];  // player, from, to
 MoveList	  root_pv;
-volatile bool stop = false;
+SearchContext search_ctx = {0};
 
-Move search_best_move(Board* board, SearchOptions* opts, EngineConfig* cfg) {
-	assert(board != NULL);
-	assert(opts != NULL);
-	assert(cfg != NULL);
-	SearchContext ctx = {0};
-	stop			  = false;
-	ctx.time_start	  = time_now();
-	ctx.time_limit	  = search_calculate_time_budget(opts, board->side);
-	log_debug(
-		"search options - depth: %d, nodes: %d, movetime: %u, wtime: %u, btime: %u, winc: %u, "
-		"binc: %u, movestogo: %d, infinite: %d",
-		opts->depth,
-		opts->nodes,
-		opts->movetime,
-		opts->wtime,
-		opts->btime,
-		opts->winc,
-		opts->binc,
-		opts->movestogo,
-		opts->infinite);
+SearchThreadArgs *ctl = NULL;
 
+void iter_deepening(struct board *board, struct search_options *opts) {
+	SearchState ss = {0};
+	ss.time_start  = time_now();
+	ss.time_limit  = search_calculate_time_budget(opts, board->side);
 	// if depth isnt set, iterate until MAX_DEPTH-1 at most to avoid overflows
 	size_t max_depth = opts->depth != 0 ? opts->depth : MAX_DEPTH - 1;
 	// iterative deepening
 	for (size_t depth = 1; depth <= max_depth; depth++) {
 		memset(&pv_length, 0, sizeof(pv_length));
-		int score = search(depth, -INF, INF, 0, board, opts, &ctx, true);
+		int score = search(depth, -INF, INF, 0, board, opts, &ss, true);
 
-		gstop_cond_eval(opts, ctx.nodes, ctx.time_start, ctx.time_limit);
-		if (stop)
+		gstop_cond_eval(opts, ss.nodes, ss.time_start, ss.time_limit);
+		if (search_should_stop())
 			break;
 
-		log_info("info depth %d score %d nodes %llu", depth, score, ctx.nodes);
+		log_info("info depth %zu score %d nodes %lu", depth, score, ss.nodes);
 		if (pv_length[0] >= move_list_size(&root_pv)) {
 			move_list_clear(&root_pv);
 			for (size_t i = 0; i < pv_length[0]; ++i) {
@@ -118,7 +116,7 @@ Move search_best_move(Board* board, SearchOptions* opts, EngineConfig* cfg) {
 			}
 		} else {
 			for (size_t i = 0; i < pv_length[0]; ++i) {
-				Move* m = move_list_at(&root_pv, i);
+				Move *m = move_list_at(&root_pv, i);
 				*m		= pv_table[0][i];
 			}
 		}
@@ -128,11 +126,10 @@ Move search_best_move(Board* board, SearchOptions* opts, EngineConfig* cfg) {
 			log_info("%s", utils_move_description(*move_list_at(&root_pv, i)).str);
 		}
 	}
-	assert(move_list_size(&root_pv) > 0);
-	return *move_list_at(&root_pv, 0);
+	search_stop();
 }
 
-int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
+int quiescence(SearchState *ctx, Board *board, int alpha, int beta, int ply) {
 	ctx->side = board->side;
 	ctx->ply  = ply;
 	ctx->nodes++;
@@ -147,7 +144,7 @@ int quiescence(SearchContext* ctx, Board* board, int alpha, int beta, int ply) {
 		alpha = best_score;
 
 	// might be good to generate promotions as well, anything that changes the mat balance
-	MoveList* moves = movegen_generate_captures(board, board->side);
+	MoveList *moves = movegen_generate_captures(board, board->side);
 	if (move_list_size(moves))
 		move_list_sort(moves, mvv_lva_compare);
 	for (size_t i = 0; i < move_list_size(moves); i++) {
@@ -176,9 +173,9 @@ int search(int			  depth,
 		   int			  alpha,
 		   int			  beta,
 		   int			  ply,
-		   Board*		  board,
-		   SearchOptions* opts,
-		   SearchContext* ctx,
+		   Board		 *board,
+		   SearchOptions *opts,
+		   SearchState	 *ctx,
 		   bool			  is_pv) {
 	pv_length[ply] = 0;
 	ctx->side	   = board->side;
@@ -193,7 +190,7 @@ int search(int			  depth,
 
 	if (board->halfmove_clock > 99 || is_repetition(board))
 		return 0;
-	if (stop)
+	if (search_should_stop())
 		return 0;
 
 	TEntry entry = {0};
@@ -215,7 +212,7 @@ int search(int			  depth,
 		}
 	}
 
-	MoveList* moves = movegen_generate(board, board->side);
+	MoveList *moves = movegen_generate(board, board->side);
 
 	Move	  best_move	  = NO_MOVE;
 	int		  best_score  = -INF;
@@ -224,7 +221,7 @@ int search(int			  depth,
 	sort_moves(moves, ctx, &entry);
 
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		if (stop) {
+		if (search_should_stop()) {
 			move_list_destroy(&moves);
 			return 0;
 		}
@@ -297,7 +294,6 @@ int search(int			  depth,
 	if (!move_equals(best_move, NO_MOVE)) {
 		ttable_store(board->hash, depth, tt_score, best_move, tt_bound);
 	}
-
 	assert(best_score != -INF && best_score != INF);
 	return best_score;
 }
@@ -306,12 +302,59 @@ int search(int			  depth,
  * Lifetime
  */
 
-void search_init(void) {
+int search_thread(void *arg) {
+	assert(arg != NULL);
+	log_trace("search thread started");
+	SearchThreadArgs *sta = arg;
+	ctl					  = sta;
+
+	ctl->shutdown = false;
+
 	memset(pv_table, 0, sizeof(pv_table));
 	memset(pv_length, 0, sizeof(pv_length));
 	memset(killer_moves, 0, sizeof(killer_moves));
 	memset(history_heuristic, 0, sizeof(history_heuristic));
 	move_list_init_reserve(&root_pv, 32);
+
+	mtx_init(&search_ctx.lock, mtx_plain);
+	cnd_init(&search_ctx.cond);
+
+	while (!ctl->shutdown) {
+		mtx_lock(&search_ctx.lock);
+		while (!search_ctx.searching && !ctl->shutdown) {
+			cnd_wait(&search_ctx.cond, &search_ctx.lock);
+		}
+		if (ctl->shutdown)
+			break;
+		mtx_unlock(&search_ctx.lock);
+		log_trace("searching");
+		iter_deepening(search_ctx.board, &search_ctx.opts);
+		log_trace("search done");
+	}
+	log_trace("search thread stopped");
+	return 0;
+}
+
+void search_start(struct board *board, struct search_options options) {
+	assert(board != NULL);
+	log_trace("starting search");
+	mtx_lock(&search_ctx.lock);
+	search_ctx.board	 = board;
+	search_ctx.opts		 = options;
+	search_ctx.searching = true;
+	cnd_signal(&search_ctx.cond);
+	mtx_unlock(&search_ctx.lock);
+	log_trace("search start signal sent");
+}
+
+void search_shutdown(void) {
+	log_trace("shutting down search");
+	mtx_lock(&search_ctx.lock);
+	search_ctx.searching = false;
+	ctl->shutdown		 = true;
+	cnd_broadcast(&search_ctx.cond);
+	mtx_unlock(&search_ctx.lock);
+	log_trace("search shutdown signal sent");
 }
 
 void search_reset(void) {
@@ -323,14 +366,20 @@ void search_reset(void) {
 }
 
 void search_stop(void) {
-	stop = true;
+	log_trace("stopping search");
+	search_ctx.searching = false;
+	log_trace("search stop signal sent");
+}
+
+bool search_should_stop(void) {
+	return !search_ctx.searching || ctl->shutdown;
 }
 
 /*
  * Time functions
  */
 
-uint32_t search_calculate_time_budget(const SearchOptions* opts, Player p) {
+uint32_t search_calculate_time_budget(const SearchOptions *opts, Player p) {
 	log_trace("calculating time budget");
 	uint32_t remaining = p == PLAYER_W ? opts->wtime : opts->btime;
 	log_trace("remaining time: %u ms", remaining);
@@ -369,19 +418,19 @@ uint32_t time_now(void) {
 	return timeval_to_ms(tv);
 }
 
-void gstop_cond_eval(SearchOptions* options,
+void gstop_cond_eval(SearchOptions *options,
 					 uint32_t		nodes,
 					 uint32_t		time_start,
 					 uint32_t		time_limit) {
 	// NOTE: depth is evaluated by the function performing iterative deepening
-	if (stop) {
+	if (search_should_stop()) {
 		log_debug("search already stopped");
 		return;
 	}
 
 	if (options->nodes && nodes >= options->nodes) {
 		log_trace("node limit reached: set %u nodes %u", options->nodes, nodes);
-		stop = true;
+		search_stop();
 		return;
 	}
 
@@ -391,7 +440,7 @@ void gstop_cond_eval(SearchOptions* options,
 			log_trace("time limit reached: elapsed %u ms, time limit: %u ms",
 					  timenow - time_start,
 					  time_limit);
-			stop = true;
+			search_stop();
 			return;
 		}
 	}
@@ -401,22 +450,22 @@ void gstop_cond_eval(SearchOptions* options,
  * Score functions
  */
 
-static int compare_move(const void* m1, const void* m2) {
-	const Move* move1 = (const Move*) m1;
-	const Move* move2 = (const Move*) m2;
+static int compare_move(const void *m1, const void *m2) {
+	const Move *move1 = (const Move *) m1;
+	const Move *move2 = (const Move *) m2;
 	return move2->score - move1->score;
 }
 
-static void sort_moves(MoveList* moves, SearchContext* ctx, TEntry* tte) {
+static void sort_moves(MoveList *moves, SearchState *ctx, TEntry *tte) {
 	for (size_t i = 0; i < move_list_size(moves); i++) {
 		score_move(move_list_at(moves, i), ctx->ply, ctx->side, tte);
 	}
 	move_list_sort(moves, compare_move);
 }
 
-static int mvv_lva_compare(const void* x, const void* y) {
-	Move* xt	= (Move*) x;
-	Move* yt	= (Move*) y;
+static int mvv_lva_compare(const void *x, const void *y) {
+	Move *xt	= (Move *) x;
+	Move *yt	= (Move *) y;
 	int	  x_val = mvv_lva[xt->piece.type][xt->captured_type];
 	int	  y_val = mvv_lva[yt->piece.type][yt->captured_type];
 	if (x_val < y_val)
@@ -426,7 +475,7 @@ static int mvv_lva_compare(const void* x, const void* y) {
 	return 0;
 }
 
-static void score_move(Move* move, int ply, Player side, TEntry* tte) {
+static void score_move(Move *move, int ply, Player side, TEntry *tte) {
 	// check if the TEntry is not empty before performing the comparison
 	if (tte->key && move_equals(*move, tte->best_move))
 		move->score = SCORE_TT;
@@ -442,10 +491,10 @@ static void score_move(Move* move, int ply, Player side, TEntry* tte) {
 		move->score = SCORE_NONE;
 }
 
-static bool is_repetition(Board* board) {
+static bool is_repetition(Board *board) {
 	int count = 0;
 	for (size_t i = 0; i < history_size(board->history); i++) {
-		History* h = history_at(board->history, i);
+		History *h = history_at(board->history, i);
 		assert(h != NULL);
 		if (h->hash == board->hash) {
 			count++;

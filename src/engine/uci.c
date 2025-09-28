@@ -1,69 +1,55 @@
+#include "uci.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "bitboards.h"
-#include "board.h"
-#include "engine.h"
 #include "fen.h"
-#include "hash.h"
 #include "log.h"
-#include "makemove.h"
-#include "movegen.h"
-#include "movelist.h"
-#include "search.h"
-#include "transposition.h"
+#include "msg_queue.h"
 #include "types.h"
+#include "uci_types.h"
 #include "utils.h"
 
-#define INPUT_LIMIT			 4096
-#define MAX_TOKENS			 1024
-#define ENGINE_NAME			 "test_engine"
-#define ENGINE_AUTHOR		 "test_author"
-#define OPTS_DEFAULT_THREADS 1
+#define INPUT_LIMIT 4096
+#define MAX_TOKENS	1024
 
 void uci_parse(char *str);
 void uci_print(const char *str, ...);
-void uci_init_opts(EngineConfig *opts);
 
-void cmd_uci(EngineConfig opts);
-void cmd_setoption(EngineConfig *cfg, char **tok, int tokn);
+void cmd_uci(void);
+void cmd_quit(void);
+void cmd_setoption(char **tok, int tokn);
 void cmd_ucinewgame(void);
 void cmd_isready(void);
 void cmd_position(char **tok, int tokn);
 void cmd_go(char **tok, int tokn);
 void cmd_stop(void);
-void cmd_debug(char *arg);
+void cmd_debug(char **tok, int tokn);
+void cmd_print(void);
 
 // size_t isnt necessary here
 
-int	 tokenize(char *str, const char *delim, size_t max_tok, char **out_tokens);
-bool tok_eq(const char *str1, const char *str2);
-int	 tok_search_pos(char **tok, size_t tokn, const char *str);
-bool is_move_tok(const char *str);
-Move tok_to_move(const char *str);
+int		tokenize(char *str, const char *delim, size_t max_tok, char **out_tokens);
+bool	tok_eq(const char *str1, const char *str2);
+int		tok_search_pos(char **tok, size_t tokn, const char *str);
+bool	is_move_tok(const char *str);
+UciMove tok_to_move(const char *str);
 
-Board		 *board		   = NULL;
-bool		  is_board_set = false;
-SearchOptions search_opts  = {0};
-EngineConfig  engine_cfg   = {0};
-Move		  best_move;
+static MsgQueue *mq		  = NULL;
+static bool		 shutdown = false;
 
-void init(void) {
-	search_init();
-	bitboards_init();
-	ttable_init(256);
-	hash_init();
-}
+int uci_thread(void *arg) {
+	log_trace("uci thread started");
+	assert(arg != NULL);
+	shutdown = false;
 
-int main(void) {
-	log_set_level(LOG_TRACE);
+	UciThreadArgs *uta = arg;
+	assert(uta->msg_queue != NULL);
+	mq = uta->msg_queue;
 	char input[INPUT_LIMIT];
-	init();
-	board = board_create();
-	uci_init_opts(&engine_cfg);
-	while (1) {
+	while (!shutdown) {
 		if (fgets(input, INPUT_LIMIT, stdin)) {
 			size_t len = strlen(input);
 			if (len > 0 && input[len - 1] == '\n')
@@ -71,7 +57,12 @@ int main(void) {
 			uci_parse(input);
 		}
 	}
+	log_trace("uci thread stopped");
 	return 0;
+}
+
+void uci_shutdown(void) {
+	shutdown = true;
 }
 
 void uci_parse(char *str) {
@@ -81,12 +72,10 @@ void uci_parse(char *str) {
 		return;
 
 	if (tok_eq(tok[0], "quit")) {
-		uci_print("bye");
-		exit(EXIT_SUCCESS);
+		cmd_quit();
 	} else if (tok_eq(tok[0], "uci")) {
-		cmd_uci(engine_cfg);
+		cmd_uci();
 	} else if (tok_eq(tok[0], "isready")) {
-		// TODO: wait until the engine has finished setting up and respond
 		cmd_isready();
 	} else if (tok_eq(tok[0], "ucinewgame")) {
 		cmd_ucinewgame();
@@ -97,11 +86,11 @@ void uci_parse(char *str) {
 	} else if (tok_eq(tok[0], "position")) {
 		cmd_position(&tok[1], tokn - 1);
 	} else if (tok_eq(tok[0], "setoption")) {
-		cmd_setoption(&engine_cfg, &tok[1], tokn - 1);
+		cmd_setoption(&tok[1], tokn - 1);
 	} else if (tok_eq(tok[0], "print")) {
-		board_print(board);
+		cmd_print();
 	} else if (tok_eq(tok[0], "debug")) {
-		cmd_debug(tok[1]);
+		cmd_debug(&tok[1], tokn - 1);
 	}
 }
 
@@ -117,16 +106,98 @@ void uci_print(const char *str, ...) {
 /*
  * Commands
  */
-
-void cmd_uci(EngineConfig opts) {
-	uci_print("id name %s", ENGINE_NAME);
-	uci_print("id author %s", ENGINE_AUTHOR);
-	uci_print("");
-	uci_print("option name Threads value %d", opts.threads);
-	uci_print("uciok");
+void msg_free(Message *msg) {
+	if (msg->type == MSG_UCI) {
+		log_trace("msg_free, %p", msg);
+		switch ((UciMsgType) msg->subtype) {
+			case MSG_UCI_POSITION: {
+				UciPosition *pos = msg->payload;
+				log_trace("msg_free position, %p", pos);
+				ucimv_list_free(pos->moves);
+				free(msg->payload);
+			} break;
+			case MSG_UCI_GO: {
+				UciGo *go = msg->payload;
+				log_trace("msg_free go, %p", go);
+				ucimv_list_free(&go->searchmoves);
+				free(msg->payload);
+			} break;
+			case MSG_UCI_SETOPTION:
+				free(msg->payload);
+				break;
+			case MSG_UCI_DEBUG:
+				free(msg->payload);
+				break;
+			default:
+				break;
+		}
+	}
 }
 
-void cmd_setoption(EngineConfig *cfg, char **tok, int tokn) {
+Message *msg_create(UciMsgType type) {
+	Message *msg = malloc(sizeof(Message));
+	log_trace("msg_create, %p", msg);
+	if (!msg) {
+		log_error("Failed to allocate command");
+
+		exit(EXIT_FAILURE);
+	}
+	void  *arg		= NULL;
+	size_t arg_size = 0;
+	switch (type) {
+		case MSG_UCI_POSITION:
+			arg_size = sizeof(UciPosition);
+			break;
+		case MSG_UCI_GO:
+			arg_size = sizeof(UciGo);
+			break;
+		case MSG_UCI_DEBUG:
+			arg_size = sizeof(UciDebug);
+			break;
+		case MSG_UCI_SETOPTION:
+			arg_size = sizeof(UciSetOption);
+			break;
+		default:
+			break;
+	}
+
+	if (arg_size > 0) {
+		arg = calloc(1, arg_size);
+		if (!arg) {
+			log_error("Failed to allocate command argument");
+			exit(EXIT_FAILURE);
+		}
+		log_trace("msg_arg, %p", arg);
+	}
+	msg->type		  = MSG_UCI;
+	msg->subtype	  = type;
+	msg->payload	  = arg;
+	msg->free_payload = msg_free;
+	return msg;
+}
+
+void cmd_uci(void) {
+	log_trace("cmd_uci");
+	Message *msg = msg_create(MSG_UCI_UCI);
+	msg_queue_push_wait(mq, msg);
+	log_trace("cmd_uci done");
+}
+
+void cmd_quit(void) {
+	log_trace("cmd_quit");
+	Message *msg = msg_create(MSG_UCI_QUIT);
+	msg_queue_push_wait(mq, msg);
+	shutdown = true;
+}
+
+void cmd_print(void) {
+	log_trace("cmd_print");
+	Message *msg = msg_create(MSG_UCI_PRINT);
+	msg_queue_push_wait(mq, msg);
+}
+
+void cmd_setoption(char **tok, int tokn) {
+	log_trace("cmd_setoption");
 	if (!tok_eq(tok[0], "name"))
 		return;
 	int threads_pos = tok_search_pos(tok, tokn, "Threads");
@@ -134,27 +205,29 @@ void cmd_setoption(EngineConfig *cfg, char **tok, int tokn) {
 		if (!tok_eq(tok[threads_pos + 1], "value"))
 			return;
 
-		cfg->threads = strtoul(tok[threads_pos + 2], NULL, 10);
-		uci_print("info string using %d threads", cfg->threads);
+		Message		 *msg = msg_create(MSG_UCI_SETOPTION);
+		UciSetOption *opt = msg->payload;
+		opt->type		  = OPT_THREADS;
+		opt->opt.threads  = strtoul(tok[threads_pos + 2], NULL, 10);
+
+		msg_queue_push_wait(mq, msg);
 	}
 }
 
 void cmd_ucinewgame(void) {
-	// TODO: reset search state, including history heuristics
-	board_destroy(&board);
-	board = board_create();
-	hash_reset();
-	ttable_reset();
-	search_reset();
+	log_trace("cmd_ucinewgame");
+	Message *msg = msg_create(MSG_UCI_UCINEWGAME);
+	msg_queue_push_wait(mq, msg);
 }
 
 void cmd_isready(void) {
-	// TODO: check hash, bitboards, TT inits, delay response until they're ready
-	uci_print("readyok");
+	log_trace("cmd_isready");
+	Message *msg = msg_create(MSG_UCI_ISREADY);
+	msg_queue_push_wait(mq, msg);
 }
 
 void cmd_position(char **tok, int tokn) {
-	// tok=0 == position, ignore
+	log_trace("cmd_position");
 	FenString fen;
 	int		  tok_idx = 0;
 	if (tok_eq(tok[tok_idx], "startpos")) {
@@ -187,46 +260,51 @@ void cmd_position(char **tok, int tokn) {
 	} else
 		return;
 
-	if (!board_from_fen(board, fen.str)) {
-		uci_print("info string Invalid FEN");
-		return;
-	}
-
+	UciMoveList *moves = ucimv_list_create();
 	if (tok_eq(tok[tok_idx], "moves")) {
 		tok_idx++;
 		while (tok_idx < tokn) {
 			if (!is_move_tok(tok[tok_idx]))
 				break;
-			Move move = tok_to_move(tok[tok_idx]);
-			if (move.piece.type != EMPTY) {
-				if (!make_move(board, move))
-					break;
+			UciMove move = tok_to_move(tok[tok_idx]);
+			if (move.from != move.to) {
+				ucimv_list_push_back(moves, move);
 			} else {
 				break;
 			}
 			tok_idx++;
 		}
 	}
+
+	Message		*cmd = msg_create(MSG_UCI_POSITION);
+	UciPosition *pos = cmd->payload;
+	pos->fen		 = fen;
+	pos->moves		 = moves;
+
+	msg_queue_push_wait(mq, cmd);
 }
 
 void cmd_go(char **tok, int tokn) {
+	log_trace("cmd_go");
 	// TODO: error handling on incorrect command arguments
 	if (!tok)
 		return;
 
-	search_opts = (SearchOptions) {0};
+	Message *msg = msg_create(MSG_UCI_GO);
+	assert(msg != NULL);
+	assert(msg->payload != NULL);
+
+	UciGo *search_opts = msg->payload;
 
 	int searchmoves_idx = tok_search_pos(tok, tokn, "searchmoves");
 	if (searchmoves_idx != -1) {
-		if (!search_opts.searchmoves)
-			search_opts.searchmoves = move_list_create();
-		move_list_clear(search_opts.searchmoves);
+		ucimv_list_init(&search_opts->searchmoves);
 		for (int i = searchmoves_idx + 1; i < tokn; i++) {
 			if (!is_move_tok(tok[i]))
 				break;
-			Move move = tok_to_move(tok[i]);
-			if (move.piece.type != EMPTY) {
-				move_list_push_back(search_opts.searchmoves, move);
+			UciMove move = tok_to_move(tok[i]);
+			if (move.from != move.to) {
+				ucimv_list_push_back(&search_opts->searchmoves, move);
 			} else {
 				break;
 			}
@@ -235,84 +313,89 @@ void cmd_go(char **tok, int tokn) {
 
 	int depth_idx = tok_search_pos(tok, tokn, "depth");
 	if (depth_idx != -1 && depth_idx + 1 < tokn) {
-		search_opts.depth = strtoul(tok[depth_idx + 1], NULL, 10);
+		search_opts->depth = strtoul(tok[depth_idx + 1], NULL, 10);
 	}
 
 	int nodes_idx = tok_search_pos(tok, tokn, "nodes");
 	if (nodes_idx != -1 && nodes_idx + 1 < tokn) {
-		search_opts.nodes = strtoul(tok[nodes_idx + 1], NULL, 10);
+		search_opts->nodes = strtoul(tok[nodes_idx + 1], NULL, 10);
 	}
 
 	int mate_idx = tok_search_pos(tok, tokn, "mate");
 	if (mate_idx != -1 && mate_idx + 1 < tokn) {
-		search_opts.mate = strtoul(tok[mate_idx + 1], NULL, 10);
+		search_opts->mate = strtoul(tok[mate_idx + 1], NULL, 10);
 	}
 
 	int wtime_idx = tok_search_pos(tok, tokn, "wtime");
 	if (wtime_idx != -1 && wtime_idx + 1 < tokn) {
-		search_opts.wtime = strtoul(tok[wtime_idx + 1], NULL, 10);
+		search_opts->wtime = strtoul(tok[wtime_idx + 1], NULL, 10);
 	}
 
 	int btime_idx = tok_search_pos(tok, tokn, "btime");
 	if (btime_idx != -1 && btime_idx + 1 < tokn) {
-		search_opts.btime = strtoul(tok[btime_idx + 1], NULL, 10);
+		search_opts->btime = strtoul(tok[btime_idx + 1], NULL, 10);
 	}
 
 	// movestogo depends on wtime and btime being set
-	if (search_opts.wtime && search_opts.btime) {
+	if (search_opts->wtime && search_opts->btime) {
 		int movestogo_idx = tok_search_pos(tok, tokn, "movestogo");
 		if (movestogo_idx != -1 && movestogo_idx + 1 < tokn) {
-			search_opts.movestogo = strtoul(tok[movestogo_idx + 1], NULL, 10);
+			search_opts->movestogo = strtoul(tok[movestogo_idx + 1], NULL, 10);
 		}
 	}
 
 	int winc_idx = tok_search_pos(tok, tokn, "winc");
 	if (winc_idx != -1 && winc_idx + 1 < tokn) {
-		search_opts.winc = strtoul(tok[winc_idx + 1], NULL, 10);
+		search_opts->winc = strtoul(tok[winc_idx + 1], NULL, 10);
 	}
 
 	int binc_idx = tok_search_pos(tok, tokn, "binc");
 	if (binc_idx != -1 && binc_idx + 1 < tokn) {
-		search_opts.binc = strtoul(tok[binc_idx + 1], NULL, 10);
+		search_opts->binc = strtoul(tok[binc_idx + 1], NULL, 10);
 	}
 
 	int movetime_idx = tok_search_pos(tok, tokn, "movetime");
 	if (movetime_idx != -1 && movetime_idx + 1 < tokn) {
-		search_opts.movetime = strtoul(tok[movetime_idx + 1], NULL, 10);
+		search_opts->movetime = strtoul(tok[movetime_idx + 1], NULL, 10);
 	}
 
 	int infinite_idx = tok_search_pos(tok, tokn, "infinite");
 	if (infinite_idx != -1) {
-		search_opts.infinite = true;
+		search_opts->infinite = true;
 	}
 
 	int ponder_idx = tok_search_pos(tok, tokn, "ponder");
 	if (ponder_idx != -1) {
-		search_opts.ponder = true;
+		search_opts->ponder = true;
 	}
 
-	best_move		 = search_best_move(board, &search_opts, &engine_cfg);
-	const char *prom = utils_prom_to_str(best_move.mv_type);
-	uci_print("bestmove %s%s%s",
-			  utils_square_to_str(best_move.from),
-			  utils_square_to_str(best_move.to),
-			  prom ? prom : "");
+	msg_queue_push_wait(mq, msg);
+	log_trace("cmd_go done");
 }
 
 void cmd_stop(void) {
-	// TODO: search is a blocking function, stop wont perform any action until search is done
-	search_stop();
-	const char *prom = utils_prom_to_str(best_move.mv_type);
-	// TODO: ponder
-	uci_print("bestmove %s%s%s",
-			  utils_square_to_str(best_move.from),
-			  utils_square_to_str(best_move.to),
-			  prom ? prom : "");
+	log_trace("cmd_stop");
+	Message *msg = msg_create(MSG_UCI_STOP);
+	msg_queue_push_wait(mq, msg);
 }
 
-void cmd_debug(char *arg) {
-	// TODO set and print debug data meant for the UCI
-	(void) arg;
+void cmd_debug(char **tok, int tokn) {
+	log_trace("cmd_debug");
+	if (tokn >= 1 || !tok)
+		return;
+	bool debug;
+	if (tok_eq(tok[0], "on")) {
+		debug = true;
+	} else if (tok_eq(tok[0], "off")) {
+		debug = false;
+	} else {
+		return;
+	}
+
+	Message	 *msg = msg_create(MSG_UCI_DEBUG);
+	UciDebug *opt = msg->payload;
+	opt->debug	  = debug;
+	msg_queue_push_wait(mq, msg);
 }
 
 /*
@@ -339,58 +422,49 @@ bool tok_eq(const char *str1, const char *str2) {
 	return strcmp(str1, str2) == 0;
 }
 
-Move tok_to_move(const char *str) {
-	Move move = NO_MOVE;
-	int	 len  = strlen(str);
+UciMove tok_to_move(const char *str) {
+	UciMove move = {0};
+	int		len	 = strlen(str);
 	if (len != 4 && len != 5) {
-		return NO_MOVE;
+		return move;
 	}
 	int f1 = tolower(str[0]) - 'a';
 	int r1 = tolower(str[1]) - '1';	 // index is 0-7
 	int f2 = tolower(str[2]) - 'a';
 	int r2 = tolower(str[3]) - '1';	 // index is 0-7
 	if (f1 < 0 || f1 > 7 || r1 < 0 || r1 > 7 || f2 < 0 || f2 > 7 || r2 < 0 || r2 > 7) {
-		return NO_MOVE;
+		return move;
 	}
-	char prom = 0;
+	char prom_char = 0;
 	if (len == 5) {
-		prom = tolower(str[4]);
-		if (prom != 'q' && prom != 'r' && prom != 'b' && prom != 'n') {
-			return NO_MOVE;
+		prom_char = tolower(str[4]);
+		if (prom_char != 'q' && prom_char != 'r' && prom_char != 'b' && prom_char != 'n') {
+			return move;
 		}
 	}
 
-	MoveList *moves = movegen_generate(board, board->side);
-	Square	  from	= utils_fr_to_square(f1, r1);
-	Square	  to	= utils_fr_to_square(f2, r2);
-	for (size_t i = 0; i < move_list_size(moves); i++) {
-		Move *m = move_list_at(moves, i);
-		if (m->from == from && m->to == to) {
-			if (prom == 0) {
-				move = *m;
-				break;
-			} else {
-				if (prom == 'q' && (m->mv_type == MV_Q_PROM || m->mv_type == MV_Q_PROM_CAPTURE)) {
-					move = *m;
-					break;
-				}
-				if (prom == 'r' && (m->mv_type == MV_R_PROM || m->mv_type == MV_R_PROM_CAPTURE)) {
-					move = *m;
-					break;
-				}
-				if (prom == 'b' && (m->mv_type == MV_B_PROM || m->mv_type == MV_B_PROM_CAPTURE)) {
-					move = *m;
-					break;
-				}
-				if (prom == 'n' && (m->mv_type == MV_N_PROM || m->mv_type == MV_N_PROM_CAPTURE)) {
-					move = *m;
-					break;
-				}
-			}
-		}
+	Square		from = utils_fr_to_square(f1, r1);
+	Square		to	 = utils_fr_to_square(f2, r2);
+	UciPromType prom;
+	switch (prom_char) {
+		case 'q':
+			prom = UCI_PROM_Q;
+			break;
+		case 'r':
+			prom = UCI_PROM_R;
+			break;
+		case 'b':
+			prom = UCI_PROM_B;
+			break;
+		case 'n':
+			prom = UCI_PROM_N;
+			break;
+		default:
+			prom = UCI_PROM_NONE;
+			break;
 	}
-	move_list_destroy(&moves);
-	return move;
+	UciMove um = {.from = from, .to = to, .prom_type = prom};
+	return um;
 }
 
 int tok_search_pos(char **tok, size_t tokn, const char *str) {
@@ -415,8 +489,4 @@ bool is_move_tok(const char *str) {
 		return false;
 	}
 	return true;
-}
-
-void uci_init_opts(EngineConfig *opts) {
-	opts->threads = OPTS_DEFAULT_THREADS;
 }

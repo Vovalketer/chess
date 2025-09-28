@@ -10,7 +10,7 @@
 #include "circbuf.h"
 #include "log.h"
 
-DECLARE_CIRCBUF(msg_buf, Message);
+DECLARE_CIRCBUF(msg_buf, Message *);
 
 struct msg_queue {
 	struct msg_buf	queue;
@@ -84,7 +84,7 @@ int msg_queue_push_wait(MsgQueue *queue, Message *msg) {
 	while (queue->open && circbuf_full(&queue->queue))
 		pthread_cond_wait(&queue->write_cond, &queue->write_lock);
 
-	ret = circbuf_put(&queue->queue, *msg);
+	ret = circbuf_put(&queue->queue, msg);
 	pthread_cond_signal(&queue->read_cond);
 	pthread_mutex_unlock(&queue->write_lock);
 
@@ -111,14 +111,14 @@ int msg_queue_push_timeout(MsgQueue *queue, Message *msg, unsigned long timeout_
 		}
 	}
 
-	ret = circbuf_put(&queue->queue, *msg);
+	ret = circbuf_put(&queue->queue, msg);
 	pthread_cond_signal(&queue->read_cond);
 	pthread_mutex_unlock(&queue->write_lock);
 
 	return ret;
 }
 
-int msg_queue_try_pop(MsgQueue *queue, Message *msg_out) {
+int msg_queue_try_pop(MsgQueue *queue, Message **msg_out) {
 	assert(queue != NULL);
 	int ret = 0;
 	pthread_mutex_lock(&queue->read_lock);
@@ -131,7 +131,7 @@ int msg_queue_try_pop(MsgQueue *queue, Message *msg_out) {
 	return ret;
 }
 
-int msg_queue_pop_wait(MsgQueue *queue, Message *msg_out) {
+int msg_queue_pop_wait(MsgQueue *queue, Message **msg_out) {
 	assert(queue != NULL);
 	int ret = 0;
 	pthread_mutex_lock(&queue->read_lock);
@@ -145,7 +145,7 @@ int msg_queue_pop_wait(MsgQueue *queue, Message *msg_out) {
 	return ret;
 }
 
-int msg_queue_pop_timeout(MsgQueue *queue, Message *msg_out, unsigned long timeout_ms) {
+int msg_queue_pop_timeout(MsgQueue *queue, Message **msg_out, unsigned long timeout_ms) {
 	assert(queue != NULL);
 	struct timeval	tv;
 	struct timespec timeout;

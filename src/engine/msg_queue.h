@@ -49,8 +49,8 @@ int msg_queue_try_push(MsgQueue *queue, Message *msg);
 int msg_queue_push_wait(MsgQueue *queue, Message *msg);
 int msg_queue_push_timeout(MsgQueue *queue, Message *msg, unsigned long timeout_ms);
 
-int msg_queue_try_pop(MsgQueue *queue, Message *msg);
-int msg_queue_pop_wait(MsgQueue *queue, Message *msg);
-int msg_queue_pop_timeout(MsgQueue *queue, Message *msg, unsigned long timeout_ms);
+int msg_queue_try_pop(MsgQueue *queue, Message **msg);
+int msg_queue_pop_wait(MsgQueue *queue, Message **msg);
+int msg_queue_pop_timeout(MsgQueue *queue, Message **msg, unsigned long timeout_ms);
 
 #endif	// MSG_QUEUE_H

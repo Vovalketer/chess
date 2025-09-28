@@ -54,3 +54,4 @@ search_test = executable(
 
 # tests for non engine dependent files such as data structures
 subdir('common')
+subdir('ds')

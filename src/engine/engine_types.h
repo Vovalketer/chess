@@ -3,14 +3,21 @@
 
 #include <stdbool.h>
 
-typedef struct engine_config {
-	unsigned int threads;
-} EngineConfig;
+#include "search_types.h"
+#include "uci_types.h"
 
-typedef struct engine_state {
-	struct engine_config *config;
-	struct msg_queue	 *msg_queue;
-	struct board		 *board;
-} EngineState;
+typedef enum {
+	MSG_UCI,
+	MSG_SEARCH,
+} EngineMsgType;
+
+typedef struct engine_msg {
+	EngineMsgType type;
+
+	union {
+		struct uci_msg	  uci;
+		struct search_msg search;
+	} payload;
+} EngineMsg;
 
 #endif	// ENGINE_TYPES_H

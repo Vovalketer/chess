@@ -14,6 +14,7 @@ eval_file = files('eval.c')
 search_file = files('search.c')
 msg_queue_file = files('msg_queue.c')
 engine_file = files('engine.c')
+engine_mq = files('engine_mq.c')
 
 board_sources = [
   bitboards_file,
@@ -50,7 +51,7 @@ perft = executable(
   include_directories: [common_inc],
 )
 
-engine_sources = [engine_file, uci_file, eval_file, search_file, transposition_file, msg_queue_file]
+engine_sources = [engine_file, uci_file, eval_file, search_file, transposition_file, engine_mq]
 engine = executable(
   'engine',
   engine_sources,

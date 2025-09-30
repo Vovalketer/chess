@@ -1,14 +1,10 @@
 #include "uci.h"
 
 #include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
+#include "engine_mq.h"
 #include "fen.h"
 #include "log.h"
-#include "msg_queue.h"
-#include "types.h"
 #include "uci_types.h"
 #include "utils.h"
 
@@ -37,17 +33,13 @@ int		tok_search_pos(char **tok, size_t tokn, const char *str);
 bool	is_move_tok(const char *str);
 UciMove tok_to_move(const char *str);
 
-static MsgQueue *mq		  = NULL;
-static bool		 shutdown = false;
+static bool shutdown = false;
 
 int uci_thread(void *arg) {
+	(void) arg;
 	log_trace("uci thread started");
-	assert(arg != NULL);
 	shutdown = false;
 
-	UciThreadArgs *uta = arg;
-	assert(uta->msg_queue != NULL);
-	mq = uta->msg_queue;
 	char input[INPUT_LIMIT];
 	while (!shutdown) {
 		if (fgets(input, INPUT_LIMIT, stdin)) {
@@ -106,42 +98,28 @@ void uci_print(const char *str, ...) {
 /*
  * Commands
  */
-void msg_free(Message *msg) {
-	if (msg->type == MSG_UCI) {
-		log_trace("msg_free, %p", msg);
-		switch ((UciMsgType) msg->subtype) {
-			case MSG_UCI_POSITION: {
-				UciPosition *pos = msg->payload;
-				log_trace("msg_free position, %p", pos);
-				ucimv_list_free(pos->moves);
-				free(msg->payload);
-			} break;
-			case MSG_UCI_GO: {
-				UciGo *go = msg->payload;
-				log_trace("msg_free go, %p", go);
-				ucimv_list_free(&go->searchmoves);
-				free(msg->payload);
-			} break;
-			case MSG_UCI_SETOPTION:
-				free(msg->payload);
-				break;
-			case MSG_UCI_DEBUG:
-				free(msg->payload);
-				break;
-			default:
-				break;
-		}
+void msg_free(UciMsg *msg) {
+	switch (msg->type) {
+		case MSG_UCI_POSITION: {
+			UciPosition *pos = msg->payload.position;
+			ucimv_list_free(&pos->moves);
+		} break;
+		case MSG_UCI_GO: {
+			UciGo *go = msg->payload.go;
+			ucimv_list_free(&go->searchmoves);
+		} break;
+		case MSG_UCI_SETOPTION:
+			free(msg->payload.set_option);
+			break;
+		case MSG_UCI_DEBUG:
+			free(msg->payload.debug);
+			break;
+		default:
+			break;
 	}
 }
 
-Message *msg_create(UciMsgType type) {
-	Message *msg = malloc(sizeof(Message));
-	log_trace("msg_create, %p", msg);
-	if (!msg) {
-		log_error("Failed to allocate command");
-
-		exit(EXIT_FAILURE);
-	}
+UciMsg msg_create(UciMsgType type) {
 	void  *arg		= NULL;
 	size_t arg_size = 0;
 	switch (type) {
@@ -169,31 +147,31 @@ Message *msg_create(UciMsgType type) {
 		}
 		log_trace("msg_arg, %p", arg);
 	}
-	msg->type		  = MSG_UCI;
-	msg->subtype	  = type;
-	msg->payload	  = arg;
-	msg->free_payload = msg_free;
+	UciMsg msg;
+	msg.type			 = type;
+	msg.payload.position = arg;	 // union type, no need to determine which member gets the memory
+	msg.free_payload	 = msg_free;
 	return msg;
 }
 
 void cmd_uci(void) {
 	log_trace("cmd_uci");
-	Message *msg = msg_create(MSG_UCI_UCI);
-	msg_queue_push_wait(mq, msg);
+	UciMsg msg = msg_create(MSG_UCI_UCI);
+	engmq_send_uci_msg(&msg);
 	log_trace("cmd_uci done");
 }
 
 void cmd_quit(void) {
 	log_trace("cmd_quit");
-	Message *msg = msg_create(MSG_UCI_QUIT);
-	msg_queue_push_wait(mq, msg);
+	UciMsg msg = msg_create(MSG_UCI_QUIT);
+	engmq_send_uci_msg(&msg);
 	shutdown = true;
 }
 
 void cmd_print(void) {
 	log_trace("cmd_print");
-	Message *msg = msg_create(MSG_UCI_PRINT);
-	msg_queue_push_wait(mq, msg);
+	UciMsg msg = msg_create(MSG_UCI_PRINT);
+	engmq_send_uci_msg(&msg);
 }
 
 void cmd_setoption(char **tok, int tokn) {
@@ -205,25 +183,23 @@ void cmd_setoption(char **tok, int tokn) {
 		if (!tok_eq(tok[threads_pos + 1], "value"))
 			return;
 
-		Message		 *msg = msg_create(MSG_UCI_SETOPTION);
-		UciSetOption *opt = msg->payload;
-		opt->type		  = OPT_THREADS;
-		opt->opt.threads  = strtoul(tok[threads_pos + 2], NULL, 10);
-
-		msg_queue_push_wait(mq, msg);
+		UciMsg msg							= msg_create(MSG_UCI_SETOPTION);
+		msg.payload.set_option->type		= OPT_THREADS;
+		msg.payload.set_option->opt.threads = strtoul(tok[threads_pos + 2], NULL, 10);
+		engmq_send_uci_msg(&msg);
 	}
 }
 
 void cmd_ucinewgame(void) {
 	log_trace("cmd_ucinewgame");
-	Message *msg = msg_create(MSG_UCI_UCINEWGAME);
-	msg_queue_push_wait(mq, msg);
+	UciMsg msg = msg_create(MSG_UCI_UCINEWGAME);
+	engmq_send_uci_msg(&msg);
 }
 
 void cmd_isready(void) {
 	log_trace("cmd_isready");
-	Message *msg = msg_create(MSG_UCI_ISREADY);
-	msg_queue_push_wait(mq, msg);
+	UciMsg msg = msg_create(MSG_UCI_ISREADY);
+	engmq_send_uci_msg(&msg);
 }
 
 void cmd_position(char **tok, int tokn) {
@@ -260,7 +236,8 @@ void cmd_position(char **tok, int tokn) {
 	} else
 		return;
 
-	UciMoveList *moves = ucimv_list_create();
+	UciMoveList moves;
+	ucimv_list_init(&moves);
 	if (tok_eq(tok[tok_idx], "moves")) {
 		tok_idx++;
 		while (tok_idx < tokn) {
@@ -268,7 +245,7 @@ void cmd_position(char **tok, int tokn) {
 				break;
 			UciMove move = tok_to_move(tok[tok_idx]);
 			if (move.from != move.to) {
-				ucimv_list_push_back(moves, move);
+				ucimv_list_push_back(&moves, move);
 			} else {
 				break;
 			}
@@ -276,12 +253,10 @@ void cmd_position(char **tok, int tokn) {
 		}
 	}
 
-	Message		*cmd = msg_create(MSG_UCI_POSITION);
-	UciPosition *pos = cmd->payload;
-	pos->fen		 = fen;
-	pos->moves		 = moves;
-
-	msg_queue_push_wait(mq, cmd);
+	UciMsg msg					= msg_create(MSG_UCI_POSITION);
+	msg.payload.position->fen	= fen;
+	msg.payload.position->moves = moves;
+	engmq_send_uci_msg(&msg);
 }
 
 void cmd_go(char **tok, int tokn) {
@@ -290,11 +265,9 @@ void cmd_go(char **tok, int tokn) {
 	if (!tok)
 		return;
 
-	Message *msg = msg_create(MSG_UCI_GO);
-	assert(msg != NULL);
-	assert(msg->payload != NULL);
+	UciMsg msg = msg_create(MSG_UCI_GO);
 
-	UciGo *search_opts = msg->payload;
+	UciGo *search_opts = msg.payload.go;
 
 	int searchmoves_idx = tok_search_pos(tok, tokn, "searchmoves");
 	if (searchmoves_idx != -1) {
@@ -369,14 +342,14 @@ void cmd_go(char **tok, int tokn) {
 		search_opts->ponder = true;
 	}
 
-	msg_queue_push_wait(mq, msg);
+	engmq_send_uci_msg(&msg);
 	log_trace("cmd_go done");
 }
 
 void cmd_stop(void) {
 	log_trace("cmd_stop");
-	Message *msg = msg_create(MSG_UCI_STOP);
-	msg_queue_push_wait(mq, msg);
+	UciMsg msg = msg_create(MSG_UCI_STOP);
+	engmq_send_uci_msg(&msg);
 }
 
 void cmd_debug(char **tok, int tokn) {
@@ -392,10 +365,9 @@ void cmd_debug(char **tok, int tokn) {
 		return;
 	}
 
-	Message	 *msg = msg_create(MSG_UCI_DEBUG);
-	UciDebug *opt = msg->payload;
-	opt->debug	  = debug;
-	msg_queue_push_wait(mq, msg);
+	UciMsg msg				 = msg_create(MSG_UCI_DEBUG);
+	msg.payload.debug->debug = debug;
+	engmq_send_uci_msg(&msg);
 }
 
 /*

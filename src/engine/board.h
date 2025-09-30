@@ -3,7 +3,6 @@
 
 #include "../common/vector.h"
 #include "../include/types.h"
-#include "fen.h"
 VECTOR_DEFINE_TYPE(History, HistoryList, history)
 #define ROOK_CASTLING_W_KS_SRC SQ_H1
 #define ROOK_CASTLING_W_QS_SRC SQ_A1
@@ -21,9 +20,6 @@ VECTOR_DEFINE_TYPE(History, HistoryList, history)
 #define KING_CASTLING_W_QS_DST SQ_C1
 #define KING_CASTLING_B_KS_DST SQ_G8
 #define KING_CASTLING_B_QS_DST SQ_C8
-
-// TODO: add zobrist key
-// we must expose the board because the speed of the movegen depends on bit manipulation
 
 struct board {
 	uint64_t	 pieces[2][6];	  // bitboards, Player and Piece used as index

@@ -6,12 +6,10 @@
 #include <threads.h>
 
 #include "board.h"
-#include "engine_types.h"
 #include "eval.h"
 #include "log.h"
 #include "makemove.h"
 #include "movegen.h"
-#include "movelist.h"
 #include "transposition.h"
 #include "types.h"
 #include "utils.h"
@@ -99,7 +97,7 @@ void iter_deepening(struct board *board, struct search_options *opts) {
 	ss.time_limit  = search_calculate_time_budget(opts, board->side);
 	// if depth isnt set, iterate until MAX_DEPTH-1 at most to avoid overflows
 	size_t max_depth = opts->depth != 0 ? opts->depth : MAX_DEPTH - 1;
-	// iterative deepening
+
 	for (size_t depth = 1; depth <= max_depth; depth++) {
 		memset(&pv_length, 0, sizeof(pv_length));
 		int score = search(depth, -INF, INF, 0, board, opts, &ss, true);

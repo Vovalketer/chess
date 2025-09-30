@@ -306,7 +306,8 @@ int search_thread(void *arg) {
 	assert(arg != NULL);
 	log_trace("search thread started");
 	SearchThreadArgs *sta = arg;
-	ctl					  = sta;
+	assert(sta->config != NULL);
+	ctl = sta;
 
 	ctl->shutdown = false;
 
@@ -492,6 +493,8 @@ static void score_move(Move *move, int ply, Player side, TEntry *tte) {
 }
 
 static bool is_repetition(Board *board) {
+	assert(board != NULL);
+	assert(board->history != NULL);
 	int count = 0;
 	for (size_t i = 0; i < history_size(board->history); i++) {
 		History *h = history_at(board->history, i);

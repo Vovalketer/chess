@@ -99,7 +99,7 @@ int engmq_send_uci_msg(struct uci_msg *msg) {
 
 int engmq_send_search_msg(struct search_msg *msg) {
 	log_trace("engmq_send_search_msg");
-	struct engine_msg eng_msg = {MSG_UCI, .payload.search = *msg};
+	struct engine_msg eng_msg = {MSG_SEARCH, .payload.search = *msg};
 	return __push_msg_wait(eng_msg);
 }
 

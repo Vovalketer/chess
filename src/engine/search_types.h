@@ -19,6 +19,7 @@ typedef struct search_options {
 	uint32_t  binc;
 	uint32_t  movestogo;
 	uint32_t  mate;	 // mate in x moves
+	uint32_t  time_limit;
 	bool	  ponder;
 	bool	  infinite;
 } SearchOptions;
@@ -29,10 +30,10 @@ typedef struct search_info {
 	// uint32_t multipv;
 	uint32_t score_cp;	// score in centipawns
 	uint64_t nodes;
-	// uint32_t nps;
+	uint32_t nps;
 	// uint32_t hashfull;
 	// uint32_t tbhits;
-	uint32_t time;	// uint32_t can hold up to 1190 hours as ms
+	uint32_t time_start;
 
 	MoveList *pv;
 } SearchInfo;

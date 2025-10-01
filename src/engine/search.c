@@ -10,9 +10,9 @@
 #include "log.h"
 #include "makemove.h"
 #include "movegen.h"
+#include "search_types.h"
 #include "transposition.h"
 #include "types.h"
-#include "utils.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
@@ -48,23 +48,15 @@ typedef enum {
 	SCORE_TT			= 20000,
 } ScoreType;
 
-typedef struct {
-	int		 ply;
-	Player	 side;
-	uint64_t nodes;
-	uint32_t time_start;
-	uint32_t time_limit;
-} SearchState;
-
 int	 search(int			   depth,
 			int			   alpha,
 			int			   beta,
 			int			   ply,
 			Board		  *board,
 			SearchOptions *opts,
-			SearchState	  *ctx,
+			SearchInfo	  *info,
 			bool		   is_pv);
-int	 quiescence(SearchState *ctx, Board *board, int alpha, int beta, int ply);
+int	 quiescence(Board *board, int alpha, int beta, int ply, SearchInfo *info);
 void iter_deepening(struct board *board, struct search_options *opts);
 bool search_should_stop(void);
 
@@ -72,11 +64,8 @@ static bool is_repetition(Board *board);
 static int	mvv_lva_compare(const void *x, const void *y);
 static void score_move(Move *move, int ply, Player side, TEntry *tte);
 static int	compare_move(const void *x, const void *y);
-static void sort_moves(MoveList *moves, SearchState *ctx, TEntry *tte);
-static void gstop_cond_eval(SearchOptions *options,
-							uint32_t	   nodes,
-							uint32_t	   time_start,
-							uint32_t	   time_limit);
+static void sort_moves(MoveList *moves, TEntry *tte, int ply, Player side);
+static void gstop_cond_eval(SearchOptions *options, SearchInfo *info);
 
 static uint32_t timeval_to_ms(struct timeval tv);
 static uint32_t time_now(void);
@@ -92,17 +81,21 @@ SearchContext search_ctx = {0};
 SearchThreadArgs *ctl = NULL;
 
 void iter_deepening(struct board *board, struct search_options *opts) {
-	SearchState ss = {0};
-	ss.time_start  = time_now();
-	ss.time_limit  = search_calculate_time_budget(opts, board->side);
+	SearchInfo info	 = {0};
+	info.time_start	 = time_now();
+	opts->time_limit = search_calculate_time_budget(opts, board->side);	 // relative time ie 400ms
 	// if depth isnt set, iterate until MAX_DEPTH-1 at most to avoid overflows
 	size_t max_depth = opts->depth != 0 ? opts->depth : MAX_DEPTH - 1;
 
 	for (size_t depth = 1; depth <= max_depth; depth++) {
 		memset(&pv_length, 0, sizeof(pv_length));
-		int score = search(depth, -INF, INF, 0, board, opts, &ss, true);
+		int score			= search(depth, -INF, INF, 0, board, opts, &info, true);
+		info.score_cp		= score;
+		uint32_t elapsed_ms = time_now() - info.time_start;
+		if (elapsed_ms == 0)
+			elapsed_ms = 1;
+		info.nps = info.nodes * 1000 / elapsed_ms;
 
-		gstop_cond_eval(opts, ss.nodes, ss.time_start, ss.time_limit);
 		if (search_should_stop())
 			break;
 
@@ -127,10 +120,9 @@ void iter_deepening(struct board *board, struct search_options *opts) {
 	search_stop();
 }
 
-int quiescence(SearchState *ctx, Board *board, int alpha, int beta, int ply) {
-	ctx->side = board->side;
-	ctx->ply  = ply;
-	ctx->nodes++;
+int quiescence(Board *board, int alpha, int beta, int ply, SearchInfo *info) {
+	info->seldepth = ply;
+	info->nodes++;
 
 	if (is_repetition(board) || board->halfmove_clock > 99)
 		return 0;
@@ -150,7 +142,7 @@ int quiescence(SearchState *ctx, Board *board, int alpha, int beta, int ply) {
 
 		if (!make_move(board, move))
 			continue;
-		int score = -quiescence(ctx, board, -beta, -alpha, ply + 1);
+		int score = -quiescence(board, -beta, -alpha, ply + 1, info);
 		unmake_move(board);
 
 		best_score = MAX(best_score, score);
@@ -173,18 +165,18 @@ int search(int			  depth,
 		   int			  ply,
 		   Board		 *board,
 		   SearchOptions *opts,
-		   SearchState	 *ctx,
+		   SearchInfo	 *info,
 		   bool			  is_pv) {
 	pv_length[ply] = 0;
-	ctx->side	   = board->side;
-	ctx->ply	   = ply;
+	info->depth	   = ply;
+	info->seldepth = ply;
 
 	if (depth == 0) {
-		return quiescence(ctx, board, alpha, beta, ply);
+		return quiescence(board, alpha, beta, ply, info);
 	}
 
-	ctx->nodes++;
-	gstop_cond_eval(opts, ctx->nodes, ctx->time_start, ctx->time_limit);
+	info->nodes++;
+	gstop_cond_eval(opts, info);
 
 	if (board->halfmove_clock > 99 || is_repetition(board))
 		return 0;
@@ -203,8 +195,8 @@ int search(int			  depth,
 			}
 		} else {
 			if (entry.bound == BOUND_EXACT) {
-				pv_table[ctx->ply][0] = entry.best_move;
-				pv_length[ctx->ply]	  = 1;
+				pv_table[ply][0] = entry.best_move;
+				pv_length[ply]	 = 1;
 				return entry.score;
 			}
 		}
@@ -216,7 +208,7 @@ int search(int			  depth,
 	int		  best_score  = -INF;
 	BoundType tt_bound	  = BOUND_UPPER;  // default to score<=alpha
 	int		  legal_moves = 0;
-	sort_moves(moves, ctx, &entry);
+	sort_moves(moves, &entry, ply, board->side);
 
 	for (size_t i = 0; i < move_list_size(moves); i++) {
 		if (search_should_stop()) {
@@ -232,13 +224,13 @@ int search(int			  depth,
 		int score;
 		if (i == 0) {
 			// full width search on the first move
-			score = -search(depth - 1, -beta, -alpha, ply + 1, board, opts, ctx, is_pv);
+			score = -search(depth - 1, -beta, -alpha, ply + 1, board, opts, info, is_pv);
 		} else {
 			// reduced width search
-			score = -search(depth - 1, -alpha - 1, -alpha, ply + 1, board, opts, ctx, false);
+			score = -search(depth - 1, -alpha - 1, -alpha, ply + 1, board, opts, info, false);
 			if (score > alpha && score < beta) {
 				// full width research
-				score = -search(depth - 1, -beta, -alpha, ply + 1, board, opts, ctx, is_pv);
+				score = -search(depth - 1, -beta, -alpha, ply + 1, board, opts, info, is_pv);
 			}
 		}
 
@@ -417,28 +409,23 @@ uint32_t time_now(void) {
 	return timeval_to_ms(tv);
 }
 
-void gstop_cond_eval(SearchOptions *options,
-					 uint32_t		nodes,
-					 uint32_t		time_start,
-					 uint32_t		time_limit) {
+void gstop_cond_eval(SearchOptions *options, SearchInfo *info) {
 	// NOTE: depth is evaluated by the function performing iterative deepening
 	if (search_should_stop()) {
 		log_debug("search already stopped");
 		return;
 	}
 
-	if (options->nodes && nodes >= options->nodes) {
-		log_trace("node limit reached: set %u nodes %u", options->nodes, nodes);
+	if (options->nodes && info->nodes >= options->nodes) {
+		log_trace("node limit reached: set %u nodes %u", options->nodes, info->nodes);
 		search_stop();
 		return;
 	}
 
 	if (!options->infinite) {
 		uint32_t timenow = time_now();
-		if (timenow - time_start >= time_limit) {
-			log_trace("time limit reached: elapsed %u ms, time limit: %u ms",
-					  timenow - time_start,
-					  time_limit);
+		if ((timenow - info->time_start) >= options->time_limit) {
+			log_trace("time limit reached: elapsed %u ms", timenow - options->time_limit);
 			search_stop();
 			return;
 		}
@@ -455,9 +442,9 @@ static int compare_move(const void *m1, const void *m2) {
 	return move2->score - move1->score;
 }
 
-static void sort_moves(MoveList *moves, SearchState *ctx, TEntry *tte) {
+static void sort_moves(MoveList *moves, TEntry *tte, int ply, Player side) {
 	for (size_t i = 0; i < move_list_size(moves); i++) {
-		score_move(move_list_at(moves, i), ctx->ply, ctx->side, tte);
+		score_move(move_list_at(moves, i), ply, side, tte);
 	}
 	move_list_sort(moves, compare_move);
 }

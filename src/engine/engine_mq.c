@@ -20,7 +20,7 @@ struct eng_mq {
 	bool			open;
 };
 
-EngineMsg			 eng_msgq_buf[ENGINE_MSG_QUEUE_SIZE];
+static EngineMsg	 eng_msgq_buf[ENGINE_MSG_QUEUE_SIZE];
 static struct eng_mq eng_mq = {0};
 
 int engmq_init(void) {

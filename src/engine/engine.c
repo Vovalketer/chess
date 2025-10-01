@@ -138,15 +138,11 @@ int main(void) {
 				SearchMsg sm = msg.payload.search;
 				switch (sm.type) {
 					case SEARCH_MSG_INFO: {
-						SearchInfo *search_info = sm.payload.search_info;
-						if (move_list_size(search_info->pv) > 0)
-							best_move = *move_list_at(search_info->pv, 0);
-						else
-							best_move = NO_MOVE;
-						engine_print_info(search_info);
+						SearchInfo search_info = sm.payload.search_info;
+						engine_print_info(&search_info);
 					} break;
 					case SEARCH_MSG_STOP:
-						engine_print_best_move(best_move);
+						engine_print_best_move(sm.payload.bestmove);
 						break;
 					case SEARCH_MSG_NONE:
 						break;
@@ -167,16 +163,19 @@ int main(void) {
 }
 
 static void engine_print_info(SearchInfo *info) {
-	printf("info depth %d seldepth %d score cp %d nodes %lu time %d\n",
+	assert(info != NULL);
+	assert(info->pv.data != NULL);
+	printf("info depth %d seldepth %d score cp %d nodes %lu nps %u ",
 		   info->depth,
 		   info->seldepth,
 		   info->score_cp,
 		   info->nodes,
-		   info->time);
+		   info->nps);
 
+	size_t pv_size = move_list_size(&info->pv);
 	printf("pv");
-	for (size_t i = 0; i < move_list_size(info->pv); i++) {
-		Move *m = move_list_at(info->pv, i);
+	for (size_t i = 0; i < pv_size; i++) {
+		Move *m = move_list_at(&info->pv, i);
 		printf(" %s%s", utils_square_to_str(m->from), utils_square_to_str(m->to));
 	}
 	printf("\n");

@@ -35,7 +35,7 @@ typedef struct search_info {
 	// uint32_t tbhits;
 	uint32_t time_start;
 
-	MoveList *pv;
+	MoveList pv;
 } SearchInfo;
 
 /*
@@ -48,7 +48,8 @@ typedef struct search_msg {
 	SearchMsgType type;
 
 	union {
-		struct search_info *search_info;
+		struct search_info search_info;
+		Move			   bestmove;
 	} payload;
 
 	void (*free_payload)(struct search_msg *msg);

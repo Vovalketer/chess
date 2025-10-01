@@ -6,6 +6,7 @@
 #include <threads.h>
 
 #include "board.h"
+#include "engine_mq.h"
 #include "eval.h"
 #include "log.h"
 #include "makemove.h"
@@ -71,6 +72,9 @@ static uint32_t timeval_to_ms(struct timeval tv);
 static uint32_t time_now(void);
 static uint32_t search_calculate_time_budget(const SearchOptions *opts, Player p);
 
+static int send_msg_stop(MoveList *pv);
+static int send_msg_info(SearchInfo *info);
+
 Move		  pv_table[MAX_DEPTH][MAX_DEPTH];
 uint8_t		  pv_length[MAX_DEPTH];
 Move		  killer_moves[MAX_DEPTH][2];
@@ -96,10 +100,6 @@ void iter_deepening(struct board *board, struct search_options *opts) {
 			elapsed_ms = 1;
 		info.nps = info.nodes * 1000 / elapsed_ms;
 
-		if (search_should_stop())
-			break;
-
-		log_info("info depth %zu score %d nodes %lu", depth, score, ss.nodes);
 		if (pv_length[0] >= move_list_size(&root_pv)) {
 			move_list_clear(&root_pv);
 			for (size_t i = 0; i < pv_length[0]; ++i) {
@@ -112,10 +112,10 @@ void iter_deepening(struct board *board, struct search_options *opts) {
 			}
 		}
 
-		log_info("PV:");
-		for (size_t i = 0; i < move_list_size(&root_pv); i++) {
-			log_info("%s", utils_move_description(*move_list_at(&root_pv, i)).str);
-		}
+		send_msg_info(&info);
+		gstop_cond_eval(opts, &info);
+		if (search_should_stop())
+			break;
 	}
 	search_stop();
 }
@@ -320,6 +320,8 @@ int search_thread(void *arg) {
 		mtx_unlock(&search_ctx.lock);
 		log_trace("searching");
 		iter_deepening(search_ctx.board, &search_ctx.opts);
+		// search finished, notify the main thread
+		send_msg_stop(&root_pv);
 		log_trace("search done");
 	}
 	log_trace("search thread stopped");
@@ -489,4 +491,43 @@ static bool is_repetition(Board *board) {
 		}
 	}
 	return count >= 3;
+}
+
+/*
+ * Messages
+ */
+
+void free_msg(SearchMsg *msg) {
+	assert(msg != NULL);
+	if (msg->type == SEARCH_MSG_INFO)
+		move_list_free(&msg->payload.search_info.pv);
+}
+
+static int send_msg_info(SearchInfo *info) {
+	assert(info != NULL);
+	SearchMsg msg			= {0};
+	msg.type				= SEARCH_MSG_INFO;
+	msg.free_payload		= free_msg;
+	msg.payload.search_info = *info;
+	size_t pv_size			= move_list_size(&root_pv);
+	if (pv_size > 0) {
+		log_debug("info payload init");
+		move_list_init(&msg.payload.search_info.pv);
+		log_debug("info payload cloning pv");
+		move_list_clone(&msg.payload.search_info.pv, &root_pv);
+	} else {
+		move_list_clear(&msg.payload.search_info.pv);
+	}
+	log_debug("info payload done");
+	return engmq_send_search_msg(&msg);
+}
+
+static int send_msg_stop(MoveList *pv) {
+	assert(pv != NULL);
+	SearchMsg msg	 = {0};
+	msg.type		 = SEARCH_MSG_STOP;
+	msg.free_payload = free_msg;
+	assert(move_list_size(&root_pv) > 0);
+	msg.payload.bestmove = *move_list_at(pv, 0);
+	return engmq_send_search_msg(&msg);
 }

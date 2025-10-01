@@ -184,6 +184,7 @@ static void engine_print_info(SearchInfo *info) {
 
 static void engine_print_best_move(Move move) {
 	printf("bestmove %s%s\n", utils_square_to_str(move.from), utils_square_to_str(move.to));
+	fflush(stdout);
 }
 
 void engine_uci(EngineConfig *opts) {
@@ -192,10 +193,12 @@ void engine_uci(EngineConfig *opts) {
 	printf("\n");
 	printf("option name Threads value %d\n", opts->threads);
 	printf("uciok\n");
+	fflush(stdout);
 }
 
 void engine_isready(void) {
 	printf("readyok\n");
+	fflush(stdout);
 }
 
 static Move *ucimv_to_move(UciMove *ucimv) {

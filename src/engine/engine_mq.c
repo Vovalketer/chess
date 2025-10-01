@@ -1,6 +1,3 @@
-#ifndef ENGINE_MQ_H
-#define ENGINE_MQ_H
-
 #include "engine_mq.h"
 
 #include <errno.h>
@@ -126,5 +123,3 @@ int engmq_receive(struct engine_msg *msg_out) {
 	log_trace("engmq_receive ret %d", ret);
 	return ret;
 }
-
-#endif	// ENGINE_MQ_H

@@ -1,5 +1,5 @@
-#ifndef ENGINE_MSG_H
-#define ENGINE_MSG_H
+#ifndef ENGINE_MQ_H
+#define ENGINE_MQ_H
 
 struct uci_msg;
 struct search_msg;
@@ -13,4 +13,4 @@ int engmq_send_search_msg(struct search_msg *msg);
 
 int engmq_receive(struct engine_msg *msg_out);
 
-#endif	// ENGINE_MSG_H
+#endif	// ENGINE_MQ_H

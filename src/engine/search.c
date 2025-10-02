@@ -20,6 +20,7 @@
 #define INF		  (INT_MAX - 100000)
 #define CHECKMATE (INF - 1000000)
 #define MAX_DEPTH 64
+#define TIME_BUFFER			50	// time in ms
 
 typedef struct search_context {
 	struct search_info	 *info;
@@ -374,6 +375,9 @@ bool search_should_stop(void) {
 
 uint32_t search_calculate_time_budget(const SearchOptions *opts, Player p) {
 	log_trace("calculating time budget");
+	if (opts->movetime) {
+		return opts->movetime - TIME_BUFFER;
+	}
 	uint32_t remaining = p == PLAYER_W ? opts->wtime : opts->btime;
 	log_trace("remaining time: %u ms", remaining);
 	uint32_t increment = p == PLAYER_W ? opts->winc : opts->binc;
@@ -391,7 +395,7 @@ uint32_t search_calculate_time_budget(const SearchOptions *opts, Player p) {
 
 	// ensure small reserve
 	if (time > 50)
-		time -= 50;
+		time -= TIME_BUFFER;
 
 	// ensure the search doesnt stop too early
 	if (time < 100)
@@ -413,6 +417,7 @@ uint32_t time_now(void) {
 
 void gstop_cond_eval(SearchOptions *options, SearchInfo *info) {
 	// NOTE: depth is evaluated by the function performing iterative deepening
+
 	if (search_should_stop()) {
 		log_debug("search already stopped");
 		return;

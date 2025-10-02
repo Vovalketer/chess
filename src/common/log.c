@@ -46,7 +46,7 @@ void log_write(int level, const char *file, int line, const char *fmt, ...) {
 	char	   timebuf[MAX_TIME_SIZE];
 	strftime(timebuf, MAX_TIME_SIZE, "%Y-%m-%d %H:%M:%S", tm_info);
 
-	FILE *out = log_file ? log_file : stderr;
+	FILE *out = stderr;
 
 	//  example output: [ERROR] 2025-06-28 06:38:44 tests/log_test.c:10:
 	fprintf(out, "[%s] %s %s:%d: ", log_get_log_type(level), timebuf, file, line);

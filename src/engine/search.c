@@ -17,9 +17,10 @@
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-#define INF		  (INT_MAX - 100000)
-#define CHECKMATE (INF - 1000000)
-#define MAX_DEPTH 64
+#define INF					(INT_MAX - 100000)
+#define CHECKMATE			(INF - 1000000)
+#define MAX_DEPTH			64
+#define TIME_CHECK_INTERVAL 0x4000
 #define TIME_BUFFER			50	// time in ms
 
 typedef struct search_context {
@@ -81,13 +82,15 @@ uint8_t		  pv_length[MAX_DEPTH];
 Move		  killer_moves[MAX_DEPTH][2];
 int			  history_heuristic[PLAYER_CNT][SQ_CNT][SQ_CNT];  // player, from, to
 MoveList	  root_pv;
-SearchContext search_ctx = {0};
+SearchContext search_ctx			 = {0};
+uint32_t	  nodes_since_last_check = 0;
 
 SearchThreadArgs *ctl = NULL;
 
 void iter_deepening(struct board *board, struct search_options *opts) {
-	SearchInfo info	 = {0};
-	info.time_start	 = time_now();
+	SearchInfo info		   = {0};
+	nodes_since_last_check = 0;
+	info.time_start		   = time_now();
 	opts->time_limit = search_calculate_time_budget(opts, board->side);	 // relative time ie 400ms
 	// if depth isnt set, iterate until MAX_DEPTH-1 at most to avoid overflows
 	size_t max_depth = opts->depth != 0 ? opts->depth : MAX_DEPTH - 1;
@@ -420,6 +423,10 @@ void gstop_cond_eval(SearchOptions *options, SearchInfo *info) {
 
 	if (search_should_stop()) {
 		log_debug("search already stopped");
+		return;
+	}
+	nodes_since_last_check++;
+	if (nodes_since_last_check < TIME_CHECK_INTERVAL) {
 		return;
 	}
 

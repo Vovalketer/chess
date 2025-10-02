@@ -57,7 +57,7 @@ int	 search(int			   depth,
 			SearchOptions *opts,
 			SearchInfo	  *info,
 			bool		   is_pv);
-int	 quiescence(Board *board, int alpha, int beta, int ply, SearchInfo *info);
+int	 quiescence(Board *board, int alpha, int beta, int ply, SearchOptions *opts, SearchInfo *info);
 void iter_deepening(struct board *board, struct search_options *opts);
 bool search_should_stop(void);
 
@@ -120,11 +120,12 @@ void iter_deepening(struct board *board, struct search_options *opts) {
 	search_stop();
 }
 
-int quiescence(Board *board, int alpha, int beta, int ply, SearchInfo *info) {
+int quiescence(Board *board, int alpha, int beta, int ply, SearchOptions *opts, SearchInfo *info) {
 	info->seldepth = ply;
 	info->nodes++;
 
-	if (is_repetition(board) || board->halfmove_clock > 99)
+	gstop_cond_eval(opts, info);
+	if (search_should_stop() || is_repetition(board) || board->halfmove_clock > 99)
 		return 0;
 
 	int best_score = eval(board);
@@ -142,7 +143,7 @@ int quiescence(Board *board, int alpha, int beta, int ply, SearchInfo *info) {
 
 		if (!make_move(board, move))
 			continue;
-		int score = -quiescence(board, -beta, -alpha, ply + 1, info);
+		int score = -quiescence(board, -beta, -alpha, ply + 1, opts, info);
 		unmake_move(board);
 
 		best_score = MAX(best_score, score);
@@ -172,15 +173,13 @@ int search(int			  depth,
 	info->seldepth = ply;
 
 	if (depth == 0) {
-		return quiescence(board, alpha, beta, ply, info);
+		return quiescence(board, alpha, beta, ply, opts, info);
 	}
 
 	info->nodes++;
 	gstop_cond_eval(opts, info);
 
-	if (board->halfmove_clock > 99 || is_repetition(board))
-		return 0;
-	if (search_should_stop())
+	if (search_should_stop() || board->halfmove_clock > 99 || is_repetition(board))
 		return 0;
 
 	TEntry entry = {0};
@@ -211,6 +210,7 @@ int search(int			  depth,
 	sort_moves(moves, &entry, ply, board->side);
 
 	for (size_t i = 0; i < move_list_size(moves); i++) {
+		gstop_cond_eval(opts, info);
 		if (search_should_stop()) {
 			move_list_destroy(&moves);
 			return 0;

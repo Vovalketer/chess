@@ -31,7 +31,7 @@ static void engine_print_best_move(Move move);
 static void engine_isready(void);
 static void engine_uci(EngineConfig *opts);
 
-static Move *ucimv_to_move(UciMove *ucimv);
+static Move ucimv_to_move(UciMove *ucimv);
 
 Board		 board;
 SearchInfo	 info;
@@ -81,9 +81,9 @@ int main(void) {
 						for (size_t i = 0; i < ucimv_list_size(&pos->moves); i++) {
 							UciMove *uci_move = ucimv_list_at(&pos->moves, i);
 
-							Move *move = ucimv_to_move(uci_move);
-
-							if (!move || !make_move(&board, *move)) {
+							Move move = ucimv_to_move(uci_move);
+							log_info("move: %s", utils_move_description(move).str);
+							if (move_equals(move, NO_MOVE) || !make_move(&board, move)) {
 								// if one move is invalid then we'll assume
 								// the rest are invalid as well
 								break;
@@ -201,7 +201,7 @@ void engine_isready(void) {
 	fflush(stdout);
 }
 
-static Move *ucimv_to_move(UciMove *ucimv) {
+static Move ucimv_to_move(UciMove *ucimv) {
 	// find the complete definition of a move to be used by make_move
 	MoveList *moves = movegen_generate(&board, board.side);
 	// TODO: generating all the moves is inefficient
@@ -214,6 +214,7 @@ static Move *ucimv_to_move(UciMove *ucimv) {
 		}
 		move = NULL;
 	}
+	Move ret = move ? *move : NO_MOVE;
 	move_list_destroy(&moves);
-	return move;
+	return ret;
 }

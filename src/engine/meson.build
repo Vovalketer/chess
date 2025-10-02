@@ -55,7 +55,6 @@ engine_sources = [engine_file, uci_file, eval_file, search_file, transposition_f
 engine = executable(
   'engine',
   engine_sources,
-  link_with: [libthrunner],
   dependencies: [libboard_dep, libmakemove_dep, liblog_dep],
   include_directories: [common_inc],
 )

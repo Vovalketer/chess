@@ -30,6 +30,7 @@ static void engine_print_info(SearchInfo *info);
 static void engine_print_best_move(Move move);
 static void engine_isready(void);
 static void engine_uci(EngineConfig *opts);
+static void engine_print_board(void);
 
 static Move ucimv_to_move(UciMove *ucimv);
 
@@ -128,6 +129,7 @@ int main(void) {
 						quit = true;
 						break;
 					case MSG_UCI_PRINT:
+						engine_print_board();
 						break;
 					case MSG_UCI_NONE:
 						break;
@@ -199,6 +201,10 @@ void engine_uci(EngineConfig *opts) {
 void engine_isready(void) {
 	printf("readyok\n");
 	fflush(stdout);
+}
+
+void engine_print_board(void) {
+	board_print(&board);
 }
 
 static Move ucimv_to_move(UciMove *ucimv) {

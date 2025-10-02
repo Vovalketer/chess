@@ -226,6 +226,8 @@ void cmd_position(char **tok, int tokn) {
 				return;
 
 			strcat(fen.str, tok[tok_idx]);
+			// update the length after concatenating
+			fenlen += toklen;
 			if (i < FEN_TOKEN_COUNT - 1) {
 				// add a space betweeen the fen arguments
 				fen.str[fenlen]		= ' ';

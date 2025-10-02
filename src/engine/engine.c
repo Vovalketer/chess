@@ -79,6 +79,8 @@ int main(void) {
 					case MSG_UCI_POSITION: {
 						UciPosition *pos = uci.payload.position;
 						board_from_fen(&board, pos->fen.str);
+						log_info("board from fen: %s", pos->fen.str);
+						log_info("moves size %d", ucimv_list_size(&pos->moves));
 						for (size_t i = 0; i < ucimv_list_size(&pos->moves); i++) {
 							UciMove *uci_move = ucimv_list_at(&pos->moves, i);
 

@@ -225,6 +225,7 @@ void cmd_position(char **tok, int tokn) {
 			if ((fenlen + toklen + 1) >= FEN_MAX_LENGTH)
 				return;
 
+			log_debug("concatenating %s to %s", tok[tok_idx], fen.str);
 			strcat(fen.str, tok[tok_idx]);
 			// update the length after concatenating
 			fenlen += toklen;
@@ -233,8 +234,11 @@ void cmd_position(char **tok, int tokn) {
 				fen.str[fenlen]		= ' ';
 				fen.str[fenlen + 1] = 0;
 			}
+			log_debug("current fen %s", fen.str);
 			tok_idx++;
 		}
+		log_debug("fen len %d", strlen(fen.str));
+		log_debug("fen string %s", fen.str);
 	} else
 		return;
 

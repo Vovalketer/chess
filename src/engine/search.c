@@ -22,6 +22,7 @@
 #define MAX_DEPTH			64
 #define TIME_CHECK_INTERVAL 0x4000
 #define TIME_BUFFER			50	// time in ms
+#define ASPIRATION_WINDOW	50	// centipawns
 
 typedef struct search_context {
 	struct search_info	 *info;
@@ -96,9 +97,29 @@ void iter_deepening(struct board *board, struct search_options *opts) {
 	size_t max_depth = opts->depth != 0 ? opts->depth : MAX_DEPTH - 1;
 
 	for (size_t depth = 1; depth <= max_depth; depth++) {
+		int alpha = -INF;
+		int beta  = INF;
+		int score = 0;
 		memset(&pv_length, 0, sizeof(pv_length));
-		int score			= search(depth, -INF, INF, 0, board, opts, &info, true);
-		info.score_cp		= score;
+
+		// aspiration window
+		if (depth > 1) {
+			alpha = score - ASPIRATION_WINDOW;
+			beta  = score + ASPIRATION_WINDOW;
+		}
+
+		score		  = search(depth, alpha, beta, 0, board, opts, &info, true);
+		info.score_cp = score;
+
+		// if the score exceeds the aspiration window, research with a full window
+		if (score <= alpha) {
+			alpha = -INF;
+			score = search(depth, alpha, beta, 0, board, opts, &info, true);
+		} else if (score >= beta) {
+			beta  = INF;
+			score = search(depth, alpha, beta, 0, board, opts, &info, true);
+		}
+
 		uint32_t elapsed_ms = time_now() - info.time_start;
 		if (elapsed_ms == 0)
 			elapsed_ms = 1;
